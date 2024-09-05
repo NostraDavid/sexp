@@ -144,6 +144,10 @@ class SExpressionParser:
         self._skip_whitespace()
         char = self._peek()
 
+        # Handle the single quote for quoting expressions
+        if char == "'":
+            return self._parse_quoted_expression()
+
         # Try to parse verbatim string (format: <length>:<string>)
         if char.isdigit():
             return self._parse_number_or_verbatim()
@@ -157,7 +161,7 @@ class SExpressionParser:
             return self._parse_base64()
 
         # Try to parse token
-        if char.isalnum() or char in "./_*+=-":
+        if char.isalnum() or char in "./_*+=-?":
             return self._parse_token()
 
         # Parse quoted strings
@@ -165,6 +169,18 @@ class SExpressionParser:
             return self._parse_quoted_string()
 
         raise ValueError(f"Unknown atom at position {self.index}: '{char}'")
+
+    def _parse_quoted_expression(self) -> SExpression:
+        """
+        Parse a quoted expression, indicated by a single quote (').
+        Quoted expressions are transformed into the form (quote <expression>).
+
+        Returns:
+            A list representing the quoted expression.
+        """
+        self._consume(1)  # Consume the single quote
+        quoted_expr = self._parse_sexpr()  # Parse the next S-expression
+        return ["quote", quoted_expr]
 
     def _parse_number_or_verbatim(self) -> SExpression:
         """
@@ -197,27 +213,42 @@ class SExpressionParser:
         Parse a hexadecimal string, which is in the format #<hex>#.
 
         Returns:
-            The decoded hexadecimal string.
+            The decoded hexadecimal string. If decoding to UTF-8 fails, return the raw bytes.
 
         Raises:
-            ValueError: If the format is invalid.
+            ValueError: If the format is invalid or if the closing '#' is missing.
         """
         self._consume(1)  # Consume the opening '#'
+        start_pos = self.index  # Remember the start position for better error reporting
         hex_string = self._consume_while(lambda c: c in "0123456789abcdefABCDEF")
 
-        if self._consume(1) != "#":
+        # Check if the hex string is empty
+        if not hex_string:
             raise ValueError(
-                f"Expected closing '#' for hexadecimal string at position {self.index}"
+                f"Empty hexadecimal string at position {start_pos}. Expected valid hex between '#'."
             )
 
-        return bytes.fromhex(hex_string).decode("utf-8")
+        if self._peek() != "#":
+            raise ValueError(
+                f"Expected closing '#' for hexadecimal string at position {self.index}. "
+                f"Parsed so far: '{self.text[start_pos:self.index]}'"
+            )
+
+        self._consume(1)  # Consume the closing '#'
+
+        try:
+            # Try decoding as UTF-8
+            return bytes.fromhex(hex_string).decode("utf-8")
+        except UnicodeDecodeError:
+            # If decoding fails, return the raw bytes
+            return bytes.fromhex(hex_string)
 
     def _parse_base64(self) -> str:
         """
         Parse a base64-encoded string, which is in the format |<base64>|.
 
         Returns:
-            The decoded base64 string.
+            The decoded base64 string. If decoding to UTF-8 fails, return the raw bytes.
 
         Raises:
             ValueError: If the format is invalid.
@@ -233,7 +264,12 @@ class SExpressionParser:
                 f"Expected closing '|' for base64 string at position {self.index}"
             )
 
-        return base64.b64decode(base64_string).decode("utf-8")
+        try:
+            # Try decoding as UTF-8
+            return base64.b64decode(base64_string).decode("utf-8")
+        except UnicodeDecodeError:
+            # If decoding fails, return the raw bytes
+            return base64.b64decode(base64_string)
 
     def _parse_token(self) -> str:
         """
@@ -242,7 +278,7 @@ class SExpressionParser:
         Returns:
             The parsed token as a string.
         """
-        return self._consume_while(lambda c: c.isalnum() or c in "./_*+=-")
+        return self._consume_while(lambda c: c.isalnum() or c in "./_*+=-?")
 
     def _parse_quoted_string(self) -> str:
         """
