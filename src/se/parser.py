@@ -133,10 +133,10 @@ class SExpressionParser:
     def _parse_atom(self) -> SExpression:
         """
         Parse a single atom, which may be a verbatim string, hexadecimal string,
-        base64 string, token, or quoted string.
+        base64 string, token, quoted string, or boolean literal.
 
         Returns:
-            The parsed atom as a string.
+            The parsed atom as a string, boolean, or other structure.
 
         Raises:
             ValueError: If the atom is not recognized.
@@ -144,17 +144,25 @@ class SExpressionParser:
         self._skip_whitespace()
         char = self._peek()
 
-        # Handle the single quote for quoting expressions
+        # Handle single quote (') for quoted expressions
         if char == "'":
             return self._parse_quoted_expression()
+
+        # Handle boolean literals #t (true) and #f (false)
+        if char == "#":
+            next_char = self._peek_ahead(1)
+            if next_char in ["t", "f"]:
+                return self._parse_boolean()  # Parse as boolean
+            else:
+                return self._parse_hexadecimal()  # Parse as hexadecimal
+
+        # Try to parse comparison operators
+        if char in "><=":
+            return self._parse_comparison_operator()
 
         # Try to parse verbatim string (format: <length>:<string>)
         if char.isdigit():
             return self._parse_number_or_verbatim()
-
-        # Try to parse hexadecimal string (format: #<hex>#)
-        if char == "#":
-            return self._parse_hexadecimal()
 
         # Try to parse base-64 string (format: |<base64>|)
         if char == "|":
@@ -169,6 +177,54 @@ class SExpressionParser:
             return self._parse_quoted_string()
 
         raise ValueError(f"Unknown atom at position {self.index}: '{char}'")
+
+    def _parse_comparison_operator(self) -> str:
+        """
+        Parse comparison operators such as >, <, >=, <=.
+
+        Returns:
+            The parsed comparison operator as a string.
+        """
+        operator = self._consume_while(lambda c: c in "><=!")
+        return operator
+
+    def _peek_ahead(self, offset: int) -> str:
+        """
+        Peek at a character a specified number of positions ahead in the input string
+        without advancing the parser index.
+
+        Args:
+            offset: The number of positions ahead to peek.
+
+        Returns:
+            The character at the specified position ahead of the current index.
+        """
+        position = self.index + offset
+        if position < len(self.text):
+            return self.text[position]
+        return ""
+
+    def _parse_boolean(self) -> bool:
+        """
+        Parse a boolean literal, which is either #t (true) or #f (false).
+
+        Returns:
+            The parsed boolean value as True or False.
+
+        Raises:
+            ValueError: If the boolean format is invalid.
+        """
+        self._consume(1)  # Consume the '#'
+        next_char = self._peek()
+
+        if next_char == "t":
+            self._consume(1)  # Consume 't'
+            return True
+        elif next_char == "f":
+            self._consume(1)  # Consume 'f'
+            return False
+        else:
+            raise ValueError(f"Invalid boolean literal at position {self.index}: expected #t or #f.")
 
     def _parse_quoted_expression(self) -> SExpression:
         """
@@ -214,6 +270,7 @@ class SExpressionParser:
 
         Returns:
             The decoded hexadecimal string. If decoding to UTF-8 fails, return the raw bytes.
+            If the hex string is empty, skip it without raising an error.
 
         Raises:
             ValueError: If the format is invalid or if the closing '#' is missing.
@@ -222,11 +279,10 @@ class SExpressionParser:
         start_pos = self.index  # Remember the start position for better error reporting
         hex_string = self._consume_while(lambda c: c in "0123456789abcdefABCDEF")
 
-        # Check if the hex string is empty
-        if not hex_string:
-            raise ValueError(
-                f"Empty hexadecimal string at position {start_pos}. Expected valid hex between '#'."
-            )
+        # Handle case where there is no hex content (i.e., ##)
+        if not hex_string and self._peek() == "#":
+            self._consume(1)  # Consume the closing '#' and skip the empty hex string
+            return ""  # Return an empty string or handle it as you see fit
 
         if self._peek() != "#":
             raise ValueError(

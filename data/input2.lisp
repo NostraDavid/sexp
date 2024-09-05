@@ -89,4 +89,7 @@
 
 ; Invalid hexadecimal strings
 (define hex-example ##)           ; Empty hex string
-(define invalid-hex #GHIJKL#)     ; Invalid hex characters
+
+; Handle empty hexadecimal string
+(define empty-hex ##)              ; Will return an empty byte sequence
+(define valid-hex #deadbeef#)      ; Valid hex string
