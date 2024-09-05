@@ -1,8 +1,7 @@
 import re
-from typing import Union
 
 # Define types for S-expression components
-SExpression = Union[str, list["SExpression"]]
+SExpression = str | list["SExpression"]
 
 # Regular expressions for the various string types in S-expressions
 TOKEN_RE = re.compile(r"[A-Za-z0-9./_*+=-]+")
@@ -16,11 +15,11 @@ class SExpressionParser:
     A parser for S-expressions.
     """
 
-    def __init__(self, text: str):
+    def __init__(self, text: str) -> None:
         self.text = text.strip()
         self.index = 0
 
-    def _skip_whitespace(self):
+    def _skip_whitespace(self) -> None:
         while self.index < len(self.text) and self.text[self.index].isspace():
             self.index += 1
 
@@ -62,7 +61,7 @@ class SExpressionParser:
         char = self._peek()
 
         # Try to parse verbatim string
-        verbatim_match = VERBATIM_RE.match(self.text[self.index :])
+        verbatim_match: re.Match[str] | None = VERBATIM_RE.match(self.text[self.index :])
         if verbatim_match:
             length = int(verbatim_match.group(1))
             self._consume(len(verbatim_match.group(0)))
@@ -70,13 +69,13 @@ class SExpressionParser:
             return value
 
         # Try to parse hexadecimal string
-        hex_match = HEX_RE.match(self.text[self.index :])
+        hex_match: re.Match[str] | None = HEX_RE.match(self.text[self.index :])
         if hex_match:
             self._consume(len(hex_match.group(0)))
             return bytes.fromhex(hex_match.group(1)).decode("utf-8")
 
         # Try to parse base-64 string
-        base64_match = BASE64_RE.match(self.text[self.index :])
+        base64_match: re.Match[str] | None = BASE64_RE.match(self.text[self.index :])
         if base64_match:
             import base64
 
@@ -84,7 +83,7 @@ class SExpressionParser:
             return base64.b64decode(base64_match.group(1)).decode("utf-8")
 
         # Try to parse token
-        token_match = TOKEN_RE.match(self.text[self.index :])
+        token_match: re.Match[str] | None = TOKEN_RE.match(self.text[self.index :])
         if token_match:
             self._consume(len(token_match.group(0)))
             return token_match.group(0)

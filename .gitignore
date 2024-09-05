@@ -5,6 +5,7 @@
 !.python-version
 !pyproject.toml
 !README.md
+!LICENSE
 !uv.lock
 
 # folders
