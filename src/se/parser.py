@@ -1,4 +1,5 @@
 import re
+import base64
 
 # Define types for S-expression components
 SExpression = str | list["SExpression"]
@@ -25,9 +26,7 @@ class SExpressionParser:
 
     def _peek(self) -> str:
         self._skip_whitespace()
-        if self.index < len(self.text):
-            return self.text[self.index]
-        return ""
+        return self.text[self.index] if self.index < len(self.text) else ""
 
     def _consume(self, length: int) -> str:
         result = self.text[self.index : self.index + length]
@@ -58,10 +57,12 @@ class SExpressionParser:
 
     def _parse_atom(self) -> SExpression:
         self._skip_whitespace()
-        char = self._peek()
+
+        # Cache the substring from current index to the end for efficiency
+        remaining_text = self.text[self.index :]
 
         # Try to parse verbatim string
-        verbatim_match: re.Match[str] | None = VERBATIM_RE.match(self.text[self.index :])
+        verbatim_match: re.Match[str] | None = VERBATIM_RE.match(remaining_text)
         if verbatim_match:
             length = int(verbatim_match.group(1))
             self._consume(len(verbatim_match.group(0)))
@@ -69,27 +70,25 @@ class SExpressionParser:
             return value
 
         # Try to parse hexadecimal string
-        hex_match: re.Match[str] | None = HEX_RE.match(self.text[self.index :])
+        hex_match: re.Match[str] | None = HEX_RE.match(remaining_text)
         if hex_match:
             self._consume(len(hex_match.group(0)))
             return bytes.fromhex(hex_match.group(1)).decode("utf-8")
 
         # Try to parse base-64 string
-        base64_match: re.Match[str] | None = BASE64_RE.match(self.text[self.index :])
+        base64_match: re.Match[str] | None = BASE64_RE.match(remaining_text)
         if base64_match:
-            import base64
-
             self._consume(len(base64_match.group(0)))
             return base64.b64decode(base64_match.group(1)).decode("utf-8")
 
         # Try to parse token
-        token_match: re.Match[str] | None = TOKEN_RE.match(self.text[self.index :])
+        token_match: re.Match[str] | None = TOKEN_RE.match(remaining_text)
         if token_match:
             self._consume(len(token_match.group(0)))
             return token_match.group(0)
 
         # Parse quoted strings
-        if char == '"':
+        if self._peek() == '"':
             return self._parse_quoted_string()
 
         raise ValueError(f"Unknown atom at position {self.index}")
@@ -98,23 +97,26 @@ class SExpressionParser:
         # Consume the opening quote
         self._consume(1)
         result: list[str] = []
-        while self._peek() != '"':
-            if self._peek() == "\\":
+        while (char := self._peek()) != '"':
+            if char == "\\":
                 # Escape sequences
                 self._consume(1)
                 next_char = self._consume(1)
-                if next_char == "n":
-                    result.append("\n")
-                elif next_char == "t":
-                    result.append("\t")
-                elif next_char == "\\":
-                    result.append("\\")
-                elif next_char == '"':
-                    result.append('"')
-                else:
-                    result.append(next_char)
+                result.append(self._handle_escape(next_char))
             else:
                 result.append(self._consume(1))
         # Consume the closing quote
         self._consume(1)
         return "".join(result)
+
+    def _handle_escape(self, next_char: str) -> str:
+        if next_char == "n":
+            return "\n"
+        elif next_char == "t":
+            return "\t"
+        elif next_char == "\\":
+            return "\\"
+        elif next_char == '"':
+            return '"'
+        else:
+            return next_char  # Return literal character if not an escape
