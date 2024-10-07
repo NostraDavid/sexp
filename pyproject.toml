@@ -18,6 +18,7 @@ build-backend = "hatchling.build"
 dev-dependencies = [
     "coverage>=7.6.1",
     "hypothesis>=6.112.4",
+    "pytest-cov>=5.0.0",
     "pytest-mock>=3.14.0",
     "pytest>=8.3.3",
 ]
