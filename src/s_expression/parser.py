@@ -56,7 +56,6 @@ class SExpressionParser:
         Returns:
             The current character at the parser's index.
         """
-        self._skip_whitespace()
         return self.text[self.index] if self.index < len(self.text) else ""
 
     def _consume(self, length: int) -> str:
@@ -319,9 +318,7 @@ class SExpressionParser:
         )
 
         if self._consume(1) != "|":
-            raise ValueError(
-                f"Expected closing '|' for base64 string at position {self.index}"
-            )
+            raise ValueError(f"Expected closing '|' for base64 string at position {self.index}")
 
         try:
             # Try decoding as UTF-8
@@ -350,7 +347,10 @@ class SExpressionParser:
         result: list[str] = []
 
         while True:
-            char = self._peek()
+            if self.index >= len(self.text):
+                raise ValueError("Unterminated quoted string at end of input.")
+
+            char = self.text[self.index]
 
             if char == '"':
                 self._consume(1)  # Consume the closing quote
@@ -358,13 +358,14 @@ class SExpressionParser:
 
             if char == "\\":
                 self._consume(1)  # Consume the backslash
-                next_char = self._peek()
+                next_char = self._consume(1)
                 # Handle specific escape sequences: ", \\, \n, \t
                 if next_char in ['"', "\\", "n", "t", " "]:
-                    result.append(self._handle_escape(self._consume(1)))
+                    result.append(self._handle_escape(next_char))
                 else:
                     # Handle unknown escape sequences as literal characters
                     result.append("\\")
+                    result.append(next_char)
             else:
                 result.append(self._consume(1))
 

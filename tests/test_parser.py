@@ -1,3 +1,4 @@
+import base64
 import pytest
 from s_expression import SExpressionParser
 
@@ -68,6 +69,37 @@ def test_parse_hexadecimal(input_text: str, expected: str):
     assert result == expected
 
 
+def test_empty_hexadecimal_string():
+    """
+    Test _parse_hexadecimal handles an empty hexadecimal string (##) without error.
+    """
+    instance = SExpressionParser(text="##")
+    result = instance._parse_hexadecimal()
+    assert result == ""
+
+
+def test_invalid_hexadecimal_format():
+    """
+    Test _parse_hexadecimal raises ValueError for invalid hexadecimal format (missing closing '#').
+    """
+    instance = SExpressionParser(text="#1f4a9")  # Missing closing '#'
+    with pytest.raises(
+        ValueError, match="Expected closing '#' for hexadecimal string at position "
+    ):
+        instance._parse_hexadecimal()
+
+
+def test_hexadecimal_unicode_decode_error():
+    """
+    Test _parse_hexadecimal handles UnicodeDecodeError by returning raw bytes.
+    """
+    # Hexadecimal encoding of invalid UTF-8 byte sequence
+    invalid_utf8_hex = "fffefd"
+    instance = SExpressionParser(text=f"#{invalid_utf8_hex}#")
+    result = instance._parse_hexadecimal()
+    assert result == b"\xff\xfe\xfd"
+
+
 @pytest.mark.parametrize(
     "input_text, expected",
     [
@@ -82,6 +114,28 @@ def test_parse_base64(input_text: str, expected: str):
     parser = SExpressionParser(input_text)
     result = parser.parse()
     assert result == expected
+
+
+def test_invalid_base64_format():
+    """
+    Test _parse_base64 raises ValueError for invalid base64 format (missing closing '|').
+    """
+    instance = SExpressionParser(text="|SGVsbG8gd29ybGQ")  # Missing closing '|'
+    with pytest.raises(
+        ValueError, match="Expected closing '\|' for base64 string at position "
+    ):
+        instance._parse_base64()
+
+
+def test_base64_unicode_decode_error():
+    """
+    Test _parse_base64 handles UnicodeDecodeError by returning raw bytes.
+    """
+    # Base64 encoding of invalid UTF-8 byte sequence
+    invalid_utf8_base64 = base64.b64encode(b"\xff\xfe\xfd").decode("ascii")
+    instance = SExpressionParser(text=f"|{invalid_utf8_base64}|")
+    result = instance._parse_base64()
+    assert result == b"\xff\xfe\xfd"
 
 
 @pytest.mark.parametrize(
@@ -99,6 +153,14 @@ def test_parse_number_or_verbatim(input_text: str, expected: str):
     result = parser.parse()
     assert result == expected
 
+
+def test_verbatim_string_length_mismatch():
+    """
+    Test _parse_number_or_verbatim raises ValueError if the verbatim string length is incorrect.
+    """
+    instance = SExpressionParser(text="5:abcd")  # Length is 5, but only 4 characters provided
+    with pytest.raises(ValueError, match="Verbatim string length mismatch at position "):
+        instance._parse_number_or_verbatim()
 
 @pytest.mark.parametrize(
     "input_text, expected",
@@ -120,11 +182,11 @@ def test_parse_ignore_comments(input_text: str, expected: list):
     "input_text, expected",
     [
         (
-            r"(foo \"quoted\" bar)",
+            '(foo "quoted" bar)',
             ["foo", "quoted", "bar"],
         ),  # Quoted strings with double quotes
         (
-            r"(foo \"hello \\\\world\" bar)",
+            '(foo "hello \\\\world" bar)',
             ["foo", "hello \\world", "bar"],
         ),  # Properly escaped backslash within quoted string
     ],
@@ -138,13 +200,27 @@ def test_parse_quoted_strings(input_text: str, expected: list):
     assert result == expected
 
 
-def test_parse_quoted_strings2():
+def test_unterminated_quoted_string():
     """
-    E   AssertionError: assert 'helloworld' == 'hello world'
-    E
-    E     - hello world
-    E     ?      -
-    E     + helloworld
+    Test _parse_quoted_string raises ValueError for unterminated quoted string.
+    """
+    instance = SExpressionParser(text='"unterminated')
+    with pytest.raises(ValueError, match="Unterminated quoted string at end of input."):
+        instance._parse_quoted_string()
+
+
+def test_unknown_escape_sequence():
+    """
+    Test _parse_quoted_string handles unknown escape sequences as literal characters.
+    """
+    instance = SExpressionParser(text='"This is a test with \\x escape"')
+    result = instance._parse_quoted_string()
+    assert result == "This is a test with \\x escape"
+
+
+def test_parse_quoted_minimal_strings():
+    """
+    This tiny example was failing.
     """
     parser = SExpressionParser('"a b"')
     result = parser.parse()
@@ -165,3 +241,26 @@ def test_parse_comparison_operators(input_text: str, expected: list):
     parser = SExpressionParser(input_text)
     result = parser.parse()
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    "input_char, expected_output",
+    [
+        ("n", "\n"),
+        ("t", "\t"),
+        ("\\", "\\"),
+        ('"', '"'),
+        (" ", " "),
+        ("a", "a"),  # No special escape, should return itself
+        ("1", "1"),  # No special escape, should return itself
+    ],
+)
+def test_handle_escape(input_char: str, expected_output: str, mocker):
+    """
+    Test _handle_escape with various escape and non-escape characters.
+    """
+    instance = SExpressionParser(
+        text="dummy_text"
+    )  # Replace with the correct class instantiation
+    result = instance._handle_escape(input_char)
+    assert result == expected_output

@@ -1,7 +1,6 @@
 {
     "python.testing.pytestArgs": [
         "-vvvv",
-        "--no-cov",
         "tests/"
     ]
 }
