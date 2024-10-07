@@ -1,5 +1,5 @@
 import argparse
-from se.parser import SExpression, SExpressionParser
+from s_expression.parser import SExpression, SExpressionParser
 
 
 def parse_sexpressions_from_file(file_path: str) -> list[SExpression]:
