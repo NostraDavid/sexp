@@ -1,0 +1,1674 @@
+<?XML333 version="1.0" encoding="utf-8"?>
+<?xml-model href="rfc7991bis.rnc"?>  <!-- Required for schema
+      validation and schema-aware editing -->
+
+<!DOCTYPE rfc [
+  <!ENTITY filename "draft-rivest-sexp-10">
+  <!ENTITY nbsp     "&#160;">
+  <!ENTITY zwsp     "&#8203;">
+  <!ENTITY nbhy     "&#8209;">
+  <!ENTITY wj       "&#8288;">
+]>
+<!-- <?xml-stylesheet type="text/xsl" href="rfc2629.xslt" ?> -->
+<!-- This third-party XSLT can be enabled for direct transformations
+in XML processors, including most browsers -->
+<!-- If further character entities are required then they should be
+added to the DOCTYPE above. Use of an external entity file is not
+recommended. -->
+<?rfc strict="yes" ?>
+<!-- give errors regarding ID-nits and DTD validation -->
+<!-- control the table of contents (ToC) -->
+<?rfc toc="yes"?>
+
+<rfc
+  xmlns:xi="http://www.w3.org/2001/XInclude"
+  category="info"
+  docName="&filename;"
+  ipr="trust200902"
+  obsoletes=""
+  submissionType="IETF"
+  xml:lang="en"
+  version="3">
+<!--
+    * docName should be the name of your draft * category should be
+    one of std, bcp, info, exp, historic * ipr should be one of
+    trust200902, noModificationTrust200902, noDerivativesTrust200902,
+    pre5378Trust200902 * updates can be an RFC number as NNNN *
+    obsoletes can be an RFC number as NNNN
+-->
+
+
+<!-- ____________________FRONT_MATTER____________________ -->
+<front>
+   <title abbrev="SPKI S-Expressions">SPKI S-Expressions</title>
+   <!--  The abbreviated title is required if the full title is
+        longer than 39 characters -->
+
+   <seriesInfo name="Internet-Draft"
+               value="&filename;"/>
+
+      <author fullname="Ronald L. Rivest" initials="R."
+           surname="Rivest">
+     <organization>MIT CSAIL</organization>
+     <address>
+       <postal>
+         <street>32 Vassar Street, Room 32-G692</street>
+         <city>Cambridge</city>
+         <region>Massachusetts</region>
+         <code>02139</code>
+         <country>USA</country>
+       </postal>
+       <email>rivest@mit.edu</email>
+       <uri>https://www.csail.mit.edu/person/ronald-l-rivest</uri>
+     </address>
+   </author>
+
+   <author fullname="Donald E. Eastlake 3rd" initials="D."
+           surname="Eastlake">
+     <organization>Independent</organization>
+     <address>
+       <postal>
+         <street>2386 Panoramic Circle</street>
+         <city>Apopka</city>
+         <region>Florida</region>
+         <code>32703</code>
+         <country>US</country>
+       </postal>
+       <phone>+1-508-333-2270</phone>
+       <email>d3e3e3@gmail.com</email>
+     </address>
+   </author>
+
+   <date year="2024" month="9" day="28"/>
+
+   <area>Applications and Real Time</area>
+   
+<workgroup>Network Working Group</workgroup>
+
+<keyword>Sexp</keyword>
+   <!-- Multiple keywords are allowed.  Keywords are incorporated
+        into HTML output files for use by search engines. -->
+
+<abstract>
+  <t>This memo specifies the data structure representation that was
+  devised in 1996/1997 to support SPKI (RFC 2692) certificates with
+  the intent that it be more widely applicable. It has been and is
+  being used elsewhere. There are multiple implementations in a
+  variety of programming languages. Uses of this representation are
+  referred to in this document as "S-expressions". This memo makes
+  precise the encodings of these SPKI S-expressions: it gives a "canonical
+  form" for them, describes two "transport" representations, and also
+  describe an "advanced" format for display to people.</t>
+</abstract>
+
+</front>
+
+
+<!-- ____________________MIDDLE_MATTER____________________ -->
+<middle>
+
+<section> <!-- 1. -->
+  <name>Introduction</name>
+
+  <t>This memo specifies the data structure representation that was
+  devised in 1996/1997 to support SPKI <xref target="RFC2692"/>
+  certificates with the intent that it be more widely applicable (see
+  <xref target="history"/>, History). It is suitable for representing
+  arbitrary, complex data structures and has been and is being used
+  elsewhere. Uses of this representation herein are referred to as
+  "S-expressions".</t>
+
+  <t>This memo makes precise the encodings of these SPKI
+  S-expressions: it gives a "canonical form" for them, describes two
+  "transport" representations, and also describe an "advanced" format
+  for display to people. There are multiple implementations of
+  S-expressions in a variety of programming languages including Python,
+  Ruby, and C (see <xref target="Code"/>).</t>
+
+  <t>These S-expressions are either byte-strings ("octet-strings") or
+  lists of simpler S-expressions.  Here is a sample S-expression:</t>
+
+<sourcecode>
+    (snicker "abc" (#03# |YWJj|))
+</sourcecode>
+
+<t>It is a list of length three containing the following:</t>
+
+<ul>
+  <li>the octet-string "snicker"</li>
+
+  <li>the octet-string "abc"</li>
+
+  <li>a sub-list containing two elements: the hexadecimal constant
+  #03# (i.e., 0x03) and the base-64 constant |YWJj| (which is the same
+  as "abc")</li>
+</ul>
+
+<t>This document specifies how to construct and use these
+S-expressions.</t>
+
+<t>The design goals for S-expressions were as follows:</t>
+
+<dl>
+
+<dt>generality:</dt><dd>S-expressions should be good at representing
+arbitrary data.</dd>
+
+<dt>readability:</dt><dd>It should be easy for someone to examine and
+understand the structure of an S-expression.</dd>
+
+<dt>economy:</dt><dd>S-expressions should represent data
+compactly.</dd>
+
+<dt>transportability:</dt><dd>S-expressions should be easy to transport
+over communication media (such as email) that are known to be less
+than perfect.</dd>
+
+<dt>flexibility:</dt><dd>S-expressions should make it relatively
+simple to modify and extend data structures.</dd>
+
+<dt>canonicalization:</dt><dd>It should be easy to produce a unique
+"canonical" form of an S-expression, for digital signature
+purposes.</dd>
+
+<dt>efficiency:</dt><dd>S-expressions should admit in-memory
+representations that allow efficient processing.</dd>
+
+</dl>
+
+<t>Implementors of new applications and protocols may wish to consider
+potential alternative representations to SPKI S-expressions such as
+<xref target="XML"/>, CBOR <xref target="RFC8949"/>, or JSON <xref
+target="RFC7159"/>.</t>
+
+<section>  <!-- 1.1 -->
+  <name>Uses of S-Expressions</name>
+
+<t>The S-expressions specified herein are in active use today between
+GnuPG <xref target="GnuPG"/> and Ribose's RNP <xref target="Ribose"/>.
+Ribose has implemented C++ software to compose and parse these
+S-expressions <xref target="RNPGP_SEXPP"/>.  The GNU software is here
+<xref target="Libgcrypt"/> and there are other implementations (see
+<xref target="Code"/>).</t>
+
+<t>They are used or referenced in the following RFCs:</t>
+
+<ul>
+  <li><xref target="RFC2693"/> for <xref target="SPKI"/></li>
+  <li><xref target="RFC3275"/> XML-Signature Syntax and
+  Processing</li>
+</ul>
+
+<t>In addition, S-Expressions are the inspiration for the encodings in
+other protocols. For example, <xref target="RFC3259"/> or Section 6 of
+<xref target="CDDLfreezer"/>.</t>
+
+</section>
+
+<section>
+  <name>Formalization</name>
+
+  <t>An Internet Draft <xref target="formal"/> has been posted showing
+  a formal model of SPKI S-Expressions and which formally demonstrates
+  that the examples and ABNF in this document are correct.</t>
+
+</section>
+
+<section anchor="history">  <!-- 1.3 -->
+  <name>Historical Note</name>
+
+<t>The S-expressions described here were originally developed for
+"SDSI" (the Simple Distributed Security Infrastructure by Lampson and
+Rivest <xref target="SDSI"/>) in 1996, although their origins date
+back to McCarthy's <xref target="LISP"/> programming language.  They
+were further refined and improved during the merger of SDSI and SPKI
+<xref target="SPKI"/> <xref target="RFC2692"/> <xref
+target="RFC2693"/> during the first half of 1997.  S-expressions are
+more readable and flexible than, Bernstein's "net-strings" <xref
+target="BERN"/>, which were developed contemporaneously.</t>
+
+<aside>
+  <t>Although a specification was made publicly available as a file
+  named draft-rivest-sexp-00.txt on 4 May 1997, that file was never
+  actually submitted to the IETF. This document is a clarified and
+  modernized version of that document.</t>
+</aside>
+
+</section>  <!-- 1.3 -->
+
+<section> <!-- 1.4 -->
+  <name>Conventions Used in This Document</name>
+
+<t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+"SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+"OPTIONAL" in this document are to be interpreted as described in BCP
+14 <xref target="RFC2119"/> <xref target="RFC8174"/> when, and only
+when, they appear in all capitals, as shown here.</t>
+
+</section>  <!-- 1.4 -->
+
+</section> <!-- end 1. Introduction -->
+
+<section anchor="Sec2"> <!-- 2. -->
+  <name>S-expressions -- informal introduction</name>
+
+  <t>Informally, an S-expression is either:</t>
+
+<ul spacing="compact">
+  <li>an octet-string, or</li>
+  <li>a finite list of simpler S-expressions.</li>
+</ul>
+
+<t>An octet-string is a finite sequence of eight-bit octets.  There
+may be many different but equivalent ways of representing an
+octet-string</t>
+
+<sourcecode>
+    abc         -- as a token
+    "abc"       -- as a quoted string
+    #616263#    -- as a hexadecimal string
+    3:abc       -- as a length-prefixed "verbatim" encoding
+    |YWJj|      -- as a base-64 encoding of the octet-string
+                     "abc"
+    {MzphYmM=}  -- as a base-64 encoding of the verbatim
+                     encoding (that is, an encoding of "3:abc")
+</sourcecode>
+
+<t>The above encodings are all equivalent in that they all denote the
+same octet-string.</t>
+
+<t>Details of these encodings are given below, and how to give a
+"display type" to a simple-string is also described in <xref
+target="DisplayHint"/>.</t>
+
+<t>A list is a finite sequence of zero or more simpler S-expressions.
+A list is represented by using parentheses to surround the sequence of
+encodings of its elements, as in:</t>
+
+<sourcecode>
+    (abc (de #6667#) "ghi jkl")
+</sourcecode>
+
+<t>As can be seen, there is variability possible in the encoding of an
+S-expression.  In some applications, it is desirable to standardize or
+restrict the encodings; in other cases, it is desirable to have no
+restrictions.  The following are the target cases these S-expressions
+aim to handle:</t>
+
+<ul>
+
+  <li>a "transport" or "basic" encoding for transporting the
+  S-expression between computers.</li>
+
+  <li>a "canonical" encoding, used when signing the
+  S-expression.</li>
+
+  <li>an "advanced" encoding used for input/output to people.</li>
+
+  <li>an "in-memory" encoding used for processing the S-expression
+  in the computer.</li>
+
+</ul>
+
+<t>In this document, related encoding techniques for each of these
+uses are provided.</t>
+
+</section>
+
+<section anchor="Sec3">  <!-- 3. -->
+  <name>Character set</name>
+
+<t>This document specifies encodings of S-expressions.  Except when
+giving "verbatim" encodings, the character set used is limited to the
+following characters in ASCII <xref target="RFC0020"/>:</t>
+
+<dl spacing="compact">
+
+  <dt>Alphabetic:</dt><dd>
+  <sourcecode>
+    A B ... Z a b ... z
+  </sourcecode></dd>
+
+  <dt>Numeric:</dt><dd>
+  <sourcecode>
+    0 1 ... 9
+  </sourcecode></dd>
+
+  <dt>Whitespace:</dt><dd>
+  <sourcecode>
+    space, horizontal tab, vertical tab, form-feed
+    carriage-return, line-feed
+  </sourcecode></dd>
+
+  <dt>The following graphics characters, which are called
+  "pseudo-alphabetic" in this document:</dt><dd/>
+  <dt></dt><dd>
+<sourcecode>
+    -  hyphen or minus
+    .  period
+    /  slash
+    _  underscore
+    :  colon
+    *  asterisk
+    +  plus
+    =  equal
+</sourcecode>
+  </dd>
+
+<dt>The following graphics characters, which are "reserved
+  punctuation":</dt><dd/>
+  <dt></dt><dd>
+<sourcecode> <![CDATA[
+    (  left parenthesis
+    )  right parenthesis
+    [  left bracket
+    ]  right bracket
+    {  left brace
+    }  right brace
+    |  vertical bar
+    #  number sign
+    "  double quote
+    &  ampersand
+    \  backslash
+]]> </sourcecode>
+  </dd>
+
+  <dt>The following characters are unused and unavailable, except in
+        "verbatim" and "quoted string" encodings:</dt><dd/>
+  <dt></dt><dd>
+<sourcecode> <![CDATA[
+    !  exclamation point
+    %  percent
+    ^  circumflex
+    ~  tilde
+    ;  semicolon
+    '  apostrophe
+    ,  comma
+    <  less than
+    >  greater than
+    ?  question mark
+]]> </sourcecode>
+  </dd>
+
+</dl>
+
+</section> <!-- 3 -->
+
+<section anchor="Sec4">  <!-- 4. -->
+  <name>Octet-string representation types</name>
+
+<t>This section describes in detail the ways in which an octet-string may
+be represented.</t>
+
+<t>Recall that an octet-string is any finite sequence of octets, and
+that the octet-string may have length zero.</t>
+
+  <section>  <!-- 4.1 -->
+    <name>Verbatim representation</name>
+
+<t>A verbatim encoding of an octet-string consists of three parts:</t>
+
+<ul>
+
+  <li>the length (number of octets) of the octet-string, given in
+  decimal, most significant digit first, with no leading zeros.</li>
+
+  <li>a colon ":"</li>
+
+  <li>the octet-string itself, verbatim.</li>
+
+</ul>
+
+<t>There are no blanks or whitespace separating the parts.  No "escape
+sequences" are interpreted in the octet-string.  This encoding is also
+called a "binary" or "raw" encoding.</t>
+
+<t>Here are some sample verbatim encodings:</t>
+
+<sourcecode>
+    3:abc
+    7:subject
+    4:::::
+    12:hello world!
+    10:abcdefghij
+    0:
+</sourcecode>
+
+</section> <!-- 4.1 -->
+
+<section>  <!-- 4.2 -->
+  <name>Quoted-string representation</name>
+
+<t>The quoted-string representation of an octet-string consists of:</t>
+
+<ul>
+
+  <li>an optional decimal length field</li>
+
+  <li>an initial double-quote (")</li>
+
+  <li>the octet-string with the "C" programming language <xref
+  target="C"/> escape conventions (\n, etc.)</li>
+
+  <li>a final double-quote (")</li>
+
+</ul>
+
+<t>The specified length is the length of the resulting string after
+any backslash escape sequences have been converted to the octet value
+they denote.  The string does not have any "terminating NULL" that
+<xref target="C"/> includes, and the length does not count such an
+octet.</t>
+
+<t>The length is optional.</t>
+
+<t>The escape conventions within the quoted string are as follows
+(these follow the "C" <xref target="C"/> programming language
+conventions, with an extension for ignoring line terminators of just
+CR, LF, CRLF, or LFCR and more restrictive octal and hexadecimal value
+formats):</t>
+
+<sourcecode>
+    \a     -- audible alert (bell)
+    \b     -- backspace
+    \t     -- horizontal tab
+    \v     -- vertical tab
+    \n     -- new-line
+    \f     -- form-feed
+    \r     -- carriage-return
+    \"     -- double-quote
+    \'     -- single-quote
+    \?     -- question mark
+    \\     -- back-slash
+    \ooo   -- character with octal value ooo (all three
+              digits MUST be present)
+    \xhh   -- character with hexadecimal value hh (both
+              digits MUST be present)
+    \&lt;carriage-return&gt;   -- causes carriage-return
+              to be ignored.
+    \&lt;line-feed&gt;         -- causes linefeed to be
+              ignored.
+    \&lt;carriage-return&gt;&lt;line-feed&gt;   -- causes
+              CRLF to be ignored.
+    \&lt;line-feed&gt;&lt;carriage-return&gt;   -- causes
+              LFCR to be ignored.
+</sourcecode>
+
+<t>Here are some examples of quoted-string encodings:</t>
+
+<sourcecode>
+    "subject"
+    "hi there"
+    7"subject"
+    "\xFE is the same octet as \376"
+    3"\n\n\n"
+    "This has\n two lines."
+    "This has \
+     one line."
+    ""
+</sourcecode>
+
+</section> <!-- 4.2 -->
+
+<section anchor="token"> <!-- 4.3 -->
+  <name>Token representation</name>
+
+<t>An octet-string that meets the following conditions may be given
+directly as a "token":</t>
+
+<ul>
+  <li>it does not begin with a digit;</li>
+
+  <li>it contains only characters that are: alphabetic (upper or lower
+  case), numeric, or one of the following eight "pseudo-alphabetic" punctuation
+  marks: &nbsp;- &nbsp;. &nbsp;/ &nbsp;_ &nbsp;: &nbsp;* &nbsp;+ &nbsp;=</li>
+
+  <li>it is length 1 or greater.</li>
+</ul>
+
+<t>Note: Upper and lower case are not equivalent.
+A token may begin with punctuation, including ":".</t>
+
+<t>Here are some examples of token representations:</t>
+
+<sourcecode>
+    subject
+    not-before
+    :=..
+    class-of-1997
+    //microsoft.com/names/smith
+    *
+</sourcecode>
+
+</section>  <!-- 4.3 -->
+
+<section>  <!-- 4.4 -->
+  <name>Hexadecimal representation</name>
+
+<t>An octet-string may be represented with a hexadecimal encoding
+consisting of:</t>
+
+<ul>
+
+  <li>an (optional) decimal length of the octet-string</li>
+
+  <li>a  sharp-sign "#"</li>
+
+  <li>a hexadecimal encoding of the octet-string, with each octet
+  represented with two hexadecimal digits, most significant digit
+  first. There MUST be an even number of such digits.</li>
+
+  <li>a sharp-sign "#"</li>
+
+</ul>
+
+<t>There may be whitespace inserted in the midst of the hexadecimal
+encoding arbitrarily; it is ignored.  It is an error to have
+characters other than whitespace and hexadecimal digits.</t>
+
+<t>Here are some examples of hexadecimal encodings:</t>
+
+<sourcecode>
+    #616263#    -- represents "abc"
+    3#616263#   -- also represents "abc"
+    # 616
+      263 #     -- also represents "abc"
+    ##          -- represents the zero-length string
+</sourcecode>
+
+</section>  <!-- 4.4 -->
+
+<section anchor="base64string">  <!-- 4.5 -->
+  <name>Base-64 representation of octet-strings</name>
+
+<t>An octet-string may be represented in a base-64 encoding <xref
+target="RFC4648"/> consisting of:</t>
+
+<ul>
+<li>an (optional) decimal length of the octet-string</li>
+
+<li>a vertical bar "|"</li>
+
+<li>the base-64 <xref target="RFC4648"/> encoding of the octet
+string.</li>
+
+<li>a final vertical bar "|"</li>
+</ul>
+
+<t>Base-64 encoding produces four characters of output for each three
+octets of input.  If the length of the input divided by three leaves a
+remainder of one or two, it produces an output block of length four
+ending in two or one equals signs, respectively.  These equals signs
+MUST be included on output but input routines MAY accept inputs where
+one or two equals signs are dropped.</t>
+
+<t>Whitespace inserted in the midst of the base-64 encoding is
+ignored.  It is an error to have characters other than whitespace and
+base-64 characters.</t>
+
+<t>Here are some examples of base-64 encodings:</t>
+
+<sourcecode>
+    |YWJj|       -- represents "abc"
+    | Y W
+      J j |      -- also represents "abc"
+    3|YWJj|      -- also represents "abc"
+    |YWJjZA==|   -- represents "abcd"
+    |YWJjZA|     -- also represents "abcd"
+    ||           -- represents the zero-length string
+</sourcecode>
+
+<t>Note the difference between this base-64 encoding of an
+octet-string using vertical bars ("| |") and the base-64 encoding of
+an S-expression using curly braces ("{ }") in <xref
+target="base64sexp"/>.</t>
+
+</section>  <!-- 4.5 -->
+
+<section anchor="DisplayHint">  <!-- 4.6 -->
+  <name>Display-hint</name>
+
+<t>The purposes of a display-hint is to provide information on how
+to display an octet-string to a user.  It has no other function.
+Many of the MIME <xref target="RFC2046"/> types work here.</t>
+
+<t>A display-hint is an octet-string representation surrounded by
+square brackets.  There may be whitespace separating the display hint
+octet-string from the surrounding brackets.  Any of the legal
+octet-string representations may be used for the display-hint string
+but a display-hint may not be applied to a display-hint string, that
+is, display-hints may not be nested.</t>
+
+<t>Every octet-string representation is either preceded by a single
+display-hint or not so preceded. There may be white space between
+the close square bracket and the octet-string to which the hint
+applies.</t>
+
+<t>Here are some examples of display-hints:</t>
+
+<sourcecode>
+    [image/gif]
+    [charset=unicode-1-1]
+    [  text/richtext  ]
+    ["text/plain; charset=iso-8859-1"]
+    [application/postscript]
+    [application/octet-stream]
+    [audio/basic]
+    ["http://example.com/display-types/funky.html"]
+</sourcecode>
+
+<t>An octet-string that has no display-hint may be considered to have
+a MIME <xref target="RFC2046"/> type specified by the application or
+use. In the absence of such a specification, the default is as
+follows:</t>
+
+<sourcecode>
+    "text/plain; charset=iso-8859-1"
+</sourcecode>
+
+<t>When an S-Expression is being encoded in one of the representations
+described in <xref target="Represent"/>, any display-hint present is
+included.  If a display-hint is the default, it is not suppressed nor
+is the default display-hint included in the representation for an
+octet-string without a display-hint.</t>
+
+</section> <!-- 4.6 -->
+
+<section>  <!-- 4.7 -->
+  <name>Comparison of octet-strings</name>
+
+<t>It is RECOMMENDED that two octet-strings be considered equivalent
+for most computational and algorithmic purposes if and only if they
+have the same display-hint and the same data octet-strings. However, a
+particular application might need a different criterion. For example,
+it might ignore the display hint on comparisons.</t>
+
+<t>Note that octet-strings are "case-sensitive"; the octet-string
+"abc" is not equal to the octet-string "ABC".</t>
+
+<t>An octet-string without a display-hint may be compared to another
+octet-string (with or without a display hint) by considering it as an
+octet-string with the default display-hint specified for the
+applications or, in the absence of such specification, the general
+default display-hint specified in <xref target="DisplayHint"/> .</t>
+
+</section>  <!-- 4.7 -->
+
+</section>  <!-- 4. -->
+
+<section anchor="Sec5"> <!-- 5. -->
+  <name>Lists</name>
+
+<t>Just as with octet-strings, there are variations in representing a
+list. Whitespace may be used to separate list elements, but they are
+only required to separate two octet-strings when otherwise the two
+octet-strings might be interpreted as one, as when one token follows
+another. To be precise, an octet-string represented as a token (<xref
+target="token"/>) MUST be separated by white space from a following
+token, verbatim representation, or any of the following if they are
+prefixed with a length: quoted-string, hexadecimal, or base-64
+representation. Also, whitespace may follow the initial left
+parenthesis, or precede the final right parenthesis of a list.</t>
+
+<t>Here are some examples of encodings of lists:</t>
+
+<sourcecode>
+    (a bob c)
+
+    ( a ( bob c ) ( ( d e ) ( e f ) )  )
+
+    (11:certificate(6:issuer3:bob)(7:subject5:alice))
+
+    ({ODpFeGFtcGxlIQ==} "1997" murphy 3:XC+)
+
+    ()
+</sourcecode>
+
+</section>
+
+<section anchor="Represent">  <!-- 6. -->
+  <name>S-expression representation types</name>
+
+<t>There are three "types" of representation: </t>
+
+<ul>
+<li>canonical</li>
+
+<li>basic transport</li>
+
+<li>advanced transport</li>
+</ul>
+
+<t>The first two MUST be supported by any implementation; the last is
+OPTIONAL. As part of both basic and advanced transport representations,
+the base-64 <xref target="RFC4648"/> representation of an S-expression
+may be used as described in <xref target="base64sexp"/>.</t>
+
+<section anchor="base64sexp">
+  <name>Base-64 representation of S-expressions</name>
+  
+<t>An S-expression may be represented in a base-64 encoding <xref
+target="RFC4648"/> consisting of:</t>
+
+<ul>
+<li>an opening curly brace "{"</li>
+
+<li>the base-64 <xref target="RFC4648"/> encoding of the
+S-expression.</li>
+
+<li>a final closing curly brace "}"</li>
+</ul>
+
+<t>Base-64 encoding produces four characters of output for each three
+octets of input.  If the length of the input divided by three leaves a
+remainder of one or two, it produces an output block of length four
+ending in two or one equals signs, respectively.  These equals signs
+MUST be included on output but input routines MAY accept inputs where
+one or two equals signs are dropped.</t>
+
+<t>Whitespace inserted in the midst of the base-64 encoding, after the
+opening curly brace, or before the closing curly brace is ignored.  It
+is an error to have characters other than whitespace and base-64
+characters.</t>
+
+<t>Note the difference between this base-64 encoding of an
+S-expression using curly braces ("{ }") and the base-64 encoding of an
+octet-string using vertical bars ("| |") in <xref
+target="base64string"/>.</t>
+
+</section>
+
+<section anchor="canonical">
+  <name>Canonical representation</name>
+
+<t>This canonical representation is used for digital signature
+purposes and transport over channels not sensitive to specific octet
+values.  It is uniquely defined for each S-expression.  It is not
+particularly readable, but that is not the point.  It is intended to
+be very easy to parse, to be reasonably economical, and to be unique
+for any S-expression. (See <xref target="CANON"/>.)</t>
+
+<t>The &quot;canonical&quot; form of an S-expression represents each
+octet-string in verbatim mode, and represents each list with no blanks
+separating elements from each other or from the surrounding
+parentheses (see also <xref target="ABNFc"/>).</t>
+
+<t>Here are some examples of canonical representations of
+S-expressions:</t>
+
+<sourcecode>
+    (6:issuer3:bob)
+    (4:icon[12:image/bitmap]9:xxxxxxxxx)
+    (7:subject(3:ref5:alice6:mother))
+    10:foo)]}>bar
+    0:
+</sourcecode>
+
+</section>
+
+<section>
+  <name>Basic transport representation</name>
+
+<t>There are two forms of the "basic transport" representation:</t>
+
+<ul>
+  <li>the canonical representation</li>
+
+  <li>an <xref target="RFC4648"/> base-64 representation of the
+  canonical representation, surrounded by braces (see <xref
+  target="base64sexp"/>).</li>
+</ul>
+
+<t>The basic transport representations (see <xref target="ABNFb"/>)
+are intended to provide a universal means of representing
+S-expressions for transport from one machine to another. The base-64
+encoding would be appropriate if the channel over which the
+S-expression is being sent might be sensitive to octets of some
+special values, such as an octet of all zero bits (NULL) or an octet
+of all one bits (DEL), or the channel is sensitive to "line length"
+such that occasional line terminating white space is needed.</t>
+
+<t>Here are two examples of an S-expression represented in basic
+transport mode:</t>
+
+<sourcecode>
+  (1:a1:b1:c)
+
+  {KDE6YTE6YjE
+     6YykK }
+</sourcecode>
+
+<t>The second example above is the same S-expression as the first
+encoded in base-64.</t>
+
+</section>
+
+<section>
+  <name>Advanced transport representation</name>
+
+<t>The "advanced transport" representation is intended to provide more
+flexible and readable notations for documentation, design, debugging,
+and (in some cases) user interface.</t>
+
+<t>The advanced transport representation allows all of the
+octet-string representation forms described above in Section 4: quoted
+strings, base-64, hexadecimal, tokens, representations of strings with
+omitted lengths, and so on. It also allows use of the base-64
+representation of S-expressions. (See <xref target="ABNFa"/>).</t>
+
+</section>
+
+</section>  <!-- 6. -->
+
+<section anchor="ABNF">  <!-- 7. -->
+  <name>ABNF of the syntax</name>
+
+<t>ABNF is the Augmented Backus-Naur Form for syntax specifications as
+defined in <xref target="RFC5234"/>. The ABNF for advanced
+representation of S-expressions is given first and the basic and
+canonical forms derived therefrom.  The rule names below in all caps
+are defined in Appendix B.1 of <xref target="RFC5234"/>.</t>
+
+<section anchor="ABNFa">
+  <name>ABNF for advanced transport</name>
+
+<sourcecode type="ABNF"> <![CDATA[
+   sexp           =  *whitespace value *whitespace
+
+   whitespace     =  SP / HTAB / vtab / CR / LF / ff
+
+   vtab           =  %x0B   ; vertical tab
+
+   ff             =  %x0C   ; form feed
+
+   value          =  string / ("(" *(value / whitespace) ")")
+
+   string         =  [display] *whitespace simple-string
+
+   display        =  "[" *whitespace display-string *whitespace "]"
+
+   display-string  =  verbatim / quoted-string / token / hexadecimal
+                      / base-64 
+
+   verbatim       =  decimal ":" *OCTET
+                       ; the length followed by a colon and the exact
+                       ; number of OCTETs indicated by the length
+
+   decimal        =  %x30 / (%x31-39 *DIGIT)
+
+   quoted-string  =  [decimal] DQUOTE *(printable / escaped) DQUOTE
+
+   printable      =  %x20-21 / %x23-5B / %x5D-7E
+                       ; All US-ASCII printable but double-quote and
+                       ; backslash 
+
+   escaped        =  backslash (%x3F / %x61 / %x62 / %x66 / %x6E /
+                     %x72 / %x74 / %x76 / DQUOTE / quote / backslash
+                     / 3(%x30-37) / (%x78 2HEXDIG) / CR / LF /
+                     (CR LF) / (LF CR))
+
+   backslash      =  %x5C
+
+   quote          =  %x27   ; single quote
+
+   token          =  (ALPHA / simple-punc) *(ALPHA / DIGIT /
+                        simple-punc)
+
+   simple-punc    =  "-" / "." / "/" / "_" / ":" / "*" / "+" / "="
+
+   hexadecimal    =  [decimal] "#" *whitespace *hexadecimals "#"
+
+   hexadecimals   =  2(HEXDIG *whitespace)
+
+   base-64        =  [decimal] "|" *whitespace *base-64-chars
+                        [base-64-end] "|"
+
+   base-64-chars  =  4(base-64-char *whitespace)
+
+   base-64-char   =  ALPHA / DIGIT / "+" / "/"
+
+   base-64-end    =  base-64-chars /
+                     3(base-64-char *whitespace) ["=" *whitespace] /
+                     2(base-64-char *whitespace) *2("=" *whitespace)
+
+   simple-string  =  verbatim / quoted-string / token / hexadecimal /
+                     base-64 / base-64-raw 
+
+   base-64-raw    =  "{" *whitespace *base-64-char base-64-end "}"
+                       ; encodes an sexp, which has a minimum
+                       ; length of 2
+]]> </sourcecode>
+
+</section>
+
+<section anchor="ABNFc">
+  <name>ABNF for canonical</name>
+
+<sourcecode type="ABNF"> <![CDATA[
+   c-sexp         =  c-string / ("(" *c-sexp ")")
+
+   c-string       =  [ "[" verbatim "]" ] verbatim
+]]> </sourcecode>
+
+</section>
+<section anchor="ABNFb">
+  <name>ABNF for basic transport</name>
+
+<sourcecode type="ABNF"> <![CDATA[
+   b-sexp         =  c-sexp / b-base-64
+
+   b-base-64      =  "{" *(4base-64-chars) base-64-end "}"
+                       ; encodes a c-sexp, which has a minimum
+                       ; length of 2
+]]> </sourcecode>
+
+</section>
+
+</section>  <!-- 7. -->
+
+<section>  <!-- 8. -->
+  <name>Restricted S-expressions</name>
+
+<t>This document has described S-expressions in general form.
+Applications may wish to restrict their use of S-expressions in
+various ways as well as to specify a different default display-hint.
+Here are some possible restrictions that might be considered:</t>
+
+<ul>
+
+<li>no advanced representations (only canonical and basic)</li>
+<li>no display-hints</li>
+<li>no lengths on hexadecimal, quoted-strings, or base-64 encodings</li>
+<li>no empty lists</li>
+<li>no empty octet-strings</li>
+<li>no lists having another list as its first element</li>
+<li>no base-64 or hexadecimal encodings</li>
+<li>fixed limits on the size of octet-strings</li>
+</ul>
+
+<t>As provided in <xref target="Represent"/>, conformant
+implementations will support canonical and basic representation but
+support for advanced representation is not generally required. Thus
+advanced representation can only be used in applications which mandate
+its support or where a capability discovery mechanism indicates
+support.</t>
+
+</section>
+
+<section anchor="Sec8">  <!-- 9. -->
+  <name>In-memory representations</name>
+
+<t>For processing, the S-expression would typically be parsed and
+represented in memory in a way that is more amenable to efficient
+processing.  This document suggests two alternatives:</t>
+
+<ul>
+<li>"list-structure"</li>
+
+<li>"array-layout"</li>
+</ul>
+
+<t>These are only sketched here, as they are only suggestive. The
+<xref target="SexpCode"/> code illustrates these styles in more
+detail.</t>
+
+<section>  <!-- 9.1 -->
+  <name>List-structure memory representation</name>
+
+<t>Here there are separate records for simple-strings, strings, and
+lists or list nodes.  An S-expression of the form ("abc" "de") could
+be encoded as two records for the simple-strings, two for the strings,
+and two for the list elements, where a record is a relatively small
+block of memory and, except for simple-string, might have pointers in
+it to other records. This is a fairly conventional representation as
+discussed in Section 4 of <xref target="LISP2"/>.</t>
+
+</section>
+
+<section>  <!-- 9.2 -->
+  <name>Array-layout memory representation</name>
+
+<t>Here each S-expression is represented as a contiguous array of octets.
+The first octet codes the "type" of the S-expression:</t>
+
+<sourcecode>
+    01   octet-string
+
+    02   octet-string with display-hint
+
+    03   beginning of list (and 00 is used for "end of list")
+</sourcecode>
+
+<t>Each of the three types is immediately followed by a k-octet integer
+indicating the size (in octets) of the following representation.  Here
+k is an integer that depends on the implementation, it might be
+anywhere from 2 to 8, but would be fixed for a given implementation;
+it determines the size of the objects that can be handled.  The
+transport and canonical representations are independent of the choice
+of k made by the implementation.</t>
+
+<t>Although the lengths of lists are not given in the usual
+S-expression notations, it is easy to fill them in when parsing; when
+you reach a right-parenthesis you know how long the list
+representation was, and where to go back to fill in the missing
+length.</t>
+
+<section>  <!-- 9.2.1 -->
+  <name>Octet-string</name>
+
+<t>This is represented as follows:</t>
+
+<sourcecode> <![CDATA[
+    01 <length> <octet-string>
+]]> </sourcecode>
+
+<t>For example (here k = 2)</t>
+
+<sourcecode>
+    01 0003 a b c
+</sourcecode>
+
+</section>
+
+<section>  <!-- 9.2.2 -->
+  <name>Octet-string with display-hint</name>
+
+<t>This is represented as follows:</t>
+
+<sourcecode> <![CDATA[
+    02 <length>
+      01 <length> <octet-string>    /* for display-type */
+      01 <length> <octet-string>    /* for octet-string */
+]]> </sourcecode>
+
+<t>For example, the S-expression </t>
+
+<sourcecode>
+    [gif] #61626364#
+</sourcecode>
+
+<t>would be represented as (with k = 2)</t>
+
+<sourcecode>
+    02 000d
+      01 0003  g  i  f
+      01 0004 61 62 63 64
+</sourcecode>
+
+</section>
+
+<section>  <!-- 9.2.3 -->
+  <name>List</name>
+
+<t>This is represented as</t>
+
+<sourcecode> <![CDATA[
+    03 <length> <item1> <item2> <item3> ... <item> 00
+]]> </sourcecode>
+
+<t>For example, the list (abc [d]ef (g)) is represented in memory as
+(with k = 2)</t>
+
+<sourcecode>
+    03 001b
+      01 0003 a b c
+      02 0009
+        01 0001 d
+        01 0002 e f
+      03 0005
+        01 0001 g
+      00
+    00
+</sourcecode>
+
+</section>
+</section>  <!-- 9.2 -->
+</section>  <!-- 9. -->
+
+<section anchor="Sec10">  <!-- 10. -->
+  <name>Security Considerations</name>
+
+<t>As a pure data representation format, there are few security
+considerations to S-expressions. A canonical form is required for the
+consistent creation and verification of digital signatures. This is
+provided in <xref target="canonical"/>.</t>
+
+<t>The default display-hint (see <xref target="DisplayHint"/>) can be
+specified for an application. Note that if S-expressions containing
+untyped octet-strings represented for that application are processed
+by a different application, those untyped octet-string may be treated
+as if they had a different display-hint.</t>
+
+</section>  <!-- 10. -->
+
+<section anchor="Sec12">  <!-- 11. -->
+  <name>IANA Considerations</name>
+
+  <t>This document requires no IANA actions.</t>
+
+</section>  <!-- 11. -->
+
+</middle>
+
+
+<!-- ____________________BACK_MATTER____________________ -->
+<back>
+
+<references>
+  <name>Normative References</name>
+
+
+<reference anchor="C">
+  <front>
+    <title>The C Programming Language</title>
+    <author surname="Kernighan" initials="B."
+            fullname="Brian W. Kernighan"/>
+    <author surname="Ritchie" initials="D."
+            fullname="Dennis M. Ritchie"/>
+    <date year="1988"/>
+  </front>
+  <seriesInfo name="ISBN" value="0-13-110370-9"/>
+</reference>
+
+<xi:include
+    href="https://www.rfc-editor.org/refs/bibxml/reference.RFC.0020.xml"/>
+<xi:include
+    href="https://www.rfc-editor.org/refs/bibxml/reference.RFC.2119.xml"/>
+<xi:include
+    href="https://www.rfc-editor.org/refs/bibxml/reference.RFC.4648.xml"/>
+<xi:include
+    href="https://www.rfc-editor.org/refs/bibxml/reference.RFC.5234.xml"/>
+<xi:include
+    href="https://www.rfc-editor.org/refs/bibxml/reference.RFC.8174.xml"/>
+
+</references>
+
+<references>
+  <name>Informative References</name>
+
+<reference anchor="BERN"
+target="https://www.ietf.org/archive/id/draft-bernstein-netstrings-02.txt">
+  <front>
+    <title>Netstrings</title>
+    <author surname="Bernstein" initials="D."
+            fullname="Daniel J. Bernstein"/>
+    <date year="1997" month="2" day="1"/>
+  </front>
+  <seriesInfo name="Work in" value="progress"/>
+</reference>
+
+<referencegroup anchor="CANON">
+<reference anchor="CANON2"
+target="https://en.wikipedia.org/wiki/Canonical_S-expressions">
+  <front>
+    <title>Canonical S-expressions</title>
+    <author surname="Wikipedia" fullname="Wikipedia"/>
+  </front>
+</reference>
+<reference anchor="CANON3"
+           target="https://github.com/ocaml-dune/csexp">
+  <front>
+    <title>Csexp - Canonical S-expressions</title>
+    <author surname="Grinberg" initials="R."
+            fullname="Rudi Grinberg"/>
+    <date year="2023" month="3" day="24"/>
+  </front>
+</reference>
+</referencegroup>
+
+<reference anchor="CDDLfreezer"
+target="https://datatracker.ietf.org/doc/draft-bormann-cbor-cddl-freezer/">
+  <front>
+    <title>A feature freezer for the Concise Data Definition Language
+    (CDDL)</title>
+    <author surname="Bormann" initials="C."
+            fullname="Carsten Bormann">
+      <organization>Universität Bremen TZI</organization>
+    </author>
+    <date year="2023" month="9" day="12"/>
+  </front>
+  <seriesInfo name="work" value="in progress"/>
+</reference>
+
+<reference anchor="formal"
+	   target="https://datatracker.ietf.org/doc/html/draft-petithuguenin-ufmrg-formal-sexpr-04">
+  <front>
+    <title>A Formalization of Symbolic Expressions</title>
+    <author fullname="Marc Petit-Huguenin"
+	    surname="Petit-Huguenin" initials="M.">
+      <organization>Impedance Mismatch LLC</organization>
+    </author>
+    <date year="2024" month="05" day="24"/>
+  </front>
+  <seriesInfo name="work" value="in progress"/>
+</reference>
+
+<reference anchor="GnuPG"
+           target="https://www.gnupg.org/">
+  <front>
+    <title>The GNU Privacy Guard</title>
+    <author>
+      <organization>Free Software Foundation, Inc.</organization>
+    </author>
+  </front>
+</reference>
+
+<reference anchor="Inferno"
+           target="http://man.cat-v.org/inferno/6/sexprs">
+  <front>
+    <title>Inferno S-expressions</title>
+    <author surname="Uriel" fullname="Uriel">
+      <organization>Random Contrarian Insurgent
+      Organization</organization>
+    </author>
+  </front>
+</reference>
+
+<reference anchor="Libgcrypt"
+           target="https://www.gnupg.org/documentation/manuals/gcrypt/">
+  <front>
+    <title>The Libgcrypt Library</title>
+    <author>
+      <organization>GnuPG</organization>
+    </author>
+    <date year="2023" month="4" day="6"/>
+  </front>
+  <seriesInfo name="Libgcrypt version" value="1.10.2"/>
+</reference>
+
+<reference anchor="LISP">
+  <front>
+    <title>LISP 1.5 Programmer's Manual</title>
+    <author surname="Levin" initials="M."
+            fullname="Michael I. Levin">
+      <organization>The Computer Center and Research Laboratory of
+      Electronics, Massachusetts Institute of
+      Technology</organization> 
+    </author>
+    <author surname="McCarthy" initials="J."
+            fullname="John McCarthy"/>
+    <date year="1962" month="August" day="15"/>
+  </front>
+  <seriesInfo name="ISBN-13" value="978-0-262-12011-0"/>
+  <seriesInfo name="ISBN-10" value="0262130114"/>
+</reference>
+
+<reference anchor="LISP2"
+target="https://people.cs.umass.edu/~emery/classes/cmpsci691st/readings/PL/LISP.pdf">
+  <front>
+    <title>Recursive Functions of Symbolic Expressions and Their
+    Computation by Machine, Part I</title>
+    <author surname="McCarthy" initials="J."
+            fullname="John McCarthy">
+      <organization>Massachusetts Institute of
+      Technology</organization>
+    </author>
+    <date year="1960" month="April"/>
+  </front>
+</reference>
+
+<xi:include
+    href="https://www.rfc-editor.org/refs/bibxml/reference.RFC.2046.xml"/>
+<xi:include
+    href="https://www.rfc-editor.org/refs/bibxml/reference.RFC.2692.xml"/>
+<xi:include
+    href="https://www.rfc-editor.org/refs/bibxml/reference.RFC.2693.xml"/>
+<xi:include
+    href="https://www.rfc-editor.org/refs/bibxml/reference.RFC.3259.xml"/>
+<xi:include
+    href="https://www.rfc-editor.org/refs/bibxml/reference.RFC.3275.xml"/>
+<xi:include
+    href="https://www.rfc-editor.org/refs/bibxml/reference.RFC.7159.xml"/>
+<xi:include
+    href="https://www.rfc-editor.org/refs/bibxml/reference.RFC.8949.xml"/>
+
+<reference anchor="Ribose"
+           target="https://open.ribose.com/">
+  <front>
+    <title>Open-source projects for developers and designers</title>
+    <author>
+      <organization>Ribose Group Inc.</organization>
+    </author>
+    <date year="2023" month="April" day="13"/>
+  </front>
+</reference>
+
+<reference anchor="RNPGP_SEXPP"
+           target="https://github.com/rnpgp/sexpp">
+  <front>
+    <title>S-Expressions parser and generator library in C++ (SEXP in
+    C++)</title>
+    <author surname="Ribose"
+            fullname="Ribose RNP"/>
+    <date year="2023" month="6" day="28"/>
+  </front>
+  <seriesInfo name="version" value="0.8.7"/>
+</reference>
+
+<reference anchor="SDSI"
+  target="https://people.csail.mit.edu/rivest/pubs/RL96.ver-1.1.html">
+  <front>
+    <title>A Simple Distributed Security Architecture</title>
+    <author surname="Rivest" initials="R."
+            fullname="Ronald L. Rivest"/>
+    <author surname="Lampson" initials="B."
+            fullname="Butler Lampson"/>
+    <date year="1996" month="October" day="2"/>
+  </front>
+  <seriesInfo name="working" value="document"/>
+  <seriesInfo name="SDSI version" value="1.1"/>
+</reference>
+
+<reference anchor="SexpCode"
+           target="https://github.com/jpmalkiewicz/rivest-sexp">
+  <front>
+    <title>SEXP---(S-expressions)</title>
+    <author surname="Malkiewicz" initials="J."
+            fullname="J. P. Malkiewicz"/>
+    <date year="2015" month="6" day="10"/>
+  </front>
+</reference>
+
+<reference anchor="SEXPP"
+           target="https://github.com/seattlerb/sexp_processor">
+  <front>
+    <title>SexpProcessor</title>
+    <author surname="Davis" initials="R."
+            fullname="Ryan &quot;zenspider&quot; Davis"/>
+    <date year="2015" month="6" day="10"/>
+  </front>
+</reference>
+
+<reference anchor="SFEXP"
+           target="https://github.com/mjsottile/sfsexp">
+  <front>
+    <title>Small Fast X-Expression Library</title>
+    <author surname="Sottile" initials="M."
+            fullname="Matthew Sottile"/>
+    <date year="2023" month="3" day="24"/>
+  </front>
+</reference>
+
+<reference anchor="SPKI"
+target="https://people.csail.mit.edu/rivest/pubs/RL96.slides-maryland.pdf">
+  <front>
+    <title>SPKI/SDSI 2.0 A Simple Distributed Security
+    Infrastructure</title>
+    <author surname="Rivest" initials="R."
+            fullname="Ronald L. Rivest">
+      <organization>MIT Lab for Computer Science</organization>
+    </author>
+  </front>
+</reference>
+
+<reference anchor="XML"
+target="https://www.w3.org/TR/REC-xml/">
+  <front>
+    <title>Extensible Markup Language (XML) 1.0</title>
+    <author surname="Bray" initials="T."
+            fullname="Tim Bray">
+      <organization>Textuality and Netscape</organization>
+    </author>
+    <author surname="Paoli" initials="J."
+            fullname="Jean Paoli">
+      <organization>Microsoft</organization>
+    </author>
+    <author surname="Sperberg-McQueen" initials="C.M."
+            fullname="C. M. Sperberg-McQueen">
+      <organization>W3C</organization>
+    </author>
+    <author surname="Maler" initials="E."
+            fullname="Eve Maler">
+      <organization>Sun Microsystems</organization>
+    </author>
+    <author surname="Yergeau" initials="F."
+            fullname="François Yergeau"/>
+    <date year="2008" month="11" day="26"/>
+  </front>
+</reference>
+
+</references>
+
+<section anchor="Code">  <!-- Appendix A -->
+  <name>Implementations</name>
+
+<t>At this time there are multiple implementations, many open source,
+available that are intended to read and parse some or all of the
+various S-expression formats specified here. In particular, see the
+following likely incomplete list:</t>
+
+<ul>
+  <li>Project GNU's <xref target="Libgcrypt"/>.</li>
+  <li>Ribose's RNP <xref target="RNPGP_SEXPP"/> in C++.</li>
+  <li>Github project of J. P. Malkiewicz <xref
+  target="SexpCode"/> in C.</li>
+  <li>The Inferno implementation <xref target="Inferno"/>.</li>
+  <li>Small Fast X-Expression Library <xref target="SFEXP"/>.</li>
+  <li>S-expression Processor <xref target="SEXPP"/> in Ruby.</li>
+  <li>Canonical S-expressions <xref target="CANON"/> (OCAML).</li>
+</ul>
+
+</section>  <!-- Appendix A -->
+
+<section>  <!-- Appendix B -->
+  <name>Change History</name>
+  
+<t>RFC Editor Note: Please delete this section before publication.</t>
+
+  <section>
+    <name>-00 Changes</name>
+
+<t>This sub-section summarizes significant changes between the
+original 1997 -00 version of this document and the 2023 -00 version
+submitted to the IETF.</t>
+
+<ol>
+  <li>Convert to XML v3.</li>
+  
+  <li>Update Ron Rivest author information and, with his permission,
+  add Donald Eastlake as an author.</li>
+  
+  <li>Add minimal "IANA Considerations" and "Security
+  Considerations" sections.</li>
+
+  <li>Since implementation requirements terminology is used, add the
+  usual paragraph about it as a sub-section of Section 1 and add
+  references to <xref target="RFC2119"/> and <xref
+  target="RFC8174"/>.</li> 
+  
+  <li>Divide references into Normative and Informational and update
+  base-64 reference to be to <xref target="RFC4648"/>.</li>
+
+  <li>Add a couple of sentences to the "Historical note" section about
+  the history of -00 versions of the draft.</li>
+</ol>
+
+  </section>  <!-- -00 -->
+
+  <section>
+    <name>Changes from -00 to -01</name>
+
+<ol>
+  <li>Fix glitches and errors in the BNF.</li>
+
+  <li>Add Acknowledgements section to list Marc Petit-Huguenin (who
+  provided BNF improvements) and John Klensin.</li>
+  
+  <li>Update code references in <xref target="Code"/> and add to
+  Informative References section. Note: The code
+  in the Malkiewicz github repository may be the code that was
+  originally at http://theory.lcs.mit.edu/~rivest/sexp.html </li>
+
+  <li>Add this Change History Appendix.</li>
+
+  <li>Move "Historical Notes" which were formerly a separate section
+  at the end of the document up to be a sub-section of Section 1.</li>
+
+  <li>Add references to <xref target="LISP"/>, <xref
+  target="RFC2692"/>, and <xref target="RFC2693"/>.</li>
+
+  <li>Add simple security considerations.</li>
+  
+  <li>Minor editorial fixes/improvements.</li>
+</ol>
+
+  </section>
+
+  <section>
+    <name>Changes from -01 to -02</name>
+
+<ol>
+  <li>Change default MIME Type in <xref target="DisplayHint"/> to have
+  charset=utf-8 <xref target="RFC4648"/>.</li>
+  <li>Change BNF to ABNF and add reference to <xref
+  target="RFC5234"/>.</li>
+  <li>Move Marc Petit-Huguenin to a Contributors section for his work
+  on the ABNF.</li>
+</ol>
+
+  </section>
+
+  <section>
+    <name>Changes from -02 to -03</name>
+
+<ol>
+  <li>Add current S-expression usage Section 1.2.</li>
+  <li>Add the white book <xref target="C"/> as a reference.</li>
+  <li>Add reference to the Ribose RNP code <xref
+  target="RNPGP_SEXPP"/>.</li>
+  <li>Minor editorial improvements.</li>
+</ol>
+
+  </section>
+  
+  <section>
+    <name>Changes from -03 to -04</name>
+
+<t>Trivial keep-alive update.</t>
+
+  </section>
+
+  <section>
+    <name>Changes from -04 to -05</name>
+
+<ol>
+  <li>Add reference to <xref target="Inferno"/> implementation.</li>
+  <li>Eliminate remaining references to being a "proposal".</li>
+  <li>Emphasize that a particular application can specify a different
+  default display-hint.</li>
+  <li>Add reference to <xref target="RFC0020"/> for ASCII.</li>
+  <li>Minor editorial improvements.</li>
+</ol>
+
+  </section>
+
+  <section>
+    <name>Changes from -05 to -06</name>
+
+<ol>
+  <li>Move implementations list to Appendix A. Add numerous
+  implementations.</li>
+  <li>Change default display-hint to "application/octet-stream".</li>
+  <li>Expand Abstract and include most of Abstract in the
+  Introduction.</li>
+  <li>Use different tokens for the top-level rule in the three ABNF
+  encodings so that the rules would not collide if all were used. Fix
+  ABNF for "printable".</li>
+  <li>Add an illustration of list-structure memory
+  representation.</li>
+  <li>Editorial improvements.</li>
+</ol>
+
+  </section>
+
+  <section>
+    <name>Changes from -06 to -07</name>
+
+<ol>
+  <li>Re-order some top-level sections.</li>
+  <li>Replace "list-structure" memory figure with explanation and
+  <xref target="LISP2"/> reference.</li>
+  <li>Re-organize ABNF to give full ABNF for advanced transport first
+  and then mostly derive canonical and basic from advanced.</li>
+  <li>Correct reference to <xref target="RFC5234"/> to be to Appendix
+  B.1, not Appendix A.</li>
+  <li>Attempt to clarify the difference between canonicalization and
+  equality.</li>
+  <li>Add the explicit <xref target="base64sexp"/> on base-64
+  representation of S-expressions.</li>
+  <li>Globally hyphenate "octet-string" and "display-hint", generally
+  replace "byte" with "octet".</li>
+  <li>Add some more examples here and there.</li>
+  <li>Fix typos. Other editorial improvements.</li>
+</ol>
+
+  </section>
+
+  <section>
+    <name>Changes from -07 to -08</name>
+
+<ol>
+  <li>A variety of minor fixes and more precise wording.</li>
+  <li>Give exact circumstances under which a space is needed to
+  separate successive octet-string representations in a list.</li>
+  <li>Additional editorial improvements.</li>
+</ol>
+
+  </section>
+
+  <section>
+    <name>Changes from -08 to -09</name>
+
+<ol>
+  <li>Add mention of and reference to <xref target="formal"/>.</li>
+  <li>Add mention in the text that white space can appear just after
+  the opening curly brace and before just before the closing curly
+  brace of base-64 encoding (the ABNF was correct).</li>
+  <li>Minor editorial improvements.</li>
+</ol>
+
+  </section>
+
+  <section>
+    <name>Changes from -09 to -10</name>
+
+<ol>
+  <li>Revert default display hint to more closely follow the original
+  SPKI S-expressions.</li>
+  <li>Editorial improvements.</li>
+</ol>
+
+  </section>
+
+</section>  <!-- Appendix B -->
+
+<section anchor="Acknowledgements" numbered="false">
+  <name>Acknowledgements</name>
+
+  <t>Special thanks to Daniel K. Gillmore for his extensive
+  comments.</t>
+  
+  <t>The comments and suggestions of the following are gratefully
+  acknowledged: John Klensin and Caleb Malchik.</t>
+
+</section>
+
+<section anchor="Contributors" numbered="false">
+  <name>Contributors</name>
+  
+  <t>Special thanks to Marc Petit-Huguenin, particularly for his
+  extensive work and advice on the ABNF and on locating and fixing
+  unclear parts of earlier versions of this document:</t>
+  
+  <contact fullname="Marc Petit-Huguenin" initials="M."
+           surname="Petit-Huguenin"> 
+    <organization>Impedance Mismatch LLC</organization>
+    <address>
+      <email>marc@petit-huguenin.org</email>
+    </address>
+  </contact>
+</section>
+
+</back>
+
+</rfc>
