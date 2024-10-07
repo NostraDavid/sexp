@@ -144,6 +144,10 @@ class SExpressionParser:
         self._skip_whitespace()
         char = self._peek()
 
+        # Handle quoted strings
+        if char == '"':
+            return self._parse_quoted_string()
+
         # Handle single quote (') for quoted expressions
         if char == "'":
             return self._parse_quoted_expression()
@@ -172,10 +176,7 @@ class SExpressionParser:
         if char.isalnum() or char in "./_*+=-?":
             return self._parse_token()
 
-        # Parse quoted strings
-        if char == '"':
-            return self._parse_quoted_string()
-
+        # If none of the cases match, raise an error
         raise ValueError(f"Unknown atom at position {self.index}: '{char}'")
 
     def _parse_comparison_operator(self) -> str:
@@ -224,7 +225,9 @@ class SExpressionParser:
             self._consume(1)  # Consume 'f'
             return False
         else:
-            raise ValueError(f"Invalid boolean literal at position {self.index}: expected #t or #f.")
+            raise ValueError(
+                f"Invalid boolean literal at position {self.index}: expected #t or #f."
+            )
 
     def _parse_quoted_expression(self) -> SExpression:
         """
@@ -345,15 +348,26 @@ class SExpressionParser:
         """
         self._consume(1)  # Consume the opening quote
         result: list[str] = []
-        while (char := self._peek()) != '"':
+
+        while True:
+            char = self._peek()
+
+            if char == '"':
+                self._consume(1)  # Consume the closing quote
+                break
+
             if char == "\\":
-                # Escape sequences
-                self._consume(1)
-                next_char = self._consume(1)
-                result.append(self._handle_escape(next_char))
+                self._consume(1)  # Consume the backslash
+                next_char = self._peek()
+                # Handle specific escape sequences: ", \\, \n, \t
+                if next_char in ['"', "\\", "n", "t", " "]:
+                    result.append(self._handle_escape(self._consume(1)))
+                else:
+                    # Handle unknown escape sequences as literal characters
+                    result.append("\\")
             else:
                 result.append(self._consume(1))
-        self._consume(1)  # Consume the closing quote
+
         return "".join(result)
 
     def _handle_escape(self, next_char: str) -> str:
@@ -375,5 +389,7 @@ class SExpressionParser:
                 return "\\"
             case '"':
                 return '"'
+            case " ":
+                return " "
             case _:
                 return next_char  # Return literal character if not an escape
