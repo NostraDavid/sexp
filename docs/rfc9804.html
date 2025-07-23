@@ -1,44 +1,47 @@
+
 <!DOCTYPE html>
-<html lang="en" class="Internet-Draft">
+<html lang="en" class="RFC">
 <head>
 <meta charset="utf-8">
 <meta content="Common,Latin" name="scripts">
 <meta content="initial-scale=1.0" name="viewport">
-<title>SPKI S-Expressions</title>
+<title>RFC 9804: Simple Public Key Infrastructure (SPKI) S-Expressions</title>
 <meta content="Ronald L. Rivest" name="author">
 <meta content="Donald E. Eastlake 3rd" name="author">
 <meta content='
        This memo specifies the data structure representation that was
-  devised in 1996/1997 to support SPKI (RFC 2692) certificates with
-  the intent that it be more widely applicable. It has been and is
-  being used elsewhere. There are multiple implementations in a
-  variety of programming languages. Uses of this representation are
-  referred to in this document as "S-expressions". This memo makes
-  precise the encodings of these SPKI S-expressions: it gives a "canonical
-  form" for them, describes two "transport" representations, and also
-  describe an "advanced" format for display to people. 
+  devised to support Simple Public Key Infrastructure (SPKI)
+  certificates, as detailed in RFC 2692, with the intent that it be more widely
+  applicable. It has been and is being used elsewhere. There are
+  multiple implementations in a variety of programming languages. Uses
+  of this representation are referred to in this document as
+  "S-expressions".  This memo makes precise the encodings of these
+  SPKI S-expressions: It gives a "canonical form" for them, describes
+  two "transport" representations, and also describes an "advanced"
+  format for display to people. 
     ' name="description">
-<meta content="xml2rfc 3.23.1" name="generator">
+<meta content="xml2rfc 3.29.0" name="generator">
 <meta content="Sexp" name="keyword">
-<meta content="draft-rivest-sexp-10" name="ietf.draft">
+<meta content="Sexpression" name="keyword">
+<meta content="S-expression" name="keyword">
+<meta content="9804" name="rfc.number">
 <!-- Generator version information:
-  xml2rfc 3.23.1
-    Python 3.9.20
-    ConfigArgParse 1.7
-    google-i18n-address 3.1.1
+  xml2rfc 3.29.0
+    Python 3.9.15
+    ConfigArgParse 1.5.3
+    google-i18n-address 3.0.0
     intervaltree 3.1.0
-    Jinja2 3.1.4
-    lxml 4.9.4
-    platformdirs 4.3.6
-    pycountry 24.6.1
-    pydyf 0.9.0
-    PyYAML 6.0.2
-    requests 2.32.3
-    setuptools 58.1.0
-    wcwidth 0.2.13
-    weasyprint 61.2
+    Jinja2 3.1.2
+    lxml 5.3.0
+    platformdirs 3.8.0
+    pycountry 22.3.5
+    PyYAML 6.0
+    requests 2.28.0
+    setuptools 44.1.1
+    wcwidth 0.2.5
+    weasyprint 65.0
 -->
-<link href="/a/www/www6s/staging/draft-rivest-sexp-10.xml" rel="alternate" type="application/rfc+xml">
+<link href="rfc9804.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
 <style type="text/css">/*
 
@@ -169,6 +172,12 @@ div {
 }
 svg {
   display: block;
+}
+@media print {
+  svg {
+    max-height: 850px;
+    max-width: 660px;
+  }
 }
 svg[font-family~="serif" i], svg [font-family~="serif" i] {
   font-family: var(--font-serif);
@@ -413,7 +422,7 @@ hr {
 /* Fix PDF info block run off issue */
 @media print {
   #identifiers dd {
-    float: none;
+    max-width: 100%;
   }
 }
 #identifiers .authors .author {
@@ -732,24 +741,23 @@ hr.addr {
   string-set: ears-bottom-right content();
 }
 */
-/* @page :first {
-    margin-top: 0;
 
-    @top-left {
-        content: none;
-        border: none;
-    }
+@page :first {
+  padding-top: 0;
+  @top-left {
+    content: normal;
+    border: none;
+  }
+  @top-center {
+    content: normal;
+    border: none;
+  }
+  @top-right {
+    content: normal;
+    border: none;
+  }
+}
 
-    @top-center {
-        content: none;
-        border: none;
-    }
-
-    @top-right {
-        content: none;
-        border: none;
-    }
-} */
 @page {
   size: A4;
   margin-bottom: 45mm;
@@ -1214,37 +1222,39 @@ li > p:last-of-type:only-child {
 }
 </style>
 <link href="rfc-local.css" rel="stylesheet" type="text/css">
-<script type="application/javascript">async function addMetadata(){try{const e=document.styleSheets[0].cssRules;for(let t=0;t<e.length;t++)if(/#identifiers/.exec(e[t].selectorText)){const a=e[t].cssText.replace("#identifiers","#external-updates");document.styleSheets[0].insertRule(a,document.styleSheets[0].cssRules.length)}}catch(e){console.log(e)}const e=document.getElementById("external-metadata");if(e)try{var t,a="",o=function(e){const t=document.getElementsByTagName("meta");for(let a=0;a<t.length;a++)if(t[a].getAttribute("name")===e)return t[a].getAttribute("content");return""}("rfc.number");if(o){t="https://www.rfc-editor.org/rfc/rfc"+o+".json";try{const e=await fetch(t);a=await e.json()}catch(e){t=document.URL.indexOf("html")>=0?document.URL.replace(/html$/,"json"):document.URL+".json";const o=await fetch(t);a=await o.json()}}if(!a)return;e.style.display="block";const s="",d="https://datatracker.ietf.org/doc",n="https://datatracker.ietf.org/ipr/search",c="https://www.rfc-editor.org/info",l=a.doc_id.toLowerCase(),i=a.doc_id.slice(0,3).toLowerCase(),f=a.doc_id.slice(3).replace(/^0+/,""),u={status:"Status",obsoletes:"Obsoletes",obsoleted_by:"Obsoleted By",updates:"Updates",updated_by:"Updated By",see_also:"See Also",errata_url:"Errata"};let h="<dl style='overflow:hidden' id='external-updates'>";["status","obsoletes","obsoleted_by","updates","updated_by","see_also","errata_url"].forEach(e=>{if("status"==e){a[e]=a[e].toLowerCase();var t=a[e].split(" "),o=t.length,w="",p=1;for(let e=0;e<o;e++)p<o?w=w+r(t[e])+" ":w+=r(t[e]),p++;a[e]=w}else if("obsoletes"==e||"obsoleted_by"==e||"updates"==e||"updated_by"==e){var g,m="",b=1;g=a[e].length;for(let t=0;t<g;t++)a[e][t]&&(a[e][t]=String(a[e][t]).toLowerCase(),m=b<g?m+"<a href='"+s+"/rfc/".concat(a[e][t])+"'>"+a[e][t].slice(3)+"</a>, ":m+"<a href='"+s+"/rfc/".concat(a[e][t])+"'>"+a[e][t].slice(3)+"</a>",b++);a[e]=m}else if("see_also"==e){var y,L="",C=1;y=a[e].length;for(let t=0;t<y;t++)if(a[e][t]){a[e][t]=String(a[e][t]);var _=a[e][t].slice(0,3),v=a[e][t].slice(3).replace(/^0+/,"");L=C<y?"RFC"!=_?L+"<a href='"+s+"/info/"+_.toLowerCase().concat(v.toLowerCase())+"'>"+_+" "+v+"</a>, ":L+"<a href='"+s+"/info/"+_.toLowerCase().concat(v.toLowerCase())+"'>"+v+"</a>, ":"RFC"!=_?L+"<a href='"+s+"/info/"+_.toLowerCase().concat(v.toLowerCase())+"'>"+_+" "+v+"</a>":L+"<a href='"+s+"/info/"+_.toLowerCase().concat(v.toLowerCase())+"'>"+v+"</a>",C++}a[e]=L}else if("errata_url"==e){var R="";R=a[e]?R+"<a href='"+a[e]+"'>Errata exist</a> | <a href='"+d+"/"+l+"'>Datatracker</a>| <a href='"+n+"/?"+i+"="+f+"&submit="+i+"'>IPR</a> | <a href='"+c+"/"+l+"'>Info page</a>":"<a href='"+d+"/"+l+"'>Datatracker</a> | <a href='"+n+"/?"+i+"="+f+"&submit="+i+"'>IPR</a> | <a href='"+c+"/"+l+"'>Info page</a>",a[e]=R}""!=a[e]?"Errata"==u[e]?h+=`<dt>More info:</dt><dd>${a[e]}</dd>`:h+=`<dt>${u[e]}:</dt><dd>${a[e]}</dd>`:"Errata"==u[e]&&(h+=`<dt>More info:</dt><dd>${a[e]}</dd>`)}),h+="</dl>",e.innerHTML=h}catch(e){console.log(e)}else console.log("Could not locate metadata <div> element");function r(e){return e.charAt(0).toUpperCase()+e.slice(1)}}window.removeEventListener("load",addMetadata),window.addEventListener("load",addMetadata);</script>
-</head>
+<link href="https://datatracker.ietf.org/doc/draft-rivest-sexp-13" rel="prev">
+  <link href="https://dx.doi.org/10.17487/rfc9804" rel="alternate">
+  <link href="urn:issn:2070-1721" rel="alternate">
+  </head>
 <body class="xml2rfc">
-<script src="metadata.min.js"></script>
+<script src="https://www.rfc-editor.org/js/metadata.min.js"></script>
 <table class="ears">
 <thead><tr>
-<td class="left">Internet-Draft</td>
+<td class="left">RFC 9804</td>
 <td class="center">SPKI S-Expressions</td>
-<td class="right">September 2024</td>
+<td class="right">June 2025</td>
 </tr></thead>
 <tfoot><tr>
-<td class="left">Rivest &amp; Eastlake</td>
-<td class="center">Expires 1 April 2025</td>
+<td class="left">Rivest &amp; Eastlake 3rd</td>
+<td class="center">Informational</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
 <div id="external-metadata" class="document-information"></div>
 <div id="internal-metadata" class="document-information">
 <dl id="identifiers">
-<dt class="label-workgroup">Workgroup:</dt>
-<dd class="workgroup">Network Working Group</dd>
-<dt class="label-internet-draft">Internet-Draft:</dt>
-<dd class="internet-draft">draft-rivest-sexp-10</dd>
+<dt class="label-stream">Stream:</dt>
+<dd class="stream">Internet Engineering Task Force (IETF)</dd>
+<dt class="label-rfc">RFC:</dt>
+<dd class="rfc"><a href="https://www.rfc-editor.org/rfc/rfc9804" class="eref">9804</a></dd>
+<dt class="label-category">Category:</dt>
+<dd class="category">Informational</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-09-28" class="published">28 September 2024</time>
+<time datetime="2025-06" class="published">June 2025</time>
     </dd>
-<dt class="label-intended-status">Intended Status:</dt>
-<dd class="intended-status">Informational</dd>
-<dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-04-01">1 April 2025</time></dd>
+<dt class="label-issn">ISSN:</dt>
+<dd class="issn">2070-1721</dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1252,24 +1262,26 @@ li > p:last-of-type:only-child {
 <div class="org">MIT CSAIL</div>
 </div>
 <div class="author">
-      <div class="author-name">D. Eastlake</div>
+      <div class="author-name">D. Eastlake 3rd</div>
 <div class="org">Independent</div>
 </div>
 </dd>
 </dl>
 </div>
-<h1 id="title">SPKI S-Expressions</h1>
+<h1 id="rfcnum">RFC 9804</h1>
+<h1 id="title">Simple Public Key Infrastructure (SPKI) S-Expressions</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
 <p id="section-abstract-1">This memo specifies the data structure representation that was
-  devised in 1996/1997 to support SPKI (RFC 2692) certificates with
-  the intent that it be more widely applicable. It has been and is
-  being used elsewhere. There are multiple implementations in a
-  variety of programming languages. Uses of this representation are
-  referred to in this document as "S-expressions". This memo makes
-  precise the encodings of these SPKI S-expressions: it gives a "canonical
-  form" for them, describes two "transport" representations, and also
-  describe an "advanced" format for display to people.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+  devised to support Simple Public Key Infrastructure (SPKI)
+  certificates, as detailed in RFC 2692, with the intent that it be more widely
+  applicable. It has been and is being used elsewhere. There are
+  multiple implementations in a variety of programming languages. Uses
+  of this representation are referred to in this document as
+  "S-expressions".  This memo makes precise the encodings of these
+  SPKI S-expressions: It gives a "canonical form" for them, describes
+  two "transport" representations, and also describes an "advanced"
+  format for display to people.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <div id="status-of-memo">
 <section id="section-boilerplate.1">
@@ -1277,20 +1289,19 @@ li > p:last-of-type:only-child {
 <a href="#name-status-of-this-memo" class="section-name selfRef">Status of This Memo</a>
         </h2>
 <p id="section-boilerplate.1-1">
-        This Internet-Draft is submitted in full conformance with the
-        provisions of BCP 78 and BCP 79.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
+            This document is not an Internet Standards Track specification; it is
+            published for informational purposes.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-2">
-        Internet-Drafts are working documents of the Internet Engineering Task
-        Force (IETF). Note that other groups may also distribute working
-        documents as Internet-Drafts. The list of current Internet-Drafts is
-        at <span><a href="https://datatracker.ietf.org/drafts/current/">https://datatracker.ietf.org/drafts/current/</a></span>.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
+            This document is a product of the Internet Engineering Task Force
+            (IETF).  It represents the consensus of the IETF community.  It has
+            received public review and has been approved for publication by the
+            Internet Engineering Steering Group (IESG).  Not all documents
+            approved by the IESG are candidates for any level of Internet
+            Standard; see Section 2 of RFC 7841.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-3">
-        Internet-Drafts are draft documents valid for a maximum of six months
-        and may be updated, replaced, or obsoleted by other documents at any
-        time. It is inappropriate to use Internet-Drafts as reference
-        material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
-<p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 1 April 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+            Information about the current status of this document, any
+            errata, and how to provide feedback on it may be obtained at
+            <span><a href="https://www.rfc-editor.org/info/rfc9804">https://www.rfc-editor.org/info/rfc9804</a></span>.<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1299,7 +1310,7 @@ li > p:last-of-type:only-child {
 <a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
         </h2>
 <p id="section-boilerplate.2-1">
-            Copyright (c) 2024 IETF Trust and the persons identified as the
+            Copyright (c) 2025 IETF Trust and the persons identified as the
             document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.2-2">
             This document is subject to BCP 78 and the IETF Trust's Legal
@@ -1337,34 +1348,34 @@ li > p:last-of-type:only-child {
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
-            <p id="section-toc.1-1.2.1"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-s-expressions-informal-intr" class="internal xref">S-expressions -- informal introduction</a></p>
+            <p id="section-toc.1-1.2.1"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-s-expressions-informal-intr" class="internal xref">S-expressions -- Informal Introduction</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
-            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-character-set" class="internal xref">Character set</a></p>
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-character-set" class="internal xref">Character Set</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
-            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-octet-string-representation" class="internal xref">Octet-string representation types</a></p>
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-octet-string-representation" class="internal xref">Octet-String Representation Types</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
-                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-verbatim-representation" class="internal xref">Verbatim representation</a></p>
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-verbatim-representation" class="internal xref">Verbatim Representation</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
-                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-quoted-string-representatio" class="internal xref">Quoted-string representation</a></p>
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-quoted-string-representatio" class="internal xref">Quoted-String Representation</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3">
-                <p id="section-toc.1-1.4.2.3.1"><a href="#section-4.3" class="auto internal xref">4.3</a>.  <a href="#name-token-representation" class="internal xref">Token representation</a></p>
+                <p id="section-toc.1-1.4.2.3.1"><a href="#section-4.3" class="auto internal xref">4.3</a>.  <a href="#name-token-representation" class="internal xref">Token Representation</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.4">
-                <p id="section-toc.1-1.4.2.4.1"><a href="#section-4.4" class="auto internal xref">4.4</a>.  <a href="#name-hexadecimal-representation" class="internal xref">Hexadecimal representation</a></p>
+                <p id="section-toc.1-1.4.2.4.1"><a href="#section-4.4" class="auto internal xref">4.4</a>.  <a href="#name-hexadecimal-representation" class="internal xref">Hexadecimal Representation</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.5">
-                <p id="section-toc.1-1.4.2.5.1"><a href="#section-4.5" class="auto internal xref">4.5</a>.  <a href="#name-base-64-representation-of-o" class="internal xref">Base-64 representation of octet-strings</a></p>
+                <p id="section-toc.1-1.4.2.5.1"><a href="#section-4.5" class="auto internal xref">4.5</a>.  <a href="#name-base-64-representation-of-o" class="internal xref">Base-64 Representation of Octet-Strings</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.6">
-                <p id="section-toc.1-1.4.2.6.1"><a href="#section-4.6" class="auto internal xref">4.6</a>.  <a href="#name-display-hint" class="internal xref">Display-hint</a></p>
+                <p id="section-toc.1-1.4.2.6.1"><a href="#section-4.6" class="auto internal xref">4.6</a>.  <a href="#name-display-hints-and-internati" class="internal xref">Display-Hints and Internationalization</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.7">
-                <p id="section-toc.1-1.4.2.7.1"><a href="#section-4.7" class="auto internal xref">4.7</a>.  <a href="#name-comparison-of-octet-strings" class="internal xref">Comparison of octet-strings</a></p>
+                <p id="section-toc.1-1.4.2.7.1"><a href="#section-4.7" class="auto internal xref">4.7</a>.  <a href="#name-comparison-of-octet-strings" class="internal xref">Comparison of Octet-Strings</a></p>
 </li>
             </ul>
 </li>
@@ -1372,53 +1383,53 @@ li > p:last-of-type:only-child {
             <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-lists" class="internal xref">Lists</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-s-expression-representation" class="internal xref">S-expression representation types</a></p>
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-s-expression-representation" class="internal xref">S-Expression Representation Types</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
-                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-base-64-representation-of-s" class="internal xref">Base-64 representation of S-expressions</a></p>
+                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-base-64-representation-of-s" class="internal xref">Base-64 Representation of S-Expressions</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
-                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-canonical-representation" class="internal xref">Canonical representation</a></p>
+                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-canonical-representation" class="internal xref">Canonical Representation</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.3">
-                <p id="section-toc.1-1.6.2.3.1"><a href="#section-6.3" class="auto internal xref">6.3</a>.  <a href="#name-basic-transport-representat" class="internal xref">Basic transport representation</a></p>
+                <p id="section-toc.1-1.6.2.3.1"><a href="#section-6.3" class="auto internal xref">6.3</a>.  <a href="#name-basic-transport-representat" class="internal xref">Basic Transport Representation</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.4">
-                <p id="section-toc.1-1.6.2.4.1"><a href="#section-6.4" class="auto internal xref">6.4</a>.  <a href="#name-advanced-transport-represen" class="internal xref">Advanced transport representation</a></p>
+                <p id="section-toc.1-1.6.2.4.1"><a href="#section-6.4" class="auto internal xref">6.4</a>.  <a href="#name-advanced-transport-represen" class="internal xref">Advanced Transport Representation</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
-            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-abnf-of-the-syntax" class="internal xref">ABNF of the syntax</a></p>
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-abnf-of-the-syntax" class="internal xref">ABNF of the Syntax</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1">
-                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-abnf-for-advanced-transport" class="internal xref">ABNF for advanced transport</a></p>
+                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-abnf-for-advanced-transport" class="internal xref">ABNF for Advanced Transport</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.2">
-                <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-abnf-for-canonical" class="internal xref">ABNF for canonical</a></p>
+                <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-abnf-for-canonical" class="internal xref">ABNF for Canonical</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3">
-                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-abnf-for-basic-transport" class="internal xref">ABNF for basic transport</a></p>
+                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-abnf-for-basic-transport" class="internal xref">ABNF for Basic Transport</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
-            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-restricted-s-expressions" class="internal xref">Restricted S-expressions</a></p>
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-restricted-s-expressions" class="internal xref">Restricted S-Expressions</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
-            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-in-memory-representations" class="internal xref">In-memory representations</a></p>
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-in-memory-representations" class="internal xref">In-Memory Representations</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1">
-                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="auto internal xref">9.1</a>.  <a href="#name-list-structure-memory-repre" class="internal xref">List-structure memory representation</a></p>
+                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="auto internal xref">9.1</a>.  <a href="#name-list-structure-memory-repre" class="internal xref">List-Structure Memory Representation</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.2">
-                <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="auto internal xref">9.2</a>.  <a href="#name-array-layout-memory-represe" class="internal xref">Array-layout memory representation</a></p>
+                <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="auto internal xref">9.2</a>.  <a href="#name-array-layout-memory-represe" class="internal xref">Array-Layout Memory Representation</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.2.2.1">
-                    <p id="section-toc.1-1.9.2.2.2.1.1"><a href="#section-9.2.1" class="auto internal xref">9.2.1</a>.  <a href="#name-octet-string" class="internal xref">Octet-string</a></p>
+                    <p id="section-toc.1-1.9.2.2.2.1.1"><a href="#section-9.2.1" class="auto internal xref">9.2.1</a>.  <a href="#name-octet-string" class="internal xref">Octet-String</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.2.2.2">
-                    <p id="section-toc.1-1.9.2.2.2.2.1"><a href="#section-9.2.2" class="auto internal xref">9.2.2</a>.  <a href="#name-octet-string-with-display-h" class="internal xref">Octet-string with display-hint</a></p>
+                    <p id="section-toc.1-1.9.2.2.2.2.1"><a href="#section-9.2.2" class="auto internal xref">9.2.2</a>.  <a href="#name-octet-string-with-display-h" class="internal xref">Octet-String with Display-Hint</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.2.2.3">
                     <p id="section-toc.1-1.9.2.2.2.3.1"><a href="#section-9.2.3" class="auto internal xref">9.2.3</a>.  <a href="#name-list" class="internal xref">List</a></p>
@@ -1434,60 +1445,27 @@ li > p:last-of-type:only-child {
             <p id="section-toc.1-1.11.1"><a href="#section-11" class="auto internal xref">11</a>. <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12">
-            <p id="section-toc.1-1.12.1"><a href="#section-12" class="auto internal xref">12</a>. <a href="#name-normative-references" class="internal xref">Normative References</a></p>
-</li>
-          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13">
-            <p id="section-toc.1-1.13.1"><a href="#section-13" class="auto internal xref">13</a>. <a href="#name-informative-references" class="internal xref">Informative References</a></p>
-</li>
-          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.14">
-            <p id="section-toc.1-1.14.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-implementations" class="internal xref">Implementations</a></p>
-</li>
-          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15">
-            <p id="section-toc.1-1.15.1"><a href="#appendix-B" class="auto internal xref">Appendix B</a>.  <a href="#name-change-history" class="internal xref">Change History</a></p>
+            <p id="section-toc.1-1.12.1"><a href="#section-12" class="auto internal xref">12</a>. <a href="#name-references" class="internal xref">References</a></p>
 <ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.1">
-                <p id="section-toc.1-1.15.2.1.1"><a href="#appendix-B.1" class="auto internal xref">B.1</a>.  <a href="#name-00-changes" class="internal xref">-00 Changes</a></p>
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.1">
+                <p id="section-toc.1-1.12.2.1.1"><a href="#section-12.1" class="auto internal xref">12.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
 </li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.2">
-                <p id="section-toc.1-1.15.2.2.1"><a href="#appendix-B.2" class="auto internal xref">B.2</a>.  <a href="#name-changes-from-00-to-01" class="internal xref">Changes from -00 to -01</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.3">
-                <p id="section-toc.1-1.15.2.3.1"><a href="#appendix-B.3" class="auto internal xref">B.3</a>.  <a href="#name-changes-from-01-to-02" class="internal xref">Changes from -01 to -02</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.4">
-                <p id="section-toc.1-1.15.2.4.1"><a href="#appendix-B.4" class="auto internal xref">B.4</a>.  <a href="#name-changes-from-02-to-03" class="internal xref">Changes from -02 to -03</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.5">
-                <p id="section-toc.1-1.15.2.5.1"><a href="#appendix-B.5" class="auto internal xref">B.5</a>.  <a href="#name-changes-from-03-to-04" class="internal xref">Changes from -03 to -04</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.6">
-                <p id="section-toc.1-1.15.2.6.1"><a href="#appendix-B.6" class="auto internal xref">B.6</a>.  <a href="#name-changes-from-04-to-05" class="internal xref">Changes from -04 to -05</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.7">
-                <p id="section-toc.1-1.15.2.7.1"><a href="#appendix-B.7" class="auto internal xref">B.7</a>.  <a href="#name-changes-from-05-to-06" class="internal xref">Changes from -05 to -06</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.8">
-                <p id="section-toc.1-1.15.2.8.1"><a href="#appendix-B.8" class="auto internal xref">B.8</a>.  <a href="#name-changes-from-06-to-07" class="internal xref">Changes from -06 to -07</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.9">
-                <p id="section-toc.1-1.15.2.9.1"><a href="#appendix-B.9" class="auto internal xref">B.9</a>.  <a href="#name-changes-from-07-to-08" class="internal xref">Changes from -07 to -08</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.10">
-                <p id="section-toc.1-1.15.2.10.1"><a href="#appendix-B.10" class="auto internal xref">B.10</a>. <a href="#name-changes-from-08-to-09" class="internal xref">Changes from -08 to -09</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15.2.11">
-                <p id="section-toc.1-1.15.2.11.1"><a href="#appendix-B.11" class="auto internal xref">B.11</a>. <a href="#name-changes-from-09-to-10" class="internal xref">Changes from -09 to -10</a></p>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.2">
+                <p id="section-toc.1-1.12.2.2.1"><a href="#section-12.2" class="auto internal xref">12.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
 </li>
             </ul>
 </li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13">
+            <p id="section-toc.1-1.13.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-implementations" class="internal xref">Implementations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.14">
+            <p id="section-toc.1-1.14.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-acknowledgements" class="internal xref">Acknowledgements</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15">
+            <p id="section-toc.1-1.15.1"><a href="#appendix-C" class="auto internal xref"></a><a href="#name-contributors" class="internal xref">Contributors</a></p>
+</li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16">
-            <p id="section-toc.1-1.16.1"><a href="#appendix-C" class="auto internal xref"></a><a href="#name-acknowledgements" class="internal xref">Acknowledgements</a></p>
-</li>
-          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.17">
-            <p id="section-toc.1-1.17.1"><a href="#appendix-D" class="auto internal xref"></a><a href="#name-contributors" class="internal xref">Contributors</a></p>
-</li>
-          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.18">
-            <p id="section-toc.1-1.18.1"><a href="#appendix-E" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
+            <p id="section-toc.1-1.16.1"><a href="#appendix-D" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
 </li>
         </ul>
 </nav>
@@ -1498,19 +1476,18 @@ li > p:last-of-type:only-child {
 <a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
 <p id="section-1-1">This memo specifies the data structure representation that was
-  devised in 1996/1997 to support SPKI <span>[<a href="#RFC2692" class="cite xref">RFC2692</a>]</span>
-  certificates with the intent that it be more widely applicable (see
-  <a href="#history" class="auto internal xref">Section 1.3</a>, History). It is suitable for representing
-  arbitrary, complex data structures and has been and is being used
-  elsewhere. Uses of this representation herein are referred to as
-  "S-expressions".<a href="#section-1-1" class="pilcrow">¶</a></p>
+  devised to support Simple Public Key Infrastructure (SPKI) certificates <span>[<a href="#RFC2692" class="cite xref">RFC2692</a>]</span>, with the intent that it be more
+  widely applicable (see <a href="#history" class="auto internal xref">Section 1.3</a>, "Historical Note"). It is
+  suitable for representing arbitrary, complex data structures and has
+  been and is being used elsewhere. Uses of this representation herein
+  are referred to as "S-expressions".<a href="#section-1-1" class="pilcrow">¶</a></p>
 <p id="section-1-2">This memo makes precise the encodings of these SPKI
-  S-expressions: it gives a "canonical form" for them, describes two
-  "transport" representations, and also describe an "advanced" format
+  S-expressions: It gives a "canonical form" for them, describes two
+  "transport" representations, and also describes an "advanced" format
   for display to people. There are multiple implementations of
   S-expressions in a variety of programming languages including Python,
   Ruby, and C (see <a href="#Code" class="auto internal xref">Appendix A</a>).<a href="#section-1-2" class="pilcrow">¶</a></p>
-<p id="section-1-3">These S-expressions are either byte-strings ("octet-strings") or
+<p id="section-1-3">These S-expressions are either octet-strings or
   lists of simpler S-expressions.  Here is a sample S-expression:<a href="#section-1-3" class="pilcrow">¶</a></p>
 <div class="sourcecode" id="section-1-4">
 <pre>
@@ -1523,56 +1500,42 @@ li > p:last-of-type:only-child {
 </li>
         <li class="normal" id="section-1-6.2">the octet-string "abc"<a href="#section-1-6.2" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-1-6.3">a sub-list containing two elements: the hexadecimal constant
-  #03# (i.e., 0x03) and the base-64 constant |YWJj| (which is the same
-  as "abc")<a href="#section-1-6.3" class="pilcrow">¶</a>
+        <li class="normal" id="section-1-6.3">a sub-list containing two elements: The hexadecimal constant
+  #03# (which represents a one-octet-long octet-string with the 
+  value of that octet being 0x03) and the base-64 constant |YWJj| (which
+  represents the same octet-string as "abc")<a href="#section-1-6.3" class="pilcrow">¶</a>
 </li>
       </ul>
 <p id="section-1-7">This document specifies how to construct and use these
 S-expressions.<a href="#section-1-7" class="pilcrow">¶</a></p>
 <p id="section-1-8">The design goals for S-expressions were as follows:<a href="#section-1-8" class="pilcrow">¶</a></p>
-<span class="break"></span><dl class="dlParallel" id="section-1-9">
-        <dt id="section-1-9.1">generality:</dt>
-        <dd style="margin-left: 1.5em" id="section-1-9.2">S-expressions should be good at representing
-arbitrary data.<a href="#section-1-9.2" class="pilcrow">¶</a>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-1-9.3">readability:</dt>
-        <dd style="margin-left: 1.5em" id="section-1-9.4">It should be easy for someone to examine and
-understand the structure of an S-expression.<a href="#section-1-9.4" class="pilcrow">¶</a>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-1-9.5">economy:</dt>
-        <dd style="margin-left: 1.5em" id="section-1-9.6">S-expressions should represent data
-compactly.<a href="#section-1-9.6" class="pilcrow">¶</a>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-1-9.7">transportability:</dt>
-        <dd style="margin-left: 1.5em" id="section-1-9.8">S-expressions should be easy to transport
+<ul class="normal">
+<li class="normal" id="section-1-9.1">Generality: S-expressions should be good at representing
+arbitrary data.<a href="#section-1-9.1" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-1-9.2">Readability: It should be easy for someone to examine and
+understand the structure of an S-expression.<a href="#section-1-9.2" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-1-9.3">Economy: S-expressions should represent data
+compactly.<a href="#section-1-9.3" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-1-9.4">Transportability: S-expressions should be easy to transport
 over communication media (such as email) that are known to be less
-than perfect.<a href="#section-1-9.8" class="pilcrow">¶</a>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-1-9.9">flexibility:</dt>
-        <dd style="margin-left: 1.5em" id="section-1-9.10">S-expressions should make it relatively
-simple to modify and extend data structures.<a href="#section-1-9.10" class="pilcrow">¶</a>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-1-9.11">canonicalization:</dt>
-        <dd style="margin-left: 1.5em" id="section-1-9.12">It should be easy to produce a unique
+than perfect.<a href="#section-1-9.4" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-1-9.5">Flexibility: S-expressions should make it relatively
+simple to modify and extend data structures.<a href="#section-1-9.5" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-1-9.6">Canonicalization: It should be easy to produce a unique
 "canonical" form of an S-expression, for digital signature
-purposes.<a href="#section-1-9.12" class="pilcrow">¶</a>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-1-9.13">efficiency:</dt>
-        <dd style="margin-left: 1.5em" id="section-1-9.14">S-expressions should admit in-memory
-representations that allow efficient processing.<a href="#section-1-9.14" class="pilcrow">¶</a>
-</dd>
-      <dd class="break"></dd>
-</dl>
-<p id="section-1-10">Implementors of new applications and protocols may wish to consider
-potential alternative representations to SPKI S-expressions such as
-<span>[<a href="#XML" class="cite xref">XML</a>]</span>, CBOR <span>[<a href="#RFC8949" class="cite xref">RFC8949</a>]</span>, or JSON <span>[<a href="#RFC7159" class="cite xref">RFC7159</a>]</span>.<a href="#section-1-10" class="pilcrow">¶</a></p>
+purposes.<a href="#section-1-9.6" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-1-9.7">Efficiency: S-expressions should admit in-memory
+representations that allow efficient processing.<a href="#section-1-9.7" class="pilcrow">¶</a>
+</li>
+      </ul>
+<p id="section-1-10">For implementors of new applications and protocols other
+technologies also worthy of consideration include the following: XML <span>[<a href="#XML" class="cite xref">XML</a>]</span>, CBOR <span>[<a href="#RFC8949" class="cite xref">RFC8949</a>]</span>, and JSON <span>[<a href="#RFC8259" class="cite xref">RFC8259</a>]</span>.<a href="#section-1-10" class="pilcrow">¶</a></p>
 <section id="section-1.1">
         <h3 id="name-uses-of-s-expressions">
 <a href="#section-1.1" class="section-number selfRef">1.1. </a><a href="#name-uses-of-s-expressions" class="section-name selfRef">Uses of S-Expressions</a>
@@ -1580,10 +1543,9 @@ potential alternative representations to SPKI S-expressions such as
 <p id="section-1.1-1">The S-expressions specified herein are in active use today between
 GnuPG <span>[<a href="#GnuPG" class="cite xref">GnuPG</a>]</span> and Ribose's RNP <span>[<a href="#Ribose" class="cite xref">Ribose</a>]</span>.
 Ribose has implemented C++ software to compose and parse these
-S-expressions <span>[<a href="#RNPGP_SEXPP" class="cite xref">RNPGP_SEXPP</a>]</span>.  The GNU software is here
-<span>[<a href="#Libgcrypt" class="cite xref">Libgcrypt</a>]</span> and there are other implementations (see
+S-expressions <span>[<a href="#RNPGP_SEXPP" class="cite xref">RNPGP_SEXPP</a>]</span>.  The GNU software is the Libgcrypt library <span>[<a href="#Libgcrypt" class="cite xref">Libgcrypt</a>]</span>, and there are other implementations (see
 <a href="#Code" class="auto internal xref">Appendix A</a>).<a href="#section-1.1-1" class="pilcrow">¶</a></p>
-<p id="section-1.1-2">They are used or referenced in the following RFCs:<a href="#section-1.1-2" class="pilcrow">¶</a></p>
+<p id="section-1.1-2">S-expressions are also used or referenced in the following RFCs:<a href="#section-1.1-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-1.1-3.1">
             <span>[<a href="#RFC2693" class="cite xref">RFC2693</a>]</span> for <span>[<a href="#SPKI" class="cite xref">SPKI</a>]</span><a href="#section-1.1-3.1" class="pilcrow">¶</a>
@@ -1593,16 +1555,15 @@ S-expressions <span>[<a href="#RNPGP_SEXPP" class="cite xref">RNPGP_SEXPP</a>]</
   Processing<a href="#section-1.1-3.2" class="pilcrow">¶</a>
 </li>
         </ul>
-<p id="section-1.1-4">In addition, S-Expressions are the inspiration for the encodings in
-other protocols. For example, <span>[<a href="#RFC3259" class="cite xref">RFC3259</a>]</span> or Section 6 of
-<span>[<a href="#CDDLfreezer" class="cite xref">CDDLfreezer</a>]</span>.<a href="#section-1.1-4" class="pilcrow">¶</a></p>
+<p id="section-1.1-4">In addition, S-expressions are the inspiration for the encodings in
+other protocols. For example, <span>[<a href="#RFC3259" class="cite xref">RFC3259</a>]</span> or <span><a href="https://datatracker.ietf.org/doc/html/draft-bormann-cbor-cddl-freezer-15#section-6" class="relref">Section 6</a> of [<a href="#I-D.bormann-cbor-cddl-freezer" class="cite xref">CDDL-freezer</a>]</span>.<a href="#section-1.1-4" class="pilcrow">¶</a></p>
 </section>
 <section id="section-1.2">
         <h3 id="name-formalization">
 <a href="#section-1.2" class="section-number selfRef">1.2. </a><a href="#name-formalization" class="section-name selfRef">Formalization</a>
         </h3>
-<p id="section-1.2-1">An Internet Draft <span>[<a href="#formal" class="cite xref">formal</a>]</span> has been posted showing
-  a formal model of SPKI S-Expressions and which formally demonstrates
+<p id="section-1.2-1"><span>[<a href="#I-D.petithuguenin-ufmrg-formal-sexpr" class="cite xref">Formal</a>]</span> is an Internet-Draft that shows
+  a formal model of SPKI S-expressions and formally demonstrates
   that the examples and ABNF in this document are correct.<a href="#section-1.2-1" class="pilcrow">¶</a></p>
 </section>
 <div id="history">
@@ -1616,7 +1577,7 @@ Rivest <span>[<a href="#SDSI" class="cite xref">SDSI</a>]</span>) in 1996, altho
 back to McCarthy's <span>[<a href="#LISP" class="cite xref">LISP</a>]</span> programming language.  They
 were further refined and improved during the merger of SDSI and SPKI
 <span>[<a href="#SPKI" class="cite xref">SPKI</a>]</span> <span>[<a href="#RFC2692" class="cite xref">RFC2692</a>]</span> <span>[<a href="#RFC2693" class="cite xref">RFC2693</a>]</span> during the first half of 1997.  S-expressions are
-more readable and flexible than, Bernstein's "net-strings" <span>[<a href="#BERN" class="cite xref">BERN</a>]</span>, which were developed contemporaneously.<a href="#section-1.3-1" class="pilcrow">¶</a></p>
+more readable and flexible than Bernstein's "netstrings" <span>[<a href="#BERN" class="cite xref">BERN</a>]</span>, which were developed contemporaneously.<a href="#section-1.3-1" class="pilcrow">¶</a></p>
 <aside id="section-1.3-2">
           <p id="section-1.3-2.1">Although a specification was made publicly available as a file
   named draft-rivest-sexp-00.txt on 4 May 1997, that file was never
@@ -1629,17 +1590,17 @@ more readable and flexible than, Bernstein's "net-strings" <span>[<a href="#BERN
         <h3 id="name-conventions-used-in-this-do">
 <a href="#section-1.4" class="section-number selfRef">1.4. </a><a href="#name-conventions-used-in-this-do" class="section-name selfRef">Conventions Used in This Document</a>
         </h3>
-<p id="section-1.4-1">The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
-"SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
-"OPTIONAL" in this document are to be interpreted as described in BCP
-14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when, and only
-when, they appear in all capitals, as shown here.<a href="#section-1.4-1" class="pilcrow">¶</a></p>
+<p id="section-1.4-1">
+    The key words "<span class="bcp14">MUST</span>", "<span class="bcp14">MUST NOT</span>", "<span class="bcp14">REQUIRED</span>", "<span class="bcp14">SHALL</span>", "<span class="bcp14">SHALL NOT</span>", "<span class="bcp14">SHOULD</span>", "<span class="bcp14">SHOULD NOT</span>", "<span class="bcp14">RECOMMENDED</span>", "<span class="bcp14">NOT RECOMMENDED</span>",
+    "<span class="bcp14">MAY</span>", and "<span class="bcp14">OPTIONAL</span>" in this document are to be interpreted as
+    described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> 
+    when, and only when, they appear in all capitals, as shown here.<a href="#section-1.4-1" class="pilcrow">¶</a></p>
 </section>
 </section>
 <div id="Sec2">
 <section id="section-2">
       <h2 id="name-s-expressions-informal-intr">
-<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-s-expressions-informal-intr" class="section-name selfRef">S-expressions -- informal introduction</a>
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-s-expressions-informal-intr" class="section-name selfRef">S-expressions -- Informal Introduction</a>
       </h2>
 <p id="section-2-1">Informally, an S-expression is either:<a href="#section-2-1" class="pilcrow">¶</a></p>
 <ul class="compact">
@@ -1648,99 +1609,81 @@ when, they appear in all capitals, as shown here.<a href="#section-1.4-1" class=
         <li class="compact" id="section-2-2.2">a finite list of simpler S-expressions.<a href="#section-2-2.2" class="pilcrow">¶</a>
 </li>
       </ul>
-<p id="section-2-3">An octet-string is a finite sequence of eight-bit octets.  There
-may be many different but equivalent ways of representing an
-octet-string<a href="#section-2-3" class="pilcrow">¶</a></p>
+<p id="section-2-3">An octet-string is a finite sequence of eight-bit octets. An
+octet-string may be zero length.  There may be many different but
+equivalent ways of representing an octet-string<a href="#section-2-3" class="pilcrow">¶</a></p>
 <div class="sourcecode" id="section-2-4">
 <pre>
     abc         -- as a token
     "abc"       -- as a quoted string
     #616263#    -- as a hexadecimal string
     3:abc       -- as a length-prefixed "verbatim" encoding
-    |YWJj|      -- as a base-64 encoding of the octet-string
-                     "abc"
-    {MzphYmM=}  -- as a base-64 encoding of the verbatim
-                     encoding (that is, an encoding of "3:abc")
+    |YWJj|      -- as a base-64 encoding of the octet-string "abc"
 </pre><a href="#section-2-4" class="pilcrow">¶</a>
 </div>
 <p id="section-2-5">The above encodings are all equivalent in that they all denote the
-same octet-string.<a href="#section-2-5" class="pilcrow">¶</a></p>
-<p id="section-2-6">Details of these encodings are given below, and how to give a
-"display type" to a simple-string is also described in <a href="#DisplayHint" class="auto internal xref">Section 4.6</a>.<a href="#section-2-6" class="pilcrow">¶</a></p>
-<p id="section-2-7">A list is a finite sequence of zero or more simpler S-expressions.
+same octet-string. Details of these encodings are given below, and how
+to give a "display type" to a simple-string is also described in <a href="#DisplayHint" class="auto internal xref">Section 4.6</a>.<a href="#section-2-5" class="pilcrow">¶</a></p>
+<p id="section-2-6">A list is a finite sequence of zero or more simpler S-expressions.
 A list is represented by using parentheses to surround the sequence of
-encodings of its elements, as in:<a href="#section-2-7" class="pilcrow">¶</a></p>
-<div class="sourcecode" id="section-2-8">
+encodings of its elements, as in:<a href="#section-2-6" class="pilcrow">¶</a></p>
+<div class="sourcecode" id="section-2-7">
 <pre>
     (abc (de #6667#) "ghi jkl")
-</pre><a href="#section-2-8" class="pilcrow">¶</a>
+</pre><a href="#section-2-7" class="pilcrow">¶</a>
 </div>
-<p id="section-2-9">As can be seen, there is variability possible in the encoding of an
+<p id="section-2-8">As can be seen, there is variability possible in the encoding of an
 S-expression.  In some applications, it is desirable to standardize or
 restrict the encodings; in other cases, it is desirable to have no
 restrictions.  The following are the target cases these S-expressions
-aim to handle:<a href="#section-2-9" class="pilcrow">¶</a></p>
+aim to handle:<a href="#section-2-8" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-2-10.1">a "transport" or "basic" encoding for transporting the
-  S-expression between computers.<a href="#section-2-10.1" class="pilcrow">¶</a>
+<li class="normal" id="section-2-9.1">a "transport" or "basic" encoding for transporting the
+  S-expression between computers<a href="#section-2-9.1" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-2-10.2">a "canonical" encoding, used when signing the
-  S-expression.<a href="#section-2-10.2" class="pilcrow">¶</a>
+        <li class="normal" id="section-2-9.2">a "canonical" encoding, used when signing the
+  S-expression<a href="#section-2-9.2" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-2-10.3">an "advanced" encoding used for input/output to people.<a href="#section-2-10.3" class="pilcrow">¶</a>
+        <li class="normal" id="section-2-9.3">an "advanced" encoding used for input/output to people<a href="#section-2-9.3" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-2-10.4">an "in-memory" encoding used for processing the S-expression
-  in the computer.<a href="#section-2-10.4" class="pilcrow">¶</a>
+        <li class="normal" id="section-2-9.4">an "in-memory" encoding used for processing the S-expression
+  in the computer<a href="#section-2-9.4" class="pilcrow">¶</a>
 </li>
       </ul>
-<p id="section-2-11">In this document, related encoding techniques for each of these
-uses are provided.<a href="#section-2-11" class="pilcrow">¶</a></p>
+<p id="section-2-10">In this document, related encoding techniques for each of these
+uses are provided.<a href="#section-2-10" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="Sec3">
 <section id="section-3">
       <h2 id="name-character-set">
-<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-character-set" class="section-name selfRef">Character set</a>
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-character-set" class="section-name selfRef">Character Set</a>
       </h2>
 <p id="section-3-1">This document specifies encodings of S-expressions.  Except when
 giving "verbatim" encodings, the character set used is limited to the
 following characters in ASCII <span>[<a href="#RFC0020" class="cite xref">RFC0020</a>]</span>:<a href="#section-3-1" class="pilcrow">¶</a></p>
-<span class="break"></span><dl class="dlCompact dlParallel" id="section-3-2">
-        <dt id="section-3-2.1">Alphabetic:</dt>
-        <dd style="margin-left: 1.5em" id="section-3-2.2">
-          <div class="sourcecode" id="section-3-2.2.1">
+<p id="section-3-2">Alphabetic:<a href="#section-3-2" class="pilcrow">¶</a></p>
+<div class="sourcecode" id="section-3-3">
 <pre>
     A B ... Z a b ... z
-</pre><a href="#section-3-2.2.1" class="pilcrow">¶</a>
+</pre><a href="#section-3-3" class="pilcrow">¶</a>
 </div>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-3-2.3">Numeric:</dt>
-        <dd style="margin-left: 1.5em" id="section-3-2.4">
-          <div class="sourcecode" id="section-3-2.4.1">
+<p id="section-3-4">Numeric:<a href="#section-3-4" class="pilcrow">¶</a></p>
+<div class="sourcecode" id="section-3-5">
 <pre>
     0 1 ... 9
-</pre><a href="#section-3-2.4.1" class="pilcrow">¶</a>
+</pre><a href="#section-3-5" class="pilcrow">¶</a>
 </div>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-3-2.5">Whitespace:</dt>
-        <dd style="margin-left: 1.5em" id="section-3-2.6">
-          <div class="sourcecode" id="section-3-2.6.1">
+<p id="section-3-6">Whitespace:<a href="#section-3-6" class="pilcrow">¶</a></p>
+<div class="sourcecode" id="section-3-7">
 <pre>
     space, horizontal tab, vertical tab, form-feed
     carriage-return, line-feed
-</pre><a href="#section-3-2.6.1" class="pilcrow">¶</a>
+</pre><a href="#section-3-7" class="pilcrow">¶</a>
 </div>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-3-2.7">The following graphics characters, which are called
-  "pseudo-alphabetic" in this document:</dt>
-        <dd style="margin-left: 1.5em" id="section-3-2.8"></dd>
-        <dd class="break"></dd>
-<dt id="section-3-2.9"></dt>
-        <dd style="margin-left: 1.5em" id="section-3-2.10">
-          <div class="sourcecode" id="section-3-2.10.1">
+<p id="section-3-8">The following graphics characters, which are called
+  "pseudo-alphabetic" in this document:<a href="#section-3-8" class="pilcrow">¶</a></p>
+<div class="sourcecode" id="section-3-9">
 <pre>
     -  hyphen or minus
     .  period
@@ -1750,17 +1693,11 @@ following characters in ASCII <span>[<a href="#RFC0020" class="cite xref">RFC002
     *  asterisk
     +  plus
     =  equal
-</pre><a href="#section-3-2.10.1" class="pilcrow">¶</a>
+</pre><a href="#section-3-9" class="pilcrow">¶</a>
 </div>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-3-2.11">The following graphics characters, which are "reserved
-  punctuation":</dt>
-        <dd style="margin-left: 1.5em" id="section-3-2.12"></dd>
-        <dd class="break"></dd>
-<dt id="section-3-2.13"></dt>
-        <dd style="margin-left: 1.5em" id="section-3-2.14">
-          <div class="sourcecode" id="section-3-2.14.1">
+<p id="section-3-10">The following graphics characters, which are "reserved
+  punctuation":<a href="#section-3-10" class="pilcrow">¶</a></p>
+<div class="sourcecode" id="section-3-11">
 <pre>
     (  left parenthesis
     )  right parenthesis
@@ -1773,56 +1710,47 @@ following characters in ASCII <span>[<a href="#RFC0020" class="cite xref">RFC002
     "  double quote
     &amp;  ampersand
     \  backslash
-</pre><a href="#section-3-2.14.1" class="pilcrow">¶</a>
+</pre><a href="#section-3-11" class="pilcrow">¶</a>
 </div>
-</dd>
-        <dd class="break"></dd>
-<dt id="section-3-2.15">The following characters are unused and unavailable, except in
-        "verbatim" and "quoted string" encodings:</dt>
-        <dd style="margin-left: 1.5em" id="section-3-2.16"></dd>
-        <dd class="break"></dd>
-<dt id="section-3-2.17"></dt>
-        <dd style="margin-left: 1.5em" id="section-3-2.18">
-          <div class="sourcecode" id="section-3-2.18.1">
+<p id="section-3-12">The following characters are unused and unavailable, except in
+        "verbatim" and "quoted string" encodings:<a href="#section-3-12" class="pilcrow">¶</a></p>
+<div class="sourcecode" id="section-3-13">
 <pre>
     !  exclamation point
     %  percent
     ^  circumflex
     ~  tilde
     ;  semicolon
-    '  apostrophe
+    '  single-quote (apostrophe)
     ,  comma
     &lt;  less than
     &gt;  greater than
     ?  question mark
-</pre><a href="#section-3-2.18.1" class="pilcrow">¶</a>
+</pre><a href="#section-3-13" class="pilcrow">¶</a>
 </div>
-</dd>
-      <dd class="break"></dd>
-</dl>
 </section>
 </div>
 <div id="Sec4">
 <section id="section-4">
       <h2 id="name-octet-string-representation">
-<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-octet-string-representation" class="section-name selfRef">Octet-string representation types</a>
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-octet-string-representation" class="section-name selfRef">Octet-String Representation Types</a>
       </h2>
 <p id="section-4-1">This section describes in detail the ways in which an octet-string may
 be represented.<a href="#section-4-1" class="pilcrow">¶</a></p>
-<p id="section-4-2">Recall that an octet-string is any finite sequence of octets, and
-that the octet-string may have length zero.<a href="#section-4-2" class="pilcrow">¶</a></p>
+<p id="section-4-2">Recall that an octet-string is any finite sequence of octets and
+that an octet-string may have length zero.<a href="#section-4-2" class="pilcrow">¶</a></p>
 <section id="section-4.1">
         <h3 id="name-verbatim-representation">
-<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-verbatim-representation" class="section-name selfRef">Verbatim representation</a>
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-verbatim-representation" class="section-name selfRef">Verbatim Representation</a>
         </h3>
 <p id="section-4.1-1">A verbatim encoding of an octet-string consists of three parts:<a href="#section-4.1-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.1-2.1">the length (number of octets) of the octet-string, given in
-  decimal, most significant digit first, with no leading zeros.<a href="#section-4.1-2.1" class="pilcrow">¶</a>
+  decimal, most significant digit first, with no leading zeros<a href="#section-4.1-2.1" class="pilcrow">¶</a>
 </li>
           <li class="normal" id="section-4.1-2.2">a colon ":"<a href="#section-4.1-2.2" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-4.1-2.3">the octet-string itself, verbatim.<a href="#section-4.1-2.3" class="pilcrow">¶</a>
+          <li class="normal" id="section-4.1-2.3">the octet-string itself, verbatim<a href="#section-4.1-2.3" class="pilcrow">¶</a>
 </li>
         </ul>
 <p id="section-4.1-3">There are no blanks or whitespace separating the parts.  No "escape
@@ -1833,7 +1761,7 @@ called a "binary" or "raw" encoding.<a href="#section-4.1-3" class="pilcrow">¶<
 <pre>
     3:abc
     7:subject
-    4:::::
+    4:::":
     12:hello world!
     10:abcdefghij
     0:
@@ -1842,7 +1770,7 @@ called a "binary" or "raw" encoding.<a href="#section-4.1-3" class="pilcrow">¶<
 </section>
 <section id="section-4.2">
         <h3 id="name-quoted-string-representatio">
-<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-quoted-string-representatio" class="section-name selfRef">Quoted-string representation</a>
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-quoted-string-representatio" class="section-name selfRef">Quoted-String Representation</a>
         </h3>
 <p id="section-4.2-1">The quoted-string representation of an octet-string consists of:<a href="#section-4.2-1" class="pilcrow">¶</a></p>
 <ul class="normal">
@@ -1850,7 +1778,7 @@ called a "binary" or "raw" encoding.<a href="#section-4.1-3" class="pilcrow">¶<
 </li>
           <li class="normal" id="section-4.2-2.2">an initial double-quote (")<a href="#section-4.2-2.2" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-4.2-2.3">the octet-string with the "C" programming language <span>[<a href="#C" class="cite xref">C</a>]</span> escape conventions (\n, etc.)<a href="#section-4.2-2.3" class="pilcrow">¶</a>
+          <li class="normal" id="section-4.2-2.3">the octet-string with the C programming language <span>[<a href="#C88" class="cite xref">C88</a>]</span> escape conventions (\n, etc.)<a href="#section-4.2-2.3" class="pilcrow">¶</a>
 </li>
           <li class="normal" id="section-4.2-2.4">a final double-quote (")<a href="#section-4.2-2.4" class="pilcrow">¶</a>
 </li>
@@ -1858,11 +1786,11 @@ called a "binary" or "raw" encoding.<a href="#section-4.1-3" class="pilcrow">¶<
 <p id="section-4.2-3">The specified length is the length of the resulting string after
 any backslash escape sequences have been converted to the octet value
 they denote.  The string does not have any "terminating NULL" that
-<span>[<a href="#C" class="cite xref">C</a>]</span> includes, and the length does not count such an
+<span>[<a href="#C88" class="cite xref">C88</a>]</span> includes, and the length does not count such an
 octet.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
 <p id="section-4.2-4">The length is optional.<a href="#section-4.2-4" class="pilcrow">¶</a></p>
 <p id="section-4.2-5">The escape conventions within the quoted string are as follows
-(these follow the "C" <span>[<a href="#C" class="cite xref">C</a>]</span> programming language
+(these follow the C programming language <span>[<a href="#C88" class="cite xref">C88</a>]</span> 
 conventions, with an extension for ignoring line terminators of just
 CR, LF, CRLF, or LFCR and more restrictive octal and hexadecimal value
 formats):<a href="#section-4.2-5" class="pilcrow">¶</a></p>
@@ -1883,10 +1811,8 @@ formats):<a href="#section-4.2-5" class="pilcrow">¶</a></p>
               digits MUST be present)
     \xhh   -- character with hexadecimal value hh (both
               digits MUST be present)
-    \&lt;carriage-return&gt;   -- causes carriage-return
-              to be ignored.
-    \&lt;line-feed&gt;         -- causes linefeed to be
-              ignored.
+    \&lt;carriage-return&gt;   -- causes carriage-return to be ignored.
+    \&lt;line-feed&gt;         -- causes line-feed to be ignored.
     \&lt;carriage-return&gt;&lt;line-feed&gt;   -- causes
               CRLF to be ignored.
     \&lt;line-feed&gt;&lt;carriage-return&gt;   -- causes
@@ -1911,16 +1837,22 @@ formats):<a href="#section-4.2-5" class="pilcrow">¶</a></p>
 <div id="token">
 <section id="section-4.3">
         <h3 id="name-token-representation">
-<a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-token-representation" class="section-name selfRef">Token representation</a>
+<a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-token-representation" class="section-name selfRef">Token Representation</a>
         </h3>
 <p id="section-4.3-1">An octet-string that meets the following conditions may be given
 directly as a "token":<a href="#section-4.3-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.3-2.1">it does not begin with a digit;<a href="#section-4.3-2.1" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-4.3-2.2">it contains only characters that are: alphabetic (upper or lower
+          <li class="normal" id="section-4.3-2.2">
+            <p id="section-4.3-2.2.1">it contains only characters that are: alphabetic (upper or lower
   case), numeric, or one of the following eight "pseudo-alphabetic" punctuation
-  marks:  -  .  /  _  :  *  +  =<a href="#section-4.3-2.2" class="pilcrow">¶</a>
+  marks:<a href="#section-4.3-2.2.1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.3-2.2.2">
+<pre>
+-  .  /  _  :  *  +  =
+</pre><a href="#section-4.3-2.2.2" class="pilcrow">¶</a>
+</div>
 </li>
           <li class="normal" id="section-4.3-2.3">it is length 1 or greater.<a href="#section-4.3-2.3" class="pilcrow">¶</a>
 </li>
@@ -1934,7 +1866,7 @@ A token may begin with punctuation, including ":".<a href="#section-4.3-3" class
     not-before
     :=..
     class-of-1997
-    //microsoft.com/names/smith
+    //example.net/names/smith
     *
 </pre><a href="#section-4.3-5" class="pilcrow">¶</a>
 </div>
@@ -1942,7 +1874,7 @@ A token may begin with punctuation, including ":".<a href="#section-4.3-3" class
 </div>
 <section id="section-4.4">
         <h3 id="name-hexadecimal-representation">
-<a href="#section-4.4" class="section-number selfRef">4.4. </a><a href="#name-hexadecimal-representation" class="section-name selfRef">Hexadecimal representation</a>
+<a href="#section-4.4" class="section-number selfRef">4.4. </a><a href="#name-hexadecimal-representation" class="section-name selfRef">Hexadecimal Representation</a>
         </h3>
 <p id="section-4.4-1">An octet-string may be represented with a hexadecimal encoding
 consisting of:<a href="#section-4.4-1" class="pilcrow">¶</a></p>
@@ -1953,9 +1885,9 @@ consisting of:<a href="#section-4.4-1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.4-2.3">a hexadecimal encoding of the octet-string, with each octet
   represented with two hexadecimal digits, most significant digit
-  first. There MUST be an even number of such digits.<a href="#section-4.4-2.3" class="pilcrow">¶</a>
+  first. There <span class="bcp14">MUST</span> be an even number of such digits.<a href="#section-4.4-2.3" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-4.4-2.4">a sharp-sign "#"<a href="#section-4.4-2.4" class="pilcrow">¶</a>
+          <li class="normal" id="section-4.4-2.4">a final sharp-sign "#"<a href="#section-4.4-2.4" class="pilcrow">¶</a>
 </li>
         </ul>
 <p id="section-4.4-3">There may be whitespace inserted in the midst of the hexadecimal
@@ -1975,7 +1907,7 @@ characters other than whitespace and hexadecimal digits.<a href="#section-4.4-3"
 <div id="base64string">
 <section id="section-4.5">
         <h3 id="name-base-64-representation-of-o">
-<a href="#section-4.5" class="section-number selfRef">4.5. </a><a href="#name-base-64-representation-of-o" class="section-name selfRef">Base-64 representation of octet-strings</a>
+<a href="#section-4.5" class="section-number selfRef">4.5. </a><a href="#name-base-64-representation-of-o" class="section-name selfRef">Base-64 Representation of Octet-Strings</a>
         </h3>
 <p id="section-4.5-1">An octet-string may be represented in a base-64 encoding <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span> consisting of:<a href="#section-4.5-1" class="pilcrow">¶</a></p>
 <ul class="normal">
@@ -1983,23 +1915,31 @@ characters other than whitespace and hexadecimal digits.<a href="#section-4.4-3"
 </li>
           <li class="normal" id="section-4.5-2.2">a vertical bar "|"<a href="#section-4.5-2.2" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-4.5-2.3">the base-64 <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span> encoding of the octet
-string.<a href="#section-4.5-2.3" class="pilcrow">¶</a>
+          <li class="normal" id="section-4.5-2.3">the base-64 <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span> encoding of the
+octet-string.<a href="#section-4.5-2.3" class="pilcrow">¶</a>
 </li>
           <li class="normal" id="section-4.5-2.4">a final vertical bar "|"<a href="#section-4.5-2.4" class="pilcrow">¶</a>
 </li>
         </ul>
 <p id="section-4.5-3">Base-64 encoding produces four characters of output for each three
-octets of input.  If the length of the input divided by three leaves a
-remainder of one or two, it produces an output block of length four
-ending in two or one equals signs, respectively.  These equals signs
-MUST be included on output but input routines MAY accept inputs where
-one or two equals signs are dropped.<a href="#section-4.5-3" class="pilcrow">¶</a></p>
-<p id="section-4.5-4">Whitespace inserted in the midst of the base-64 encoding is
+octets of input.
+  When the length of the input is divided by three:<a href="#section-4.5-3" class="pilcrow">¶</a></p>
+<ul class="compact">
+<li class="compact" id="section-4.5-4.1">if the remainder is one, it produces an output block of length four
+     ending in two equals signs.<a href="#section-4.5-4.1" class="pilcrow">¶</a>
+</li>
+          <li class="compact" id="section-4.5-4.2">if the remainder is two, it produces an output block of length four
+     ending in one equals sign.<a href="#section-4.5-4.2" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-4.5-5">These equals signs
+<span class="bcp14">MUST</span> be included on output, but input routines <span class="bcp14">MAY</span> accept inputs where
+one or two equals signs are dropped.<a href="#section-4.5-5" class="pilcrow">¶</a></p>
+<p id="section-4.5-6">Whitespace inserted in the midst of the base-64 encoding is
 ignored.  It is an error to have characters other than whitespace and
-base-64 characters.<a href="#section-4.5-4" class="pilcrow">¶</a></p>
-<p id="section-4.5-5">Here are some examples of base-64 encodings:<a href="#section-4.5-5" class="pilcrow">¶</a></p>
-<div class="sourcecode" id="section-4.5-6">
+base-64 characters.<a href="#section-4.5-6" class="pilcrow">¶</a></p>
+<p id="section-4.5-7">Here are some examples of base-64 encodings:<a href="#section-4.5-7" class="pilcrow">¶</a></p>
+<div class="sourcecode" id="section-4.5-8">
 <pre>
     |YWJj|       -- represents "abc"
     | Y W
@@ -2008,65 +1948,78 @@ base-64 characters.<a href="#section-4.5-4" class="pilcrow">¶</a></p>
     |YWJjZA==|   -- represents "abcd"
     |YWJjZA|     -- also represents "abcd"
     ||           -- represents the zero-length string
-</pre><a href="#section-4.5-6" class="pilcrow">¶</a>
+</pre><a href="#section-4.5-8" class="pilcrow">¶</a>
 </div>
-<p id="section-4.5-7">Note the difference between this base-64 encoding of an
+<p id="section-4.5-9">Note the difference between this base-64 encoding of an
 octet-string using vertical bars ("| |") and the base-64 encoding of
-an S-expression using curly braces ("{ }") in <a href="#base64sexp" class="auto internal xref">Section 6.1</a>.<a href="#section-4.5-7" class="pilcrow">¶</a></p>
+an S-expression using curly braces ("{ }") in <a href="#base64sexp" class="auto internal xref">Section 6.1</a>.<a href="#section-4.5-9" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="DisplayHint">
 <section id="section-4.6">
-        <h3 id="name-display-hint">
-<a href="#section-4.6" class="section-number selfRef">4.6. </a><a href="#name-display-hint" class="section-name selfRef">Display-hint</a>
+        <h3 id="name-display-hints-and-internati">
+<a href="#section-4.6" class="section-number selfRef">4.6. </a><a href="#name-display-hints-and-internati" class="section-name selfRef">Display-Hints and Internationalization</a>
         </h3>
-<p id="section-4.6-1">The purposes of a display-hint is to provide information on how
-to display an octet-string to a user.  It has no other function.
-Many of the MIME <span>[<a href="#RFC2046" class="cite xref">RFC2046</a>]</span> types work here.<a href="#section-4.6-1" class="pilcrow">¶</a></p>
-<p id="section-4.6-2">A display-hint is an octet-string representation surrounded by
+<p id="section-4.6-1">An octet-string can contain any type of data representable by a
+finite octet-string, e.g., text, a fixed or variable-length
+integer, or an image. Normally, the application producing and/or consuming
+S-expressions will understand their structure, the data type, and
+the encoding of the octet-strings within the S-expressions used by that
+application. If the octet-string consists of text, use of UTF-8
+encoding is <span class="bcp14">RECOMMENDED</span> <span>[<a href="#RFC2130" class="cite xref">RFC2130</a>]</span> <span>[<a href="#RFC3629" class="cite xref">RFC3629</a>]</span>.<a href="#section-4.6-1" class="pilcrow">¶</a></p>
+<p id="section-4.6-2">The purpose of a display-hint is to provide information on how to
+display an octet-string to a user.  It has no other function.  Many of
+the media types <span>[<a href="#RFC2046" class="cite xref">RFC2046</a>]</span> work here.<a href="#section-4.6-2" class="pilcrow">¶</a></p>
+<p id="section-4.6-3">A display-hint is an octet-string representation surrounded by
 square brackets.  There may be whitespace separating the display hint
 octet-string from the surrounding brackets.  Any of the legal
-octet-string representations may be used for the display-hint string
-but a display-hint may not be applied to a display-hint string, that
-is, display-hints may not be nested.<a href="#section-4.6-2" class="pilcrow">¶</a></p>
-<p id="section-4.6-3">Every octet-string representation is either preceded by a single
-display-hint or not so preceded. There may be white space between
-the close square bracket and the octet-string to which the hint
-applies.<a href="#section-4.6-3" class="pilcrow">¶</a></p>
-<p id="section-4.6-4">Here are some examples of display-hints:<a href="#section-4.6-4" class="pilcrow">¶</a></p>
+octet-string representations may be used for the display-hint string,
+but a display-hint may not be applied to a display-hint string -- that
+is, display-hints may not be nested.<a href="#section-4.6-3" class="pilcrow">¶</a></p>
+<p id="section-4.6-4">A display-hint that can be used for UTF-8-encoded text is shown in
+the following example where the octet-string represents "böb☺", that is, "bob" with an umlaut over the "o", followed by the Unicode <span>[<a href="#Unicode" class="cite xref">Unicode</a>]</span> character WHITE SMILING FACE (U+263A).<a href="#section-4.6-4" class="pilcrow">¶</a></p>
 <div class="sourcecode" id="section-4.6-5">
+<pre>
+    ["text/plain; charset=utf-8"]"b\xC3\xB7b\xE2\x98\xBA"
+</pre><a href="#section-4.6-5" class="pilcrow">¶</a>
+</div>
+<p id="section-4.6-6">Every octet-string representation is or is not preceded by a single
+display-hint. There may be whitespace between
+the close square bracket and the octet-string to which the hint
+applies.<a href="#section-4.6-6" class="pilcrow">¶</a></p>
+<p id="section-4.6-7">Here are some other examples of display-hints:<a href="#section-4.6-7" class="pilcrow">¶</a></p>
+<div class="sourcecode" id="section-4.6-8">
 <pre>
     [image/gif]
     [charset=unicode-1-1]
     [  text/richtext  ]
     ["text/plain; charset=iso-8859-1"]
     [application/postscript]
-    [application/octet-stream]
     [audio/basic]
     ["http://example.com/display-types/funky.html"]
-</pre><a href="#section-4.6-5" class="pilcrow">¶</a>
+</pre><a href="#section-4.6-8" class="pilcrow">¶</a>
 </div>
-<p id="section-4.6-6">An octet-string that has no display-hint may be considered to have
-a MIME <span>[<a href="#RFC2046" class="cite xref">RFC2046</a>]</span> type specified by the application or
+<p id="section-4.6-9">An octet-string that has no display-hint may be considered to have
+a media type <span>[<a href="#RFC2046" class="cite xref">RFC2046</a>]</span> specified by the application or
 use. In the absence of such a specification, the default is as
-follows:<a href="#section-4.6-6" class="pilcrow">¶</a></p>
-<div class="sourcecode" id="section-4.6-7">
+follows:<a href="#section-4.6-9" class="pilcrow">¶</a></p>
+<div class="sourcecode" id="section-4.6-10">
 <pre>
-    "text/plain; charset=iso-8859-1"
-</pre><a href="#section-4.6-7" class="pilcrow">¶</a>
+    [application/octet-stream]
+</pre><a href="#section-4.6-10" class="pilcrow">¶</a>
 </div>
-<p id="section-4.6-8">When an S-Expression is being encoded in one of the representations
+<p id="section-4.6-11">When an S-expression is being encoded in one of the representations
 described in <a href="#Represent" class="auto internal xref">Section 6</a>, any display-hint present is
 included.  If a display-hint is the default, it is not suppressed nor
 is the default display-hint included in the representation for an
-octet-string without a display-hint.<a href="#section-4.6-8" class="pilcrow">¶</a></p>
+octet-string without a display-hint.<a href="#section-4.6-11" class="pilcrow">¶</a></p>
 </section>
 </div>
 <section id="section-4.7">
         <h3 id="name-comparison-of-octet-strings">
-<a href="#section-4.7" class="section-number selfRef">4.7. </a><a href="#name-comparison-of-octet-strings" class="section-name selfRef">Comparison of octet-strings</a>
+<a href="#section-4.7" class="section-number selfRef">4.7. </a><a href="#name-comparison-of-octet-strings" class="section-name selfRef">Comparison of Octet-Strings</a>
         </h3>
-<p id="section-4.7-1">It is RECOMMENDED that two octet-strings be considered equivalent
+<p id="section-4.7-1">It is <span class="bcp14">RECOMMENDED</span> that two octet-strings be considered equivalent
 for most computational and algorithmic purposes if and only if they
 have the same display-hint and the same data octet-strings. However, a
 particular application might need a different criterion. For example,
@@ -2090,11 +2043,11 @@ default display-hint specified in <a href="#DisplayHint" class="auto internal xr
 list. Whitespace may be used to separate list elements, but they are
 only required to separate two octet-strings when otherwise the two
 octet-strings might be interpreted as one, as when one token follows
-another. To be precise, an octet-string represented as a token (<a href="#token" class="auto internal xref">Section 4.3</a>) MUST be separated by white space from a following
+another. To be precise, an octet-string represented as a token (<a href="#token" class="auto internal xref">Section 4.3</a>) <span class="bcp14">MUST</span> be separated by whitespace from a following
 token, verbatim representation, or any of the following if they are
 prefixed with a length: quoted-string, hexadecimal, or base-64
 representation. Also, whitespace may follow the initial left
-parenthesis, or precede the final right parenthesis of a list.<a href="#section-5-1" class="pilcrow">¶</a></p>
+parenthesis or precede the final right parenthesis of a list.<a href="#section-5-1" class="pilcrow">¶</a></p>
 <p id="section-5-2">Here are some examples of encodings of lists:<a href="#section-5-2" class="pilcrow">¶</a></p>
 <div class="sourcecode" id="section-5-3">
 <pre>
@@ -2104,7 +2057,7 @@ parenthesis, or precede the final right parenthesis of a list.<a href="#section-
 
     (11:certificate(6:issuer3:bob)(7:subject5:alice))
 
-    ({ODpFeGFtcGxlIQ==} "1997" murphy 3:XC+)
+    (|ODpFeGFtcGxlIQ==| "1997" murphy 3:XC+)
 
     ()
 </pre><a href="#section-5-3" class="pilcrow">¶</a>
@@ -2114,7 +2067,7 @@ parenthesis, or precede the final right parenthesis of a list.<a href="#section-
 <div id="Represent">
 <section id="section-6">
       <h2 id="name-s-expression-representation">
-<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-s-expression-representation" class="section-name selfRef">S-expression representation types</a>
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-s-expression-representation" class="section-name selfRef">S-Expression Representation Types</a>
       </h2>
 <p id="section-6-1">There are three "types" of representation:<a href="#section-6-1" class="pilcrow">¶</a></p>
 <ul class="normal">
@@ -2125,21 +2078,20 @@ parenthesis, or precede the final right parenthesis of a list.<a href="#section-
         <li class="normal" id="section-6-2.3">advanced transport<a href="#section-6-2.3" class="pilcrow">¶</a>
 </li>
       </ul>
-<p id="section-6-3">The first two MUST be supported by any implementation; the last is
-OPTIONAL. As part of both basic and advanced transport representations,
-the base-64 <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span> representation of an S-expression
-may be used as described in <a href="#base64sexp" class="auto internal xref">Section 6.1</a>.<a href="#section-6-3" class="pilcrow">¶</a></p>
+<p id="section-6-3">The first two <span class="bcp14">MUST</span> be supported by any implementation; the last is
+<span class="bcp14">OPTIONAL</span>. As part of basic representation, the base-64 <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span> representation of an S-expression may be used as
+described in <a href="#base64sexp" class="auto internal xref">Section 6.1</a>.<a href="#section-6-3" class="pilcrow">¶</a></p>
 <div id="base64sexp">
 <section id="section-6.1">
         <h3 id="name-base-64-representation-of-s">
-<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-base-64-representation-of-s" class="section-name selfRef">Base-64 representation of S-expressions</a>
+<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-base-64-representation-of-s" class="section-name selfRef">Base-64 Representation of S-Expressions</a>
         </h3>
 <p id="section-6.1-1">An S-expression may be represented in a base-64 encoding <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span> consisting of:<a href="#section-6.1-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-6.1-2.1">an opening curly brace "{"<a href="#section-6.1-2.1" class="pilcrow">¶</a>
 </li>
           <li class="normal" id="section-6.1-2.2">the base-64 <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span> encoding of the
-S-expression.<a href="#section-6.1-2.2" class="pilcrow">¶</a>
+S-expression<a href="#section-6.1-2.2" class="pilcrow">¶</a>
 </li>
           <li class="normal" id="section-6.1-2.3">a final closing curly brace "}"<a href="#section-6.1-2.3" class="pilcrow">¶</a>
 </li>
@@ -2148,7 +2100,7 @@ S-expression.<a href="#section-6.1-2.2" class="pilcrow">¶</a>
 octets of input.  If the length of the input divided by three leaves a
 remainder of one or two, it produces an output block of length four
 ending in two or one equals signs, respectively.  These equals signs
-MUST be included on output but input routines MAY accept inputs where
+<span class="bcp14">MUST</span> be included on output, but input routines <span class="bcp14">MAY</span> accept inputs where
 one or two equals signs are dropped.<a href="#section-6.1-3" class="pilcrow">¶</a></p>
 <p id="section-6.1-4">Whitespace inserted in the midst of the base-64 encoding, after the
 opening curly brace, or before the closing curly brace is ignored.  It
@@ -2162,18 +2114,18 @@ octet-string using vertical bars ("| |") in <a href="#base64string" class="auto 
 <div id="canonical">
 <section id="section-6.2">
         <h3 id="name-canonical-representation">
-<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-canonical-representation" class="section-name selfRef">Canonical representation</a>
+<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-canonical-representation" class="section-name selfRef">Canonical Representation</a>
         </h3>
 <p id="section-6.2-1">This canonical representation is used for digital signature
 purposes and transport over channels not sensitive to specific octet
 values.  It is uniquely defined for each S-expression.  It is not
 particularly readable, but that is not the point.  It is intended to
-be very easy to parse, to be reasonably economical, and to be unique
-for any S-expression. (See <span>[<a href="#CANON" class="cite xref">CANON</a>]</span>.)<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+be very easy to parse, reasonably economical, and unique
+for any S-expression. See <span>[<a href="#CANON1" class="cite xref">CANON1</a>]</span> and <span>[<a href="#CANON2" class="cite xref">CANON2</a>]</span>.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
 <p id="section-6.2-2">The "canonical" form of an S-expression represents each
 octet-string in verbatim mode, and represents each list with no blanks
 separating elements from each other or from the surrounding
-parentheses (see also <a href="#ABNFc" class="auto internal xref">Section 7.2</a>).<a href="#section-6.2-2" class="pilcrow">¶</a></p>
+parentheses. See also <a href="#ABNFc" class="auto internal xref">Section 7.2</a>.<a href="#section-6.2-2" class="pilcrow">¶</a></p>
 <p id="section-6.2-3">Here are some examples of canonical representations of
 S-expressions:<a href="#section-6.2-3" class="pilcrow">¶</a></p>
 <div class="sourcecode" id="section-6.2-4">
@@ -2189,24 +2141,24 @@ S-expressions:<a href="#section-6.2-3" class="pilcrow">¶</a></p>
 </div>
 <section id="section-6.3">
         <h3 id="name-basic-transport-representat">
-<a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-basic-transport-representat" class="section-name selfRef">Basic transport representation</a>
+<a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-basic-transport-representat" class="section-name selfRef">Basic Transport Representation</a>
         </h3>
 <p id="section-6.3-1">There are two forms of the "basic transport" representation:<a href="#section-6.3-1" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-6.3-2.1">the canonical representation<a href="#section-6.3-2.1" class="pilcrow">¶</a>
+<ol start="1" type="1" class="normal type-1" id="section-6.3-2">
+  <li id="section-6.3-2.1">The canonical representation<a href="#section-6.3-2.1" class="pilcrow">¶</a>
 </li>
-          <li class="normal" id="section-6.3-2.2">an <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span> base-64 representation of the
-  canonical representation, surrounded by braces (see <a href="#base64sexp" class="auto internal xref">Section 6.1</a>).<a href="#section-6.3-2.2" class="pilcrow">¶</a>
+          <li id="section-6.3-2.2">A base-64 <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span> representation of the
+  canonical representation, surrounded by braces (see <a href="#base64sexp" class="auto internal xref">Section 6.1</a>)<a href="#section-6.3-2.2" class="pilcrow">¶</a>
 </li>
-        </ul>
+        </ol>
 <p id="section-6.3-3">The basic transport representations (see <a href="#ABNFb" class="auto internal xref">Section 7.3</a>)
 are intended to provide a universal means of representing
 S-expressions for transport from one machine to another. The base-64
 encoding would be appropriate if the channel over which the
 S-expression is being sent might be sensitive to octets of some
 special values, such as an octet of all zero bits (NULL) or an octet
-of all one bits (DEL), or the channel is sensitive to "line length"
-such that occasional line terminating white space is needed.<a href="#section-6.3-3" class="pilcrow">¶</a></p>
+of all one bits (DEL), or if the channel is sensitive to "line length"
+such that occasional line terminating whitespace is needed.<a href="#section-6.3-3" class="pilcrow">¶</a></p>
 <p id="section-6.3-4">Here are two examples of an S-expression represented in basic
 transport mode:<a href="#section-6.3-4" class="pilcrow">¶</a></p>
 <div class="sourcecode" id="section-6.3-5">
@@ -2214,7 +2166,7 @@ transport mode:<a href="#section-6.3-4" class="pilcrow">¶</a></p>
   (1:a1:b1:c)
 
   {KDE6YTE6YjE
-     6YykK }
+     6Yyk= }
 </pre><a href="#section-6.3-5" class="pilcrow">¶</a>
 </div>
 <p id="section-6.3-6">The second example above is the same S-expression as the first
@@ -2222,100 +2174,93 @@ encoded in base-64.<a href="#section-6.3-6" class="pilcrow">¶</a></p>
 </section>
 <section id="section-6.4">
         <h3 id="name-advanced-transport-represen">
-<a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-advanced-transport-represen" class="section-name selfRef">Advanced transport representation</a>
+<a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-advanced-transport-represen" class="section-name selfRef">Advanced Transport Representation</a>
         </h3>
 <p id="section-6.4-1">The "advanced transport" representation is intended to provide more
 flexible and readable notations for documentation, design, debugging,
 and (in some cases) user interface.<a href="#section-6.4-1" class="pilcrow">¶</a></p>
 <p id="section-6.4-2">The advanced transport representation allows all of the
-octet-string representation forms described above in Section 4: quoted
+octet-string representation forms described above in <a href="#Sec4" class="auto internal xref">Section 4</a>: quoted
 strings, base-64, hexadecimal, tokens, representations of strings with
-omitted lengths, and so on. It also allows use of the base-64
-representation of S-expressions. (See <a href="#ABNFa" class="auto internal xref">Section 7.1</a>).<a href="#section-6.4-2" class="pilcrow">¶</a></p>
+omitted lengths, and so on. See <a href="#ABNFa" class="auto internal xref">Section 7.1</a>.<a href="#section-6.4-2" class="pilcrow">¶</a></p>
 </section>
 </section>
 </div>
 <div id="ABNF">
 <section id="section-7">
       <h2 id="name-abnf-of-the-syntax">
-<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-abnf-of-the-syntax" class="section-name selfRef">ABNF of the syntax</a>
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-abnf-of-the-syntax" class="section-name selfRef">ABNF of the Syntax</a>
       </h2>
 <p id="section-7-1">ABNF is the Augmented Backus-Naur Form for syntax specifications as
 defined in <span>[<a href="#RFC5234" class="cite xref">RFC5234</a>]</span>. The ABNF for advanced
-representation of S-expressions is given first and the basic and
-canonical forms derived therefrom.  The rule names below in all caps
-are defined in Appendix B.1 of <span>[<a href="#RFC5234" class="cite xref">RFC5234</a>]</span>.<a href="#section-7-1" class="pilcrow">¶</a></p>
+representation of S-expressions is given first, and the basic and
+canonical forms are derived therefrom.  The rule names below in all
+capital letters are defined in <span><a href="https://rfc-editor.org/rfc/rfc5234#appendix-B.1" class="relref">Appendix B.1</a> of [<a href="#RFC5234" class="cite xref">RFC5234</a>]</span>.<a href="#section-7-1" class="pilcrow">¶</a></p>
 <div id="ABNFa">
 <section id="section-7.1">
         <h3 id="name-abnf-for-advanced-transport">
-<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-abnf-for-advanced-transport" class="section-name selfRef">ABNF for advanced transport</a>
+<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-abnf-for-advanced-transport" class="section-name selfRef">ABNF for Advanced Transport</a>
         </h3>
-<div class="breakable lang-ABNF sourcecode" id="section-7.1-1">
+<div class="breakable lang-abnf sourcecode" id="section-7.1-1">
 <pre>
-   sexp           =  *whitespace value *whitespace
+sexp           =  *whitespace value *whitespace
 
-   whitespace     =  SP / HTAB / vtab / CR / LF / ff
+whitespace     =  SP / HTAB / vtab / CR / LF / ff
 
-   vtab           =  %x0B   ; vertical tab
+vtab           =  %x0B   ; vertical tab
 
-   ff             =  %x0C   ; form feed
+ff             =  %x0C   ; form feed
 
-   value          =  string / ("(" *(value / whitespace) ")")
+value          =  string / ("(" *(value / whitespace) ")")
 
-   string         =  [display] *whitespace simple-string
+string         =  [display] simple-string
 
-   display        =  "[" *whitespace display-string *whitespace "]"
+display        =  "[" *whitespace simple-string *whitespace "]"
+                  *whitespace
 
-   display-string  =  verbatim / quoted-string / token / hexadecimal
-                      / base-64
+simple-string  =  verbatim / quoted-string / token / hexadecimal /
+                  base-64
 
-   verbatim       =  decimal ":" *OCTET
-                       ; the length followed by a colon and the exact
-                       ; number of OCTETs indicated by the length
+verbatim       =  decimal ":" *OCTET
+                    ; the length followed by a colon and the exact
+                    ; number of OCTETs indicated by the length
 
-   decimal        =  %x30 / (%x31-39 *DIGIT)
+decimal        =  %x30 / (%x31-39 *DIGIT)
 
-   quoted-string  =  [decimal] DQUOTE *(printable / escaped) DQUOTE
+quoted-string  =  [decimal] DQUOTE *(printable / escaped) DQUOTE
 
-   printable      =  %x20-21 / %x23-5B / %x5D-7E
-                       ; All US-ASCII printable but double-quote and
-                       ; backslash
+printable      =  %x20-21 / %x23-5B / %x5D-7E
+                    ; All US-ASCII printable but double-quote and
+                    ; backslash
 
-   escaped        =  backslash (%x3F / %x61 / %x62 / %x66 / %x6E /
-                     %x72 / %x74 / %x76 / DQUOTE / quote / backslash
-                     / 3(%x30-37) / (%x78 2HEXDIG) / CR / LF /
-                     (CR LF) / (LF CR))
+escaped        =  backslash (%x3F / %x61 / %x62 / %x66 / %x6E /
+                  %x72 / %x74 / %x76 / DQUOTE / quote / backslash
+                  / 3(%x30-37) / (%x78 2HEXDIG) / CR / LF /
+                  (CR LF) / (LF CR))
 
-   backslash      =  %x5C
+backslash      =  %x5C
 
-   quote          =  %x27   ; single quote
+quote          =  %x27   ; single quote
 
-   token          =  (ALPHA / simple-punc) *(ALPHA / DIGIT /
-                        simple-punc)
+token          =  (ALPHA / simple-punc) *(ALPHA / DIGIT /
+                     simple-punc)
 
-   simple-punc    =  "-" / "." / "/" / "_" / ":" / "*" / "+" / "="
+simple-punc    =  "-" / "." / "/" / "_" / ":" / "*" / "+" / "="
 
-   hexadecimal    =  [decimal] "#" *whitespace *hexadecimals "#"
+hexadecimal    =  [decimal] "#" *whitespace *hexadecimals "#"
 
-   hexadecimals   =  2(HEXDIG *whitespace)
+hexadecimals   =  2(HEXDIG *whitespace)
 
-   base-64        =  [decimal] "|" *whitespace *base-64-chars
-                        [base-64-end] "|"
+base-64        =  [decimal] "|" *whitespace *base-64-chars
+                     [base-64-end] "|"
 
-   base-64-chars  =  4(base-64-char *whitespace)
+base-64-chars  =  4(base-64-char *whitespace)
 
-   base-64-char   =  ALPHA / DIGIT / "+" / "/"
+base-64-char   =  ALPHA / DIGIT / "+" / "/"
 
-   base-64-end    =  base-64-chars /
-                     3(base-64-char *whitespace) ["=" *whitespace] /
-                     2(base-64-char *whitespace) *2("=" *whitespace)
-
-   simple-string  =  verbatim / quoted-string / token / hexadecimal /
-                     base-64 / base-64-raw
-
-   base-64-raw    =  "{" *whitespace *base-64-char base-64-end "}"
-                       ; encodes an sexp, which has a minimum
-                       ; length of 2
+base-64-end    =  base-64-chars /
+                  3(base-64-char *whitespace) ["=" *whitespace] /
+                  2(base-64-char *whitespace) *2("=" *whitespace)
 </pre><a href="#section-7.1-1" class="pilcrow">¶</a>
 </div>
 </section>
@@ -2323,13 +2268,13 @@ are defined in Appendix B.1 of <span>[<a href="#RFC5234" class="cite xref">RFC52
 <div id="ABNFc">
 <section id="section-7.2">
         <h3 id="name-abnf-for-canonical">
-<a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-abnf-for-canonical" class="section-name selfRef">ABNF for canonical</a>
+<a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-abnf-for-canonical" class="section-name selfRef">ABNF for Canonical</a>
         </h3>
-<div class="lang-ABNF sourcecode" id="section-7.2-1">
+<div class="lang-abnf sourcecode" id="section-7.2-1">
 <pre>
-   c-sexp         =  c-string / ("(" *c-sexp ")")
+c-sexp         =  c-string / ("(" *c-sexp ")")
 
-   c-string       =  [ "[" verbatim "]" ] verbatim
+c-string       =  [ "[" verbatim "]" ] verbatim
 </pre><a href="#section-7.2-1" class="pilcrow">¶</a>
 </div>
 </section>
@@ -2337,15 +2282,15 @@ are defined in Appendix B.1 of <span>[<a href="#RFC5234" class="cite xref">RFC52
 <div id="ABNFb">
 <section id="section-7.3">
         <h3 id="name-abnf-for-basic-transport">
-<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-abnf-for-basic-transport" class="section-name selfRef">ABNF for basic transport</a>
+<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-abnf-for-basic-transport" class="section-name selfRef">ABNF for Basic Transport</a>
         </h3>
-<div class="lang-ABNF sourcecode" id="section-7.3-1">
+<div class="lang-abnf sourcecode" id="section-7.3-1">
 <pre>
-   b-sexp         =  c-sexp / b-base-64
+b-sexp         =  c-sexp / b-base-64
 
-   b-base-64      =  "{" *(4base-64-chars) base-64-end "}"
-                       ; encodes a c-sexp, which has a minimum
-                       ; length of 2
+b-base-64      =  "{" *whitespace *base-64-chars base-64-end "}"
+                    ; encodes a c-sexp, which has a minimum
+                    ; length of 2
 </pre><a href="#section-7.3-1" class="pilcrow">¶</a>
 </div>
 </section>
@@ -2354,7 +2299,7 @@ are defined in Appendix B.1 of <span>[<a href="#RFC5234" class="cite xref">RFC52
 </div>
 <section id="section-8">
       <h2 id="name-restricted-s-expressions">
-<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-restricted-s-expressions" class="section-name selfRef">Restricted S-expressions</a>
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-restricted-s-expressions" class="section-name selfRef">Restricted S-Expressions</a>
       </h2>
 <p id="section-8-1">This document has described S-expressions in general form.
 Applications may wish to restrict their use of S-expressions in
@@ -2379,16 +2324,16 @@ Here are some possible restrictions that might be considered:<a href="#section-8
 </li>
       </ul>
 <p id="section-8-3">As provided in <a href="#Represent" class="auto internal xref">Section 6</a>, conformant
-implementations will support canonical and basic representation but
-support for advanced representation is not generally required. Thus
-advanced representation can only be used in applications which mandate
+implementations will support canonical and basic representation, but
+support for advanced representation is not generally required. Thus,
+advanced representation can only be used in applications that mandate
 its support or where a capability discovery mechanism indicates
 support.<a href="#section-8-3" class="pilcrow">¶</a></p>
 </section>
 <div id="Sec8">
 <section id="section-9">
       <h2 id="name-in-memory-representations">
-<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-in-memory-representations" class="section-name selfRef">In-memory representations</a>
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-in-memory-representations" class="section-name selfRef">In-Memory Representations</a>
       </h2>
 <p id="section-9-1">For processing, the S-expression would typically be parsed and
 represented in memory in a way that is more amenable to efficient
@@ -2400,50 +2345,50 @@ processing.  This document suggests two alternatives:<a href="#section-9-1" clas
 </li>
       </ul>
 <p id="section-9-3">These are only sketched here, as they are only suggestive. The
-<span>[<a href="#SexpCode" class="cite xref">SexpCode</a>]</span> code illustrates these styles in more
+code in <span>[<a href="#SexpCode" class="cite xref">SexpCode</a>]</span> illustrates these styles in more
 detail.<a href="#section-9-3" class="pilcrow">¶</a></p>
 <section id="section-9.1">
         <h3 id="name-list-structure-memory-repre">
-<a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-list-structure-memory-repre" class="section-name selfRef">List-structure memory representation</a>
+<a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-list-structure-memory-repre" class="section-name selfRef">List-Structure Memory Representation</a>
         </h3>
 <p id="section-9.1-1">Here there are separate records for simple-strings, strings, and
 lists or list nodes.  An S-expression of the form ("abc" "de") could
 be encoded as two records for the simple-strings, two for the strings,
-and two for the list elements, where a record is a relatively small
+and two for the list elements where a record is a relatively small
 block of memory and, except for simple-string, might have pointers in
 it to other records. This is a fairly conventional representation as
 discussed in Section 4 of <span>[<a href="#LISP2" class="cite xref">LISP2</a>]</span>.<a href="#section-9.1-1" class="pilcrow">¶</a></p>
 </section>
 <section id="section-9.2">
         <h3 id="name-array-layout-memory-represe">
-<a href="#section-9.2" class="section-number selfRef">9.2. </a><a href="#name-array-layout-memory-represe" class="section-name selfRef">Array-layout memory representation</a>
+<a href="#section-9.2" class="section-number selfRef">9.2. </a><a href="#name-array-layout-memory-represe" class="section-name selfRef">Array-Layout Memory Representation</a>
         </h3>
 <p id="section-9.2-1">Here each S-expression is represented as a contiguous array of octets.
 The first octet codes the "type" of the S-expression:<a href="#section-9.2-1" class="pilcrow">¶</a></p>
 <div class="sourcecode" id="section-9.2-2">
-<pre>
-    01   octet-string
-
-    02   octet-string with display-hint
-
-    03   beginning of list (and 00 is used for "end of list")
-</pre><a href="#section-9.2-2" class="pilcrow">¶</a>
+<pre>01   octet-string</pre><a href="#section-9.2-2" class="pilcrow">¶</a>
 </div>
-<p id="section-9.2-3">Each of the three types is immediately followed by a k-octet integer
-indicating the size (in octets) of the following representation.  Here
-k is an integer that depends on the implementation, it might be
-anywhere from 2 to 8, but would be fixed for a given implementation;
+<div class="sourcecode" id="section-9.2-3">
+<pre>02   octet-string with display-hint</pre><a href="#section-9.2-3" class="pilcrow">¶</a>
+</div>
+<div class="sourcecode" id="section-9.2-4">
+<pre>03   beginning of list (and 00 is used for "end of list")</pre><a href="#section-9.2-4" class="pilcrow">¶</a>
+</div>
+<p id="section-9.2-5">Each of the three types is immediately followed by a k-octet integer
+indicating the size (in octets) of the following representation.  Here,
+k is an integer that depends on the implementation. It might be
+anywhere from 2 to 8, but it would be fixed for a given implementation;
 it determines the size of the objects that can be handled.  The
 transport and canonical representations are independent of the choice
-of k made by the implementation.<a href="#section-9.2-3" class="pilcrow">¶</a></p>
-<p id="section-9.2-4">Although the lengths of lists are not given in the usual
+of k made by the implementation.<a href="#section-9.2-5" class="pilcrow">¶</a></p>
+<p id="section-9.2-6">Although the lengths of lists are not given in the usual
 S-expression notations, it is easy to fill them in when parsing; when
-you reach a right-parenthesis you know how long the list
-representation was, and where to go back to fill in the missing
-length.<a href="#section-9.2-4" class="pilcrow">¶</a></p>
+you reach a right parenthesis, you know how long the list
+representation was and where to go back to fill in the missing
+length.<a href="#section-9.2-6" class="pilcrow">¶</a></p>
 <section id="section-9.2.1">
           <h4 id="name-octet-string">
-<a href="#section-9.2.1" class="section-number selfRef">9.2.1. </a><a href="#name-octet-string" class="section-name selfRef">Octet-string</a>
+<a href="#section-9.2.1" class="section-number selfRef">9.2.1. </a><a href="#name-octet-string" class="section-name selfRef">Octet-String</a>
           </h4>
 <p id="section-9.2.1-1">This is represented as follows:<a href="#section-9.2.1-1" class="pilcrow">¶</a></p>
 <div class="sourcecode" id="section-9.2.1-2">
@@ -2451,7 +2396,7 @@ length.<a href="#section-9.2-4" class="pilcrow">¶</a></p>
     01 &lt;length&gt; &lt;octet-string&gt;
 </pre><a href="#section-9.2.1-2" class="pilcrow">¶</a>
 </div>
-<p id="section-9.2.1-3">For example (here k = 2)<a href="#section-9.2.1-3" class="pilcrow">¶</a></p>
+<p id="section-9.2.1-3">For example (here, k = 2):<a href="#section-9.2.1-3" class="pilcrow">¶</a></p>
 <div class="sourcecode" id="section-9.2.1-4">
 <pre>
     01 0003 a b c
@@ -2460,7 +2405,7 @@ length.<a href="#section-9.2-4" class="pilcrow">¶</a></p>
 </section>
 <section id="section-9.2.2">
           <h4 id="name-octet-string-with-display-h">
-<a href="#section-9.2.2" class="section-number selfRef">9.2.2. </a><a href="#name-octet-string-with-display-h" class="section-name selfRef">Octet-string with display-hint</a>
+<a href="#section-9.2.2" class="section-number selfRef">9.2.2. </a><a href="#name-octet-string-with-display-h" class="section-name selfRef">Octet-String with Display-Hint</a>
           </h4>
 <p id="section-9.2.2-1">This is represented as follows:<a href="#section-9.2.2-1" class="pilcrow">¶</a></p>
 <div class="sourcecode" id="section-9.2.2-2">
@@ -2470,13 +2415,13 @@ length.<a href="#section-9.2-4" class="pilcrow">¶</a></p>
       01 &lt;length&gt; &lt;octet-string&gt;    /* for octet-string */
 </pre><a href="#section-9.2.2-2" class="pilcrow">¶</a>
 </div>
-<p id="section-9.2.2-3">For example, the S-expression<a href="#section-9.2.2-3" class="pilcrow">¶</a></p>
+<p id="section-9.2.2-3">For example, the S-expression:<a href="#section-9.2.2-3" class="pilcrow">¶</a></p>
 <div class="sourcecode" id="section-9.2.2-4">
 <pre>
     [gif] #61626364#
 </pre><a href="#section-9.2.2-4" class="pilcrow">¶</a>
 </div>
-<p id="section-9.2.2-5">would be represented as (with k = 2)<a href="#section-9.2.2-5" class="pilcrow">¶</a></p>
+<p id="section-9.2.2-5">would be represented as (with k = 2):<a href="#section-9.2.2-5" class="pilcrow">¶</a></p>
 <div class="sourcecode" id="section-9.2.2-6">
 <pre>
     02 000d
@@ -2489,14 +2434,14 @@ length.<a href="#section-9.2-4" class="pilcrow">¶</a></p>
           <h4 id="name-list">
 <a href="#section-9.2.3" class="section-number selfRef">9.2.3. </a><a href="#name-list" class="section-name selfRef">List</a>
           </h4>
-<p id="section-9.2.3-1">This is represented as<a href="#section-9.2.3-1" class="pilcrow">¶</a></p>
+<p id="section-9.2.3-1">This is represented as:<a href="#section-9.2.3-1" class="pilcrow">¶</a></p>
 <div class="sourcecode" id="section-9.2.3-2">
 <pre>
     03 &lt;length&gt; &lt;item1&gt; &lt;item2&gt; &lt;item3&gt; ... &lt;item&gt; 00
 </pre><a href="#section-9.2.3-2" class="pilcrow">¶</a>
 </div>
 <p id="section-9.2.3-3">For example, the list (abc [d]ef (g)) is represented in memory as
-(with k = 2)<a href="#section-9.2.3-3" class="pilcrow">¶</a></p>
+(with k = 2):<a href="#section-9.2.3-3" class="pilcrow">¶</a></p>
 <div class="sourcecode" id="section-9.2.3-4">
 <pre>
     03 001b
@@ -2535,146 +2480,164 @@ as if they had a different display-hint.<a href="#section-10-2" class="pilcrow">
       <h2 id="name-iana-considerations">
 <a href="#section-11" class="section-number selfRef">11. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<p id="section-11-1">This document requires no IANA actions.<a href="#section-11-1" class="pilcrow">¶</a></p>
+<p id="section-11-1">This document has no IANA actions.<a href="#section-11-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <section id="section-12">
-      <h2 id="name-normative-references">
-<a href="#section-12" class="section-number selfRef">12. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+      <h2 id="name-references">
+<a href="#section-12" class="section-number selfRef">12. </a><a href="#name-references" class="section-name selfRef">References</a>
       </h2>
+<section id="section-12.1">
+        <h3 id="name-normative-references">
+<a href="#section-12.1" class="section-number selfRef">12.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+        </h3>
 <dl class="references">
-<dt id="C">[C]</dt>
-      <dd>
+<dt id="C88">[C88]</dt>
+        <dd>
 <span class="refAuthor">Kernighan, B.</span> and <span class="refAuthor">D. Ritchie</span>, <span class="refTitle">"The C Programming Language"</span>, <span class="seriesInfo">ISBN 0-13-110370-9</span>, <time datetime="1988" class="refDate">1988</time>. </dd>
 <dd class="break"></dd>
 <dt id="RFC0020">[RFC0020]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Cerf, V.</span>, <span class="refTitle">"ASCII format for network interchange"</span>, <span class="seriesInfo">STD 80</span>, <span class="seriesInfo">RFC 20</span>, <span class="seriesInfo">DOI 10.17487/RFC0020</span>, <time datetime="1969-10" class="refDate">October 1969</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc20">https://www.rfc-editor.org/info/rfc20</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC2119">[RFC2119]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc2119">https://www.rfc-editor.org/info/rfc2119</a>&gt;</span>. </dd>
 <dd class="break"></dd>
+<dt id="RFC3629">[RFC3629]</dt>
+        <dd>
+<span class="refAuthor">Yergeau, F.</span>, <span class="refTitle">"UTF-8, a transformation format of ISO 10646"</span>, <span class="seriesInfo">STD 63</span>, <span class="seriesInfo">RFC 3629</span>, <span class="seriesInfo">DOI 10.17487/RFC3629</span>, <time datetime="2003-11" class="refDate">November 2003</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc3629">https://www.rfc-editor.org/info/rfc3629</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 <dt id="RFC4648">[RFC4648]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Josefsson, S.</span>, <span class="refTitle">"The Base16, Base32, and Base64 Data Encodings"</span>, <span class="seriesInfo">RFC 4648</span>, <span class="seriesInfo">DOI 10.17487/RFC4648</span>, <time datetime="2006-10" class="refDate">October 2006</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc4648">https://www.rfc-editor.org/info/rfc4648</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC5234">[RFC5234]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Crocker, D., Ed.</span> and <span class="refAuthor">P. Overell</span>, <span class="refTitle">"Augmented BNF for Syntax Specifications: ABNF"</span>, <span class="seriesInfo">STD 68</span>, <span class="seriesInfo">RFC 5234</span>, <span class="seriesInfo">DOI 10.17487/RFC5234</span>, <time datetime="2008-01" class="refDate">January 2008</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc5234">https://www.rfc-editor.org/info/rfc5234</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC8174">[RFC8174]</dt>
-    <dd>
+      <dd>
 <span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8174">https://www.rfc-editor.org/info/rfc8174</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 </dl>
 </section>
-<section id="section-13">
-      <h2 id="name-informative-references">
-<a href="#section-13" class="section-number selfRef">13. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
-      </h2>
+<section id="section-12.2">
+        <h3 id="name-informative-references">
+<a href="#section-12.2" class="section-number selfRef">12.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+        </h3>
 <dl class="references">
 <dt id="BERN">[BERN]</dt>
-      <dd>
-<span class="refAuthor">Bernstein, D.</span>, <span class="refTitle">"Netstrings"</span>, <span class="seriesInfo">Work in progress</span>, <time datetime="1997-02-01" class="refDate">1 February 1997</time>, <span>&lt;<a href="https://www.ietf.org/archive/id/draft-bernstein-netstrings-02.txt">https://www.ietf.org/archive/id/draft-bernstein-netstrings-02.txt</a>&gt;</span>. </dd>
+        <dd>
+<span class="refAuthor">Bernstein, D. J.</span>, <span class="refTitle">"Netstrings"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-bernstein-netstrings-02</span>, <time datetime="1997-01-01" class="refDate">1 January 1997</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-bernstein-netstrings-02">https://datatracker.ietf.org/doc/html/draft-bernstein-netstrings-02</a>&gt;</span>. </dd>
 <dd class="break"></dd>
-<dt id="CANON">[CANON]</dt>
-      <dd>
-<div class="refInstance" id="CANON2">
-          <span class="refAuthor">Wikipedia</span>, <span class="refTitle">"Canonical S-expressions"</span>, <span>&lt;<a href="https://en.wikipedia.org/wiki/Canonical_S-expressions">https://en.wikipedia.org/wiki/Canonical_S-expressions</a>&gt;</span>. </div>
-<div class="refInstance" id="CANON3">
-          <span class="refAuthor">Grinberg, R.</span>, <span class="refTitle">"Csexp - Canonical S-expressions"</span>, <time datetime="2023-03-24" class="refDate">24 March 2023</time>, <span>&lt;<a href="https://github.com/ocaml-dune/csexp">https://github.com/ocaml-dune/csexp</a>&gt;</span>. </div>
-</dd>
+<dt id="CANON1">[CANON1]</dt>
+        <dd>
+<span class="refAuthor">Wikipedia</span>, <span class="refTitle">"Canonical S-expressions"</span>, <span>&lt;<a href="https://en.wikipedia.org/wiki/Canonical_S-expressions">https://en.wikipedia.org/wiki/Canonical_S-expressions</a>&gt;</span>. </dd>
 <dd class="break"></dd>
-<dt id="CDDLfreezer">[CDDLfreezer]</dt>
-      <dd>
-<span class="refAuthor">Bormann, C.</span>, <span class="refTitle">"A feature freezer for the Concise Data Definition Language (CDDL)"</span>, <span class="seriesInfo">work in progress</span>, <time datetime="2023-09-12" class="refDate">12 September 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/draft-bormann-cbor-cddl-freezer/">https://datatracker.ietf.org/doc/draft-bormann-cbor-cddl-freezer/</a>&gt;</span>. </dd>
+<dt id="CANON2">[CANON2]</dt>
+        <dd>
+<span class="refAuthor">Grinberg, R.</span>, <span class="refTitle">"Csexp - Canonical S-expressions"</span>, <time datetime="2023-03-24" class="refDate">24 March 2023</time>, <span>&lt;<a href="https://github.com/ocaml-dune/csexp">https://github.com/ocaml-dune/csexp</a>&gt;</span>. </dd>
 <dd class="break"></dd>
-<dt id="formal">[formal]</dt>
-      <dd>
-<span class="refAuthor">Petit-Huguenin, M.</span>, <span class="refTitle">"A Formalization of Symbolic Expressions"</span>, <span class="seriesInfo">work in progress</span>, <time datetime="2024-05-24" class="refDate">24 May 2024</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-petithuguenin-ufmrg-formal-sexpr-04">https://datatracker.ietf.org/doc/html/draft-petithuguenin-ufmrg-formal-sexpr-04</a>&gt;</span>. </dd>
+<dt id="I-D.bormann-cbor-cddl-freezer">[CDDL-freezer]</dt>
+        <dd>
+<span class="refAuthor">Bormann, C.</span>, <span class="refTitle">"A feature freezer for the Concise Data Definition Language (CDDL)"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-bormann-cbor-cddl-freezer-15</span>, <time datetime="2025-02-28" class="refDate">28 February 2025</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-bormann-cbor-cddl-freezer-15">https://datatracker.ietf.org/doc/html/draft-bormann-cbor-cddl-freezer-15</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="I-D.petithuguenin-ufmrg-formal-sexpr">[Formal]</dt>
+        <dd>
+<span class="refAuthor">Petit-Huguenin, M.</span>, <span class="refTitle">"A Formalization of Symbolic Expressions"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-petithuguenin-ufmrg-formal-sexpr-06</span>, <time datetime="2025-05-04" class="refDate">4 May 2025</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-petithuguenin-ufmrg-formal-sexpr-06">https://datatracker.ietf.org/doc/html/draft-petithuguenin-ufmrg-formal-sexpr-06</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="GnuPG">[GnuPG]</dt>
-      <dd>
-<span class="refAuthor">Free Software Foundation, Inc.</span>, <span class="refTitle">"The GNU Privacy Guard"</span>, <span>&lt;<a href="https://www.gnupg.org/">https://www.gnupg.org/</a>&gt;</span>. </dd>
+        <dd>
+<span class="refAuthor">GnuPG</span>, <span class="refTitle">"The GNU Privacy Guard"</span>, <span>&lt;<a href="https://www.gnupg.org/">https://www.gnupg.org/</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="Inferno">[Inferno]</dt>
-      <dd>
-<span class="refAuthor">Uriel</span>, <span class="refTitle">"Inferno S-expressions"</span>, <span>&lt;<a href="http://man.cat-v.org/inferno/6/sexprs">http://man.cat-v.org/inferno/6/sexprs</a>&gt;</span>. </dd>
+        <dd>
+<span class="refTitle">"Inferno S-expressions"</span>, <span class="refContent">Inferno Manual Page</span>, <span>&lt;<a href="https://man.cat-v.org/inferno/6/sexprs">https://man.cat-v.org/inferno/6/sexprs</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="Libgcrypt">[Libgcrypt]</dt>
-      <dd>
-<span class="refAuthor">GnuPG</span>, <span class="refTitle">"The Libgcrypt Library"</span>, <span class="seriesInfo">Libgcrypt version 1.10.2</span>, <time datetime="2023-04-06" class="refDate">6 April 2023</time>, <span>&lt;<a href="https://www.gnupg.org/documentation/manuals/gcrypt/">https://www.gnupg.org/documentation/manuals/gcrypt/</a>&gt;</span>. </dd>
+        <dd>
+<span class="refAuthor">GnuPG</span>, <span class="refTitle">"The Libgcrypt Library"</span>, <span class="refContent">Libgcrypt version 1.10.2</span>, <time datetime="2023-04-06" class="refDate">6 April 2023</time>, <span>&lt;<a href="https://www.gnupg.org/documentation/manuals/gcrypt/">https://www.gnupg.org/documentation/manuals/gcrypt/</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="LISP">[LISP]</dt>
-      <dd>
-<span class="refAuthor">Levin, M.</span> and <span class="refAuthor">J. McCarthy</span>, <span class="refTitle">"LISP 1.5 Programmer's Manual"</span>, <span class="seriesInfo">ISBN-13 978-0-262-12011-0</span>, <span class="seriesInfo">ISBN-10 0262130114</span>, <time datetime="1962-08-15" class="refDate">15 August 1962</time>. </dd>
+        <dd>
+<span class="refAuthor">McCarthy, J.</span>, <span class="refAuthor">Abrahams, P. W.</span>, <span class="refAuthor">Edwards, D. J.</span>, <span class="refAuthor">Hart, T. P.</span>, and <span class="refAuthor">M. Levin</span>, <span class="refTitle">"LISP 1.5 Programmer's Manual"</span>, <span class="seriesInfo">ISBN-13 978-0-262-12011-0</span>, <span class="seriesInfo">ISBN-10 0262130114</span>, <time datetime="1962-08-15" class="refDate">15 August 1962</time>, <span>&lt;<a href="https://www.softwarepreservation.org/projects/LISP/book/LISP%201.5%20Programmers%20Manual.pdf">https://www.softwarepreservation.org/projects/LISP/book/LISP%201.5%20Programmers%20Manual.pdf</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="LISP2">[LISP2]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">McCarthy, J.</span>, <span class="refTitle">"Recursive Functions of Symbolic Expressions and Their Computation by Machine, Part I"</span>, <time datetime="1960-04" class="refDate">April 1960</time>, <span>&lt;<a href="https://people.cs.umass.edu/~emery/classes/cmpsci691st/readings/PL/LISP.pdf">https://people.cs.umass.edu/~emery/classes/cmpsci691st/readings/PL/LISP.pdf</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC2046">[RFC2046]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Freed, N.</span> and <span class="refAuthor">N. Borenstein</span>, <span class="refTitle">"Multipurpose Internet Mail Extensions (MIME) Part Two: Media Types"</span>, <span class="seriesInfo">RFC 2046</span>, <span class="seriesInfo">DOI 10.17487/RFC2046</span>, <time datetime="1996-11" class="refDate">November 1996</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc2046">https://www.rfc-editor.org/info/rfc2046</a>&gt;</span>. </dd>
 <dd class="break"></dd>
+<dt id="RFC2130">[RFC2130]</dt>
+        <dd>
+<span class="refAuthor">Weider, C.</span>, <span class="refAuthor">Preston, C.</span>, <span class="refAuthor">Simonsen, K.</span>, <span class="refAuthor">Alvestrand, H.</span>, <span class="refAuthor">Atkinson, R.</span>, <span class="refAuthor">Crispin, M.</span>, and <span class="refAuthor">P. Svanberg</span>, <span class="refTitle">"The Report of the IAB Character Set Workshop held 29 February - 1 March, 1996"</span>, <span class="seriesInfo">RFC 2130</span>, <span class="seriesInfo">DOI 10.17487/RFC2130</span>, <time datetime="1997-04" class="refDate">April 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc2130">https://www.rfc-editor.org/info/rfc2130</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 <dt id="RFC2692">[RFC2692]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Ellison, C.</span>, <span class="refTitle">"SPKI Requirements"</span>, <span class="seriesInfo">RFC 2692</span>, <span class="seriesInfo">DOI 10.17487/RFC2692</span>, <time datetime="1999-09" class="refDate">September 1999</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc2692">https://www.rfc-editor.org/info/rfc2692</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC2693">[RFC2693]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Ellison, C.</span>, <span class="refAuthor">Frantz, B.</span>, <span class="refAuthor">Lampson, B.</span>, <span class="refAuthor">Rivest, R.</span>, <span class="refAuthor">Thomas, B.</span>, and <span class="refAuthor">T. Ylonen</span>, <span class="refTitle">"SPKI Certificate Theory"</span>, <span class="seriesInfo">RFC 2693</span>, <span class="seriesInfo">DOI 10.17487/RFC2693</span>, <time datetime="1999-09" class="refDate">September 1999</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc2693">https://www.rfc-editor.org/info/rfc2693</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC3259">[RFC3259]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Ott, J.</span>, <span class="refAuthor">Perkins, C.</span>, and <span class="refAuthor">D. Kutscher</span>, <span class="refTitle">"A Message Bus for Local Coordination"</span>, <span class="seriesInfo">RFC 3259</span>, <span class="seriesInfo">DOI 10.17487/RFC3259</span>, <time datetime="2002-04" class="refDate">April 2002</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc3259">https://www.rfc-editor.org/info/rfc3259</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC3275">[RFC3275]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Eastlake 3rd, D.</span>, <span class="refAuthor">Reagle, J.</span>, and <span class="refAuthor">D. Solo</span>, <span class="refTitle">"(Extensible Markup Language) XML-Signature Syntax and Processing"</span>, <span class="seriesInfo">RFC 3275</span>, <span class="seriesInfo">DOI 10.17487/RFC3275</span>, <time datetime="2002-03" class="refDate">March 2002</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc3275">https://www.rfc-editor.org/info/rfc3275</a>&gt;</span>. </dd>
 <dd class="break"></dd>
-<dt id="RFC7159">[RFC7159]</dt>
-      <dd>
-<span class="refAuthor">Bray, T., Ed.</span>, <span class="refTitle">"The JavaScript Object Notation (JSON) Data Interchange Format"</span>, <span class="seriesInfo">RFC 7159</span>, <span class="seriesInfo">DOI 10.17487/RFC7159</span>, <time datetime="2014-03" class="refDate">March 2014</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc7159">https://www.rfc-editor.org/info/rfc7159</a>&gt;</span>. </dd>
+<dt id="RFC8259">[RFC8259]</dt>
+        <dd>
+<span class="refAuthor">Bray, T., Ed.</span>, <span class="refTitle">"The JavaScript Object Notation (JSON) Data Interchange Format"</span>, <span class="seriesInfo">STD 90</span>, <span class="seriesInfo">RFC 8259</span>, <span class="seriesInfo">DOI 10.17487/RFC8259</span>, <time datetime="2017-12" class="refDate">December 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8259">https://www.rfc-editor.org/info/rfc8259</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC8949">[RFC8949]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Bormann, C.</span> and <span class="refAuthor">P. Hoffman</span>, <span class="refTitle">"Concise Binary Object Representation (CBOR)"</span>, <span class="seriesInfo">STD 94</span>, <span class="seriesInfo">RFC 8949</span>, <span class="seriesInfo">DOI 10.17487/RFC8949</span>, <time datetime="2020-12" class="refDate">December 2020</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8949">https://www.rfc-editor.org/info/rfc8949</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="Ribose">[Ribose]</dt>
-      <dd>
-<span class="refAuthor">Ribose Group Inc.</span>, <span class="refTitle">"Open-source projects for developers and designers"</span>, <time datetime="2023-04-13" class="refDate">13 April 2023</time>, <span>&lt;<a href="https://open.ribose.com/">https://open.ribose.com/</a>&gt;</span>. </dd>
+        <dd>
+<span class="refAuthor">Ribose Group Inc.</span>, <span class="refTitle">"Open-source projects for developers and designers"</span>, <span>&lt;<a href="https://open.ribose.com/">https://open.ribose.com/</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RNPGP_SEXPP">[RNPGP_SEXPP]</dt>
-      <dd>
-<span class="refAuthor">RNP, R.</span>, <span class="refTitle">"S-Expressions parser and generator library in C++ (SEXP in C++)"</span>, <span class="seriesInfo">version 0.8.7</span>, <time datetime="2023-06-28" class="refDate">28 June 2023</time>, <span>&lt;<a href="https://github.com/rnpgp/sexpp">https://github.com/rnpgp/sexpp</a>&gt;</span>. </dd>
+        <dd>
+<span class="refTitle">"S-Expressions parser and generator library in C++ (SEXP in C++)"</span>, <span class="refContent">Version 0.9.2, commit 249c6e3</span>, <time datetime="2025-03-22" class="refDate">22 March 2025</time>, <span>&lt;<a href="https://github.com/rnpgp/sexpp">https://github.com/rnpgp/sexpp</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="SDSI">[SDSI]</dt>
-      <dd>
-<span class="refAuthor">Rivest, R.</span> and <span class="refAuthor">B. Lampson</span>, <span class="refTitle">"A Simple Distributed Security Architecture"</span>, <span class="seriesInfo">working document</span>, <span class="seriesInfo">SDSI version 1.1</span>, <time datetime="1996-10-02" class="refDate">2 October 1996</time>, <span>&lt;<a href="https://people.csail.mit.edu/rivest/pubs/RL96.ver-1.1.html">https://people.csail.mit.edu/rivest/pubs/RL96.ver-1.1.html</a>&gt;</span>. </dd>
+        <dd>
+<span class="refAuthor">Rivest, R.</span> and <span class="refAuthor">B. Lampson</span>, <span class="refTitle">"A Simple Distributed Security Architecture"</span>, <span class="refContent">Working document for SDSI version 1.1</span>, <time datetime="1996-10-02" class="refDate">2 October 1996</time>, <span>&lt;<a href="https://people.csail.mit.edu/rivest/pubs/RL96.ver-1.1.html">https://people.csail.mit.edu/rivest/pubs/RL96.ver-1.1.html</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="SexpCode">[SexpCode]</dt>
-      <dd>
-<span class="refAuthor">Malkiewicz, J.</span>, <span class="refTitle">"SEXP---(S-expressions)"</span>, <time datetime="2015-06-10" class="refDate">10 June 2015</time>, <span>&lt;<a href="https://github.com/jpmalkiewicz/rivest-sexp">https://github.com/jpmalkiewicz/rivest-sexp</a>&gt;</span>. </dd>
+        <dd>
+<span class="refTitle">"SEXP---(S-expressions)"</span>, <span class="refContent">commit 4aa7c36</span>, <time datetime="2015-06-10" class="refDate">10 June 2015</time>, <span>&lt;<a href="https://github.com/jpmalkiewicz/rivest-sexp">https://github.com/jpmalkiewicz/rivest-sexp</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="SEXPP">[SEXPP]</dt>
-      <dd>
-<span class="refAuthor">Davis, R.</span>, <span class="refTitle">"SexpProcessor"</span>, <time datetime="2015-06-10" class="refDate">10 June 2015</time>, <span>&lt;<a href="https://github.com/seattlerb/sexp_processor">https://github.com/seattlerb/sexp_processor</a>&gt;</span>. </dd>
+        <dd>
+<span class="refTitle">"SexpProcessor"</span>, <span class="refContent">commit a90f90f</span>, <time datetime="2025-04-11" class="refDate">11 April 2025</time>, <span>&lt;<a href="https://github.com/seattlerb/sexp_processor">https://github.com/seattlerb/sexp_processor</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="SFEXP">[SFEXP]</dt>
-      <dd>
-<span class="refAuthor">Sottile, M.</span>, <span class="refTitle">"Small Fast X-Expression Library"</span>, <time datetime="2023-03-24" class="refDate">24 March 2023</time>, <span>&lt;<a href="https://github.com/mjsottile/sfsexp">https://github.com/mjsottile/sfsexp</a>&gt;</span>. </dd>
+        <dd>
+<span class="refTitle">"Small Fast X-Expression Library"</span>, <span class="refContent">commit b7d3bea</span>, <time datetime="2023-03-24" class="refDate">24 March 2023</time>, <span>&lt;<a href="https://github.com/mjsottile/sfsexp">https://github.com/mjsottile/sfsexp</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="SPKI">[SPKI]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Rivest, R.</span>, <span class="refTitle">"SPKI/SDSI 2.0 A Simple Distributed Security Infrastructure"</span>, <span>&lt;<a href="https://people.csail.mit.edu/rivest/pubs/RL96.slides-maryland.pdf">https://people.csail.mit.edu/rivest/pubs/RL96.slides-maryland.pdf</a>&gt;</span>. </dd>
 <dd class="break"></dd>
+<dt id="Unicode">[Unicode]</dt>
+        <dd>
+<span class="refAuthor">The Unicode Consortium</span>, <span class="refTitle">"The Unicode Standard"</span>, <span>&lt;<a href="https://www.unicode.org/versions/latest/">https://www.unicode.org/versions/latest/</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 <dt id="XML">[XML]</dt>
-    <dd>
-<span class="refAuthor">Bray, T.</span>, <span class="refAuthor">Paoli, J.</span>, <span class="refAuthor">Sperberg-McQueen, C.M.</span>, <span class="refAuthor">Maler, E.</span>, and <span class="refAuthor">F. Yergeau</span>, <span class="refTitle">"Extensible Markup Language (XML) 1.0"</span>, <time datetime="2008-11-26" class="refDate">26 November 2008</time>, <span>&lt;<a href="https://www.w3.org/TR/REC-xml/">https://www.w3.org/TR/REC-xml/</a>&gt;</span>. </dd>
+      <dd>
+<span class="refAuthor">Bray, T.</span>, <span class="refAuthor">Paoli, J.</span>, <span class="refAuthor">Sperberg-McQueen, C.M.</span>, <span class="refAuthor">Maler, E.</span>, and <span class="refAuthor">F. Yergeau</span>, <span class="refTitle">"Extensible Markup Language (XML) 1.0"</span>, <span class="refContent">W3C Recommendation</span>, <time datetime="2008-11-26" class="refDate">26 November 2008</time>, <span>&lt;<a href="https://www.w3.org/TR/2008/REC-xml-20081126/">https://www.w3.org/TR/2008/REC-xml-20081126/</a>&gt;</span>. <span class="annotation">Latest version available at <span>&lt;<a href="https://www.w3.org/TR/REC-xml/">https://www.w3.org/TR/REC-xml/</a>&gt;</span>.</span>
+        </dd>
 <dd class="break"></dd>
 </dl>
+</section>
 </section>
 <div id="Code">
 <section id="appendix-A">
@@ -2684,256 +2647,44 @@ as if they had a different display-hint.<a href="#section-10-2" class="pilcrow">
 <p id="appendix-A-1">At this time there are multiple implementations, many open source,
 available that are intended to read and parse some or all of the
 various S-expression formats specified here. In particular, see the
-following likely incomplete list:<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+following -- likely incomplete -- list:<a href="#appendix-A-1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="appendix-A-2.1">Project GNU's <span>[<a href="#Libgcrypt" class="cite xref">Libgcrypt</a>]</span>.<a href="#appendix-A-2.1" class="pilcrow">¶</a>
+<li class="normal" id="appendix-A-2.1">Project GNU's <span>[<a href="#Libgcrypt" class="cite xref">Libgcrypt</a>]</span><a href="#appendix-A-2.1" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="appendix-A-2.2">Ribose's RNP <span>[<a href="#RNPGP_SEXPP" class="cite xref">RNPGP_SEXPP</a>]</span> in C++.<a href="#appendix-A-2.2" class="pilcrow">¶</a>
+        <li class="normal" id="appendix-A-2.2">Ribose's RNP <span>[<a href="#RNPGP_SEXPP" class="cite xref">RNPGP_SEXPP</a>]</span> in C++<a href="#appendix-A-2.2" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="appendix-A-2.3">Github project of J. P. Malkiewicz <span>[<a href="#SexpCode" class="cite xref">SexpCode</a>]</span> in C.<a href="#appendix-A-2.3" class="pilcrow">¶</a>
+        <li class="normal" id="appendix-A-2.3">Github project of J. P. Malkiewicz <span>[<a href="#SexpCode" class="cite xref">SexpCode</a>]</span> in C<a href="#appendix-A-2.3" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="appendix-A-2.4">The Inferno implementation <span>[<a href="#Inferno" class="cite xref">Inferno</a>]</span>.<a href="#appendix-A-2.4" class="pilcrow">¶</a>
+        <li class="normal" id="appendix-A-2.4">The Inferno implementation <span>[<a href="#Inferno" class="cite xref">Inferno</a>]</span><a href="#appendix-A-2.4" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="appendix-A-2.5">Small Fast X-Expression Library <span>[<a href="#SFEXP" class="cite xref">SFEXP</a>]</span>.<a href="#appendix-A-2.5" class="pilcrow">¶</a>
+        <li class="normal" id="appendix-A-2.5">Small Fast X-Expression Library <span>[<a href="#SFEXP" class="cite xref">SFEXP</a>]</span><a href="#appendix-A-2.5" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="appendix-A-2.6">S-expression Processor <span>[<a href="#SEXPP" class="cite xref">SEXPP</a>]</span> in Ruby.<a href="#appendix-A-2.6" class="pilcrow">¶</a>
+        <li class="normal" id="appendix-A-2.6">S-expression Processor <span>[<a href="#SEXPP" class="cite xref">SEXPP</a>]</span> in Ruby<a href="#appendix-A-2.6" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="appendix-A-2.7">Canonical S-expressions <span>[<a href="#CANON" class="cite xref">CANON</a>]</span> (OCAML).<a href="#appendix-A-2.7" class="pilcrow">¶</a>
+        <li class="normal" id="appendix-A-2.7">Canonical S-expressions <span>[<a href="#CANON2" class="cite xref">CANON2</a>]</span> (OCAML)<a href="#appendix-A-2.7" class="pilcrow">¶</a>
 </li>
       </ul>
 </section>
 </div>
-<section id="appendix-B">
-      <h2 id="name-change-history">
-<a href="#appendix-B" class="section-number selfRef">Appendix B. </a><a href="#name-change-history" class="section-name selfRef">Change History</a>
-      </h2>
-<p id="appendix-B-1">RFC Editor Note: Please delete this section before publication.<a href="#appendix-B-1" class="pilcrow">¶</a></p>
-<section id="appendix-B.1">
-        <h3 id="name-00-changes">
-<a href="#appendix-B.1" class="section-number selfRef">B.1. </a><a href="#name-00-changes" class="section-name selfRef">-00 Changes</a>
-        </h3>
-<p id="appendix-B.1-1">This sub-section summarizes significant changes between the
-original 1997 -00 version of this document and the 2023 -00 version
-submitted to the IETF.<a href="#appendix-B.1-1" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="appendix-B.1-2">
-  <li id="appendix-B.1-2.1">Convert to XML v3.<a href="#appendix-B.1-2.1" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.1-2.2">Update Ron Rivest author information and, with his permission,
-  add Donald Eastlake as an author.<a href="#appendix-B.1-2.2" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.1-2.3">Add minimal "IANA Considerations" and "Security
-  Considerations" sections.<a href="#appendix-B.1-2.3" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.1-2.4">Since implementation requirements terminology is used, add the
-  usual paragraph about it as a sub-section of Section 1 and add
-  references to <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> and <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span>.<a href="#appendix-B.1-2.4" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.1-2.5">Divide references into Normative and Informational and update
-  base-64 reference to be to <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span>.<a href="#appendix-B.1-2.5" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.1-2.6">Add a couple of sentences to the "Historical note" section about
-  the history of -00 versions of the draft.<a href="#appendix-B.1-2.6" class="pilcrow">¶</a>
-</li>
-        </ol>
-</section>
-<section id="appendix-B.2">
-        <h3 id="name-changes-from-00-to-01">
-<a href="#appendix-B.2" class="section-number selfRef">B.2. </a><a href="#name-changes-from-00-to-01" class="section-name selfRef">Changes from -00 to -01</a>
-        </h3>
-<ol start="1" type="1" class="normal type-1" id="appendix-B.2-1">
-  <li id="appendix-B.2-1.1">Fix glitches and errors in the BNF.<a href="#appendix-B.2-1.1" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.2-1.2">Add Acknowledgements section to list Marc Petit-Huguenin (who
-  provided BNF improvements) and John Klensin.<a href="#appendix-B.2-1.2" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.2-1.3">Update code references in <a href="#Code" class="auto internal xref">Appendix A</a> and add to
-  Informative References section. Note: The code
-  in the Malkiewicz github repository may be the code that was
-  originally at http://theory.lcs.mit.edu/~rivest/sexp.html<a href="#appendix-B.2-1.3" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.2-1.4">Add this Change History Appendix.<a href="#appendix-B.2-1.4" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.2-1.5">Move "Historical Notes" which were formerly a separate section
-  at the end of the document up to be a sub-section of Section 1.<a href="#appendix-B.2-1.5" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.2-1.6">Add references to <span>[<a href="#LISP" class="cite xref">LISP</a>]</span>, <span>[<a href="#RFC2692" class="cite xref">RFC2692</a>]</span>, and <span>[<a href="#RFC2693" class="cite xref">RFC2693</a>]</span>.<a href="#appendix-B.2-1.6" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.2-1.7">Add simple security considerations.<a href="#appendix-B.2-1.7" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.2-1.8">Minor editorial fixes/improvements.<a href="#appendix-B.2-1.8" class="pilcrow">¶</a>
-</li>
-        </ol>
-</section>
-<section id="appendix-B.3">
-        <h3 id="name-changes-from-01-to-02">
-<a href="#appendix-B.3" class="section-number selfRef">B.3. </a><a href="#name-changes-from-01-to-02" class="section-name selfRef">Changes from -01 to -02</a>
-        </h3>
-<ol start="1" type="1" class="normal type-1" id="appendix-B.3-1">
-  <li id="appendix-B.3-1.1">Change default MIME Type in <a href="#DisplayHint" class="auto internal xref">Section 4.6</a> to have
-  charset=utf-8 <span>[<a href="#RFC4648" class="cite xref">RFC4648</a>]</span>.<a href="#appendix-B.3-1.1" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.3-1.2">Change BNF to ABNF and add reference to <span>[<a href="#RFC5234" class="cite xref">RFC5234</a>]</span>.<a href="#appendix-B.3-1.2" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.3-1.3">Move Marc Petit-Huguenin to a Contributors section for his work
-  on the ABNF.<a href="#appendix-B.3-1.3" class="pilcrow">¶</a>
-</li>
-        </ol>
-</section>
-<section id="appendix-B.4">
-        <h3 id="name-changes-from-02-to-03">
-<a href="#appendix-B.4" class="section-number selfRef">B.4. </a><a href="#name-changes-from-02-to-03" class="section-name selfRef">Changes from -02 to -03</a>
-        </h3>
-<ol start="1" type="1" class="normal type-1" id="appendix-B.4-1">
-  <li id="appendix-B.4-1.1">Add current S-expression usage Section 1.2.<a href="#appendix-B.4-1.1" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.4-1.2">Add the white book <span>[<a href="#C" class="cite xref">C</a>]</span> as a reference.<a href="#appendix-B.4-1.2" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.4-1.3">Add reference to the Ribose RNP code <span>[<a href="#RNPGP_SEXPP" class="cite xref">RNPGP_SEXPP</a>]</span>.<a href="#appendix-B.4-1.3" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.4-1.4">Minor editorial improvements.<a href="#appendix-B.4-1.4" class="pilcrow">¶</a>
-</li>
-        </ol>
-</section>
-<section id="appendix-B.5">
-        <h3 id="name-changes-from-03-to-04">
-<a href="#appendix-B.5" class="section-number selfRef">B.5. </a><a href="#name-changes-from-03-to-04" class="section-name selfRef">Changes from -03 to -04</a>
-        </h3>
-<p id="appendix-B.5-1">Trivial keep-alive update.<a href="#appendix-B.5-1" class="pilcrow">¶</a></p>
-</section>
-<section id="appendix-B.6">
-        <h3 id="name-changes-from-04-to-05">
-<a href="#appendix-B.6" class="section-number selfRef">B.6. </a><a href="#name-changes-from-04-to-05" class="section-name selfRef">Changes from -04 to -05</a>
-        </h3>
-<ol start="1" type="1" class="normal type-1" id="appendix-B.6-1">
-  <li id="appendix-B.6-1.1">Add reference to <span>[<a href="#Inferno" class="cite xref">Inferno</a>]</span> implementation.<a href="#appendix-B.6-1.1" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.6-1.2">Eliminate remaining references to being a "proposal".<a href="#appendix-B.6-1.2" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.6-1.3">Emphasize that a particular application can specify a different
-  default display-hint.<a href="#appendix-B.6-1.3" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.6-1.4">Add reference to <span>[<a href="#RFC0020" class="cite xref">RFC0020</a>]</span> for ASCII.<a href="#appendix-B.6-1.4" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.6-1.5">Minor editorial improvements.<a href="#appendix-B.6-1.5" class="pilcrow">¶</a>
-</li>
-        </ol>
-</section>
-<section id="appendix-B.7">
-        <h3 id="name-changes-from-05-to-06">
-<a href="#appendix-B.7" class="section-number selfRef">B.7. </a><a href="#name-changes-from-05-to-06" class="section-name selfRef">Changes from -05 to -06</a>
-        </h3>
-<ol start="1" type="1" class="normal type-1" id="appendix-B.7-1">
-  <li id="appendix-B.7-1.1">Move implementations list to Appendix A. Add numerous
-  implementations.<a href="#appendix-B.7-1.1" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.7-1.2">Change default display-hint to "application/octet-stream".<a href="#appendix-B.7-1.2" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.7-1.3">Expand Abstract and include most of Abstract in the
-  Introduction.<a href="#appendix-B.7-1.3" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.7-1.4">Use different tokens for the top-level rule in the three ABNF
-  encodings so that the rules would not collide if all were used. Fix
-  ABNF for "printable".<a href="#appendix-B.7-1.4" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.7-1.5">Add an illustration of list-structure memory
-  representation.<a href="#appendix-B.7-1.5" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.7-1.6">Editorial improvements.<a href="#appendix-B.7-1.6" class="pilcrow">¶</a>
-</li>
-        </ol>
-</section>
-<section id="appendix-B.8">
-        <h3 id="name-changes-from-06-to-07">
-<a href="#appendix-B.8" class="section-number selfRef">B.8. </a><a href="#name-changes-from-06-to-07" class="section-name selfRef">Changes from -06 to -07</a>
-        </h3>
-<ol start="1" type="1" class="normal type-1" id="appendix-B.8-1">
-  <li id="appendix-B.8-1.1">Re-order some top-level sections.<a href="#appendix-B.8-1.1" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.8-1.2">Replace "list-structure" memory figure with explanation and
-  <span>[<a href="#LISP2" class="cite xref">LISP2</a>]</span> reference.<a href="#appendix-B.8-1.2" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.8-1.3">Re-organize ABNF to give full ABNF for advanced transport first
-  and then mostly derive canonical and basic from advanced.<a href="#appendix-B.8-1.3" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.8-1.4">Correct reference to <span>[<a href="#RFC5234" class="cite xref">RFC5234</a>]</span> to be to Appendix
-  B.1, not Appendix A.<a href="#appendix-B.8-1.4" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.8-1.5">Attempt to clarify the difference between canonicalization and
-  equality.<a href="#appendix-B.8-1.5" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.8-1.6">Add the explicit <a href="#base64sexp" class="auto internal xref">Section 6.1</a> on base-64
-  representation of S-expressions.<a href="#appendix-B.8-1.6" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.8-1.7">Globally hyphenate "octet-string" and "display-hint", generally
-  replace "byte" with "octet".<a href="#appendix-B.8-1.7" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.8-1.8">Add some more examples here and there.<a href="#appendix-B.8-1.8" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.8-1.9">Fix typos. Other editorial improvements.<a href="#appendix-B.8-1.9" class="pilcrow">¶</a>
-</li>
-        </ol>
-</section>
-<section id="appendix-B.9">
-        <h3 id="name-changes-from-07-to-08">
-<a href="#appendix-B.9" class="section-number selfRef">B.9. </a><a href="#name-changes-from-07-to-08" class="section-name selfRef">Changes from -07 to -08</a>
-        </h3>
-<ol start="1" type="1" class="normal type-1" id="appendix-B.9-1">
-  <li id="appendix-B.9-1.1">A variety of minor fixes and more precise wording.<a href="#appendix-B.9-1.1" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.9-1.2">Give exact circumstances under which a space is needed to
-  separate successive octet-string representations in a list.<a href="#appendix-B.9-1.2" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.9-1.3">Additional editorial improvements.<a href="#appendix-B.9-1.3" class="pilcrow">¶</a>
-</li>
-        </ol>
-</section>
-<section id="appendix-B.10">
-        <h3 id="name-changes-from-08-to-09">
-<a href="#appendix-B.10" class="section-number selfRef">B.10. </a><a href="#name-changes-from-08-to-09" class="section-name selfRef">Changes from -08 to -09</a>
-        </h3>
-<ol start="1" type="1" class="normal type-1" id="appendix-B.10-1">
-  <li id="appendix-B.10-1.1">Add mention of and reference to <span>[<a href="#formal" class="cite xref">formal</a>]</span>.<a href="#appendix-B.10-1.1" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.10-1.2">Add mention in the text that white space can appear just after
-  the opening curly brace and before just before the closing curly
-  brace of base-64 encoding (the ABNF was correct).<a href="#appendix-B.10-1.2" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.10-1.3">Minor editorial improvements.<a href="#appendix-B.10-1.3" class="pilcrow">¶</a>
-</li>
-        </ol>
-</section>
-<section id="appendix-B.11">
-        <h3 id="name-changes-from-09-to-10">
-<a href="#appendix-B.11" class="section-number selfRef">B.11. </a><a href="#name-changes-from-09-to-10" class="section-name selfRef">Changes from -09 to -10</a>
-        </h3>
-<ol start="1" type="1" class="normal type-1" id="appendix-B.11-1">
-  <li id="appendix-B.11-1.1">Revert default display hint to more closely follow the original
-  SPKI S-expressions.<a href="#appendix-B.11-1.1" class="pilcrow">¶</a>
-</li>
-          <li id="appendix-B.11-1.2">Editorial improvements.<a href="#appendix-B.11-1.2" class="pilcrow">¶</a>
-</li>
-        </ol>
-</section>
-</section>
 <div id="Acknowledgements">
-<section id="appendix-C">
+<section id="appendix-B">
       <h2 id="name-acknowledgements">
 <a href="#name-acknowledgements" class="section-name selfRef">Acknowledgements</a>
       </h2>
-<p id="appendix-C-1">Special thanks to Daniel K. Gillmore for his extensive
-  comments.<a href="#appendix-C-1" class="pilcrow">¶</a></p>
-<p id="appendix-C-2">The comments and suggestions of the following are gratefully
-  acknowledged: John Klensin and Caleb Malchik.<a href="#appendix-C-2" class="pilcrow">¶</a></p>
+<p id="appendix-B-1">Special thanks to <span class="contact-name">Daniel K. Gillmor</span> for his extensive
+  comments.<a href="#appendix-B-1" class="pilcrow">¶</a></p>
+<p id="appendix-B-2">The comments and suggestions of the following are gratefully
+  acknowledged: <span class="contact-name">John Klensin</span> and <span class="contact-name">Caleb Malchik</span>.<a href="#appendix-B-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="Contributors">
-<section id="appendix-D">
+<section id="appendix-C">
       <h2 id="name-contributors">
 <a href="#name-contributors" class="section-name selfRef">Contributors</a>
       </h2>
-<p id="appendix-D-1">Special thanks to Marc Petit-Huguenin, particularly for his
+<p id="appendix-C-1">Special thanks to <span class="contact-name">Marc Petit-Huguenin</span>, particularly for his
   extensive work and advice on the ABNF and on locating and fixing
-  unclear parts of earlier versions of this document:<a href="#appendix-D-1" class="pilcrow">¶</a></p>
+  unclear parts of earlier draft versions of this document:<a href="#appendix-C-1" class="pilcrow">¶</a></p>
 <address class="vcard">
         <div dir="auto" class="left"><span class="fn nameRole">Marc Petit-Huguenin</span></div>
 <div dir="auto" class="left"><span class="org">Impedance Mismatch LLC</span></div>
@@ -2945,7 +2696,7 @@ submitted to the IETF.<a href="#appendix-B.1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="authors-addresses">
-<section id="appendix-E">
+<section id="appendix-D">
       <h2 id="name-authors-addresses">
 <a href="#name-authors-addresses" class="section-name selfRef">Authors' Addresses</a>
       </h2>
@@ -2995,3 +2746,4 @@ toc.querySelector("nav").addEventListener("click", e => {
 </script>
 </body>
 </html>
+
