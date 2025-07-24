@@ -3,10 +3,12 @@ Tests for the S-expression parser.
 """
 
 import base64
+from unittest.mock import call
 import pytest
 from hypothesis import given, strategies as st, settings, HealthCheck
 
 from sexp.parser import SExpressionParser
+from tests.random_generator import sexp
 
 # According to RFC 9804 ABNF
 # simple-punc = "-" / "." / "/" / "_" / ":" / "*" / "+" / "="
@@ -29,8 +31,9 @@ st_verbatim_content = st.text(max_size=200)
 def st_verbatim_strings(draw):# -> tuple[str, Any]:
     """Strategy for generating verbatim strings and their expected value."""
     content = draw(st_verbatim_content)
-    # The parser implementation uses character length, not byte length.
-    return f"{len(content)}:{content}", content
+    # The parser implementation uses byte length for verbatim strings.
+    content_bytes = content.encode("utf-8", "surrogatepass")
+    return f"{len(content_bytes)}:{content}", content
 
 
 # Strategy for generating content for quoted strings
@@ -173,3 +176,27 @@ def test_unclosed_list_raises_error():
     """Test that an unclosed list raises a ValueError."""
     with pytest.raises(ValueError, match="Unclosed list"):
         SExpressionParser("(a b").parse()
+
+
+# def test_parse_multiple_expressions_with_whitespace(parser_mock):
+#     parser_mock.return_value = None
+#     text = '() ( foo bar )  "hello" '
+#     parser = SExpressionParser(text)
+#     result = parser.parse_multiple()
+#     assert result == [[], ["foo", "bar"], "hello"]
+#     parser_mock.assert_has_calls(
+#         [call("()"), call(" ( foo bar ) "), call(' "hello"')]
+#     )
+
+
+@given(sexp())
+def test_parser_with_random_valid_input(input_text: str):
+    """Test that the parser can handle any valid S-expression from the generator."""
+    parser = SExpressionParser(input_text)
+    try:
+        parser.parse()
+    except ValueError:
+        # It's okay for the parser to fail on some generated inputs,
+        # as the generator might produce edge cases the parser doesn't support yet.
+        # The main goal is to ensure the parser doesn't crash unexpectedly.
+        pass

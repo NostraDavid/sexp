@@ -169,20 +169,33 @@ class SExpressionParser:
         return int(num_str)
 
     def _parse_verbatim(self) -> str:
-        """
-        Parses a verbatim string.
-        ABNF: verbatim = decimal ":" *OCTET
-        """
-        length = self._parse_decimal()
-        if self.index >= len(self.text) or self._consume() != ":":
-            raise ValueError(
-                f"Missing colon in verbatim string at position {self.index}"
-            )
-        if self.index + length > len(self.text):
+        """Parses a verbatim string like '5:hello'."""
+        match = self._consume_while(lambda char: char.isdigit())
+        if not match:
+            raise ValueError("Invalid verbatim string format: missing length")
+
+        length = int(match)
+        if self._peek() != ":":
+            raise ValueError("Invalid verbatim string format: missing colon")
+        self._consume()  # Skip the colon
+
+        # The rest of the text from the current index
+        remaining_text = self.text[self.index :]
+        # Encode to bytes to correctly handle multi-byte characters
+        remaining_bytes = remaining_text.encode("utf-8")
+
+        if length > len(remaining_bytes):
             raise ValueError("Verbatim string length exceeds input size")
-        value = self.text[self.index : self.index + length]
-        self.index += length
-        return value
+
+        # Get the verbatim content in bytes
+        verbatim_bytes = remaining_bytes[:length]
+        # Decode back to a string
+        content = verbatim_bytes.decode("utf-8")
+
+        # Advance the index by the number of characters in the decoded content
+        self.index += len(content)
+
+        return content
 
     def _parse_quoted_string(self) -> str:
         """
