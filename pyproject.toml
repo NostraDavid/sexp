@@ -5,7 +5,6 @@ description = "RFC 9804 Simple Public Key Infrastructure (SPKI) S-Expressions pa
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "returns[compatible-mypy]>=0.25.0",
 ]
 
 [project.scripts]
@@ -19,6 +18,7 @@ build-backend = "hatchling.build"
 dev-dependencies = [
     "coverage>=7.6.1",
     "hypothesis>=6.112.4",
+    "lark>=1.2.2",
     "pytest-cov>=5.0.0",
     "pytest-mock>=3.14.0",
     "pytest>=8.3.3",
