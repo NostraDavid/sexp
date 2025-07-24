@@ -2,5 +2,6 @@
     "python.testing.pytestArgs": [
         "-vvvv",
         "tests/"
-    ]
+    ],
+    "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix"
 }

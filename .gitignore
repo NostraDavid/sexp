@@ -3,14 +3,21 @@
 # files
 !.gitignore
 !.python-version
+!CHANGELOG.md
+!flake.lock
+!flake.nix
+!LICENSE
 !pyproject.toml
 !README.md
-!LICENSE
 !uv.lock
 
 # folders
+!.github/
 !.vscode/
 !data/
 !docs/
 !src/
 !tests/
+
+# reignore
+__pycache__/

@@ -1,14 +1,15 @@
 [project]
-name = "s-expression"
-version = "0.1.0"
-description = "Add your description here"
+name = "sexp"
+version = "0.0.0"
+description = "RFC 9804 Simple Public Key Infrastructure (SPKI) S-Expressions parser-generator"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = [
+    "returns[compatible-mypy]>=0.25.0",
 ]
 
 [project.scripts]
-se = "se:main"
+sexp = "sexp:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -21,6 +22,8 @@ dev-dependencies = [
     "pytest-cov>=5.0.0",
     "pytest-mock>=3.14.0",
     "pytest>=8.3.3",
+    "ruff>=0.12.4",
+    "ty>=0.0.1a15",
 ]
 
 [tool.pytest.ini_options]

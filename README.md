@@ -25,7 +25,7 @@ and certain cryptographic systems.
 
 ## Usage
 
-## Project Management with UV
+## Project Management with `uv`
 
 uv installation:
 
@@ -36,8 +36,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 run application via uv:
 
 ```bash
-# se as application is defined in pyproject.toml; Python versioning will be handled by uv>=0.4.5.
-uv run se data/input1.lisp
+# sexp as application is defined in pyproject.toml; Python versioning will be handled by uv>=0.4.5.
+uv run sexp data/input1.lisp
 ```
 
 ### Example Input File
@@ -100,3 +100,17 @@ with the position in the file where the error was encountered.
 
 This project is licensed under the MIT License. Feel free to use
 and modify the code as needed.
+
+## Changelog
+
+Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## Semantic Versioning
+
+This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## Dev guide
+
+```bash
+nix develop .#uv2nix
+```
