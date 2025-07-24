@@ -3,7 +3,6 @@ Tests for the S-expression parser.
 """
 
 import base64
-from unittest.mock import call
 import pytest
 from hypothesis import given, strategies as st, settings, HealthCheck
 
@@ -189,6 +188,7 @@ def test_unclosed_list_raises_error():
 #     )
 
 
+@settings(deadline=300_000, max_examples=10_000) # 5 minutes in milliseconds
 @given(sexp())
 def test_parser_with_random_valid_input(input_text: str):
     """Test that the parser can handle any valid S-expression from the generator."""

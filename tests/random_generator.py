@@ -113,3 +113,17 @@ def sexp(draw):
     ws_after = draw(WHITESPACE)
     s_expression_value = draw(value)
     return f"{ws_before}{s_expression_value}{ws_after}"
+
+
+# Example of how to use the strategy with Hypothesis
+# You would typically use this inside a @given decorator in a pytest test.
+if __name__ == "__main__":
+    output_filename = "data/random_sexp.lisp"
+    num_examples = 20
+    with open(output_filename, "w", encoding="utf-8") as f:
+        print(f"Generating {num_examples} random S-expressions to {output_filename}...")
+        for _ in range(num_examples):
+            example = sexp().example()
+            f.write(example)
+            f.write("\n")  # Add a newline for better readability
+    print("Done.")
