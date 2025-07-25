@@ -1,0 +1,7 @@
+[image/gif]
+[charset=unicode-1-1]
+[  text/richtext  ]
+["text/plain; charset=iso-8859-1"]
+[application/postscript]
+[audio/basic]
+["http://example.com/display-types/funky.html"]
