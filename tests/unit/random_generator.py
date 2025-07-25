@@ -1,5 +1,12 @@
+"""
+These are helper functions to generate random S-expressions using the Hypothesis
+library. They define various strategies for generating tokens, verbatim strings,
+quoted strings, hexadecimal strings, and base64 strings, as well as lists and
+complete S-expressions. The generated S-expressions can be used for testing
+parsers or other components that process S-expressions.
+"""
+
 import base64
-import re
 from hypothesis import strategies as st
 
 # Character sets from the grammar
@@ -11,9 +18,14 @@ LF = st.just("\n")
 FF = st.just("\x0c")
 
 WHITESPACE_CHAR = st.one_of(SP, HTAB, VTAB, CR, LF, FF)
-WHITESPACE = st.text(WHITESPACE_CHAR, min_size=0, max_size=5)
+WHITESPACE = st.text(
+    WHITESPACE_CHAR,
+    min_size=0,
+    max_size=5,
+)  # TODO(NostraDavid): check if max_size is appropriate
 
 DIGIT = st.characters(min_codepoint=ord("0"), max_codepoint=ord("9"))
+DECIMAL = st.integers(min_value=0).map(str)
 ALPHA = st.characters(min_codepoint=ord("a"), max_codepoint=ord("z")) | st.characters(
     min_codepoint=ord("A"), max_codepoint=ord("Z")
 )
@@ -28,7 +40,11 @@ TOKEN_BODY_CHAR = ALPHA | DIGIT | SIMPLE_PUNC
 
 @st.composite
 def tokens(draw):
-    """Strategy for tokens."""
+    """
+    Strategy for tokens.
+
+    token = (ALPHA / simple-punc) *(ALPHA / DIGIT / simple-punc)
+    """
     start = draw(TOKEN_START_CHAR)
     body = draw(st.text(TOKEN_BODY_CHAR, min_size=0, max_size=10))
     return start + body
@@ -36,7 +52,13 @@ def tokens(draw):
 
 @st.composite
 def verbatim_strings(draw):
-    """Strategy for verbatim strings, e.g., '5:hello'."""
+    """
+    Strategy for verbatim strings, e.g., '5:hello'.
+
+    ; the length followed by a colon and the exact
+    ; number of OCTETs indicated by the length
+    verbatim = decimal ":" *OCTET
+    """
     data = draw(st.binary(max_size=20))
     # The parser expects UTF-8, but verbatim can be any octet.
     # We'll generate valid UTF-8 here for compatibility with Python strings.
@@ -113,17 +135,3 @@ def sexp(draw):
     ws_after = draw(WHITESPACE)
     s_expression_value = draw(value)
     return f"{ws_before}{s_expression_value}{ws_after}"
-
-
-# Example of how to use the strategy with Hypothesis
-# You would typically use this inside a @given decorator in a pytest test.
-if __name__ == "__main__":
-    output_filename = "data/random_sexp.lisp"
-    num_examples = 20
-    with open(output_filename, "w", encoding="utf-8") as f:
-        print(f"Generating {num_examples} random S-expressions to {output_filename}...")
-        for _ in range(num_examples):
-            example = sexp().example()
-            f.write(example)
-            f.write("\n")  # Add a newline for better readability
-    print("Done.")

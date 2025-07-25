@@ -2,10 +2,13 @@
 
 # files
 !.gitignore
+!.pre-commit-config.yaml
 !.python-version
+!asv.conf.json
 !CHANGELOG.md
 !flake.lock
 !flake.nix
+!justfile
 !LICENSE
 !pyproject.toml
 !README.md
@@ -14,6 +17,7 @@
 # folders
 !.github/
 !.vscode/
+!benchmarks/
 !data/
 !docs/
 !src/

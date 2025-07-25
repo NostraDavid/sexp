@@ -3,10 +3,9 @@ S-expression parser for RFC 9804.
 """
 
 import base64
-from typing import List, Union
+from typing import List
 
-# An S-expression is either a string (atom) or a list of S-expressions.
-SExpression = Union[str, List["SExpression"]]
+from sexp.types import SExpression
 
 
 class SExpressionParser:
