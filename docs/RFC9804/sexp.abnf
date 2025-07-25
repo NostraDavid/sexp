@@ -1,45 +1,46 @@
-SP             =  %x20   ; space
-HTAB           =  %x09   ; horizontal tab
-CR             =  %x0D   ; carriage return
-LF             =  %x0A   ; line feed
-DIGIT          =  %x30-39 ; 0-9
-ALPHA          =  %x41-5A / %x61-7A ; ; A-Z / a-z
-HEXDIG         =  DIGIT / %x41-46 / %x61-66 ; 0-9 / A-F / a-f
-OCTET          =  %x00-FF ; any octet
-DQUOTE         =  %x22   ; double quote
-sexp           =  *whitespace value *whitespace
-whitespace     =  SP / HTAB / vtab / CR / LF / ff
+; note that the order of the rules is based on dependencies, instead of the
+; original order from the RFC. I've also replaced all hex symbols with
+; variables. All variables have been lowercased as well, as I am using this as a
+; reference for my implementation.
+sp             =  %x20   ; space
+htab           =  %x09   ; horizontal tab
+cr             =  %x0D   ; carriage return
+lf             =  %x0A   ; line feed
+digit          =  %x30-39 ; 0-9
+alpha          =  %x41-5A / %x61-7A ; ; A-Z / a-z
+hexdig         =  digit / %x41-46 / %x61-66 ; 0-9 / A-F / a-f
+octet          =  %x00-FF ; any octet
+dquote         =  %x22   ; double quote
 vtab           =  %x0B   ; vertical tab
 ff             =  %x0C   ; form feed
-value          =  string / ("(" *(value / whitespace) ")")
-string         =  [display] simple-string
-display        =  "[" *whitespace simple-string *whitespace "]"
-                  *whitespace
-simple-string  =  verbatim / quoted-string / token / hexadecimal /
-                  base-64
-verbatim       =  decimal ":" *OCTET
-                    ; the length followed by a colon and the exact
-                    ; number of OCTETs indicated by the length
-decimal        =  %x30 / (%x31-39 *DIGIT)
-quoted-string  =  [decimal] DQUOTE *(printable / escaped) DQUOTE
+whitespace     =  sp / htab / vtab / cr / lf / ff
+decimal        =  %x30 / (%x31-39 *digit)
+verbatim       =  decimal ":" *octet
 printable      =  %x20-21 / %x23-5B / %x5D-7E
-                    ; All US-ASCII printable but double-quote and
-                    ; backslash
-escaped        =  backslash (%x3F / %x61 / %x62 / %x66 / %x6E /
-                  %x72 / %x74 / %x76 / DQUOTE / quote / backslash
-                  / 3(%x30-37) / (%x78 2HEXDIG) / CR / LF /
-                  (CR LF) / (LF CR))
 backslash      =  %x5C
+question-mark  =  %x3F   ; question mark
+a              =  %x61   ; lowercase a
+b              =  %x62   ; lowercase b
+f              =  %x66   ; lowercase f
+n              =  %x6E   ; lowercase n
+r              =  %x72   ; lowercase r
+t              =  %x74   ; lowercase t
+v              =  %x76   ; lowercase v
 quote          =  %x27   ; single quote
-token          =  (ALPHA / simple-punc) *(ALPHA / DIGIT /
-                     simple-punc)
+zero-to-seven  =  %x30-37 ; 0-7
+x              =  %x78   ; lowercase x
+escaped        =  backslash (question-mark / a / b / f / n / r / t / v / dquote / quote / backslash / 3(zero-to-seven) / (x 2hexdig) / cr / lf / (cr lf) / (lf cr))
+quoted-string  =  [decimal] dquote *(printable / escaped) dquote
 simple-punc    =  "-" / "." / "/" / "_" / ":" / "*" / "+" / "="
+token          =  (alpha / simple-punc) *(alpha / digit / simple-punc)
+hexadecimals   =  2(hexdig *whitespace)
 hexadecimal    =  [decimal] "#" *whitespace *hexadecimals "#"
-hexadecimals   =  2(HEXDIG *whitespace)
-base-64        =  [decimal] "|" *whitespace *base-64-chars
-                     [base-64-end] "|"
+base-64-char   =  alpha / digit / "+" / "/"
 base-64-chars  =  4(base-64-char *whitespace)
-base-64-char   =  ALPHA / DIGIT / "+" / "/"
-base-64-end    =  base-64-chars /
-                  3(base-64-char *whitespace) ["=" *whitespace] /
-                  2(base-64-char *whitespace) *2("=" *whitespace)
+base-64-end    =  base-64-chars / 3(base-64-char *whitespace) ["=" *whitespace] / 2(base-64-char *whitespace) *2("=" *whitespace)
+base-64        =  [decimal] "|" *whitespace *base-64-chars [base-64-end] "|"
+simple-string  =  verbatim / quoted-string / token / hexadecimal / base-64
+display        =  "[" *whitespace simple-string *whitespace "]" *whitespace
+string         =  [display] simple-string
+value          =  string / ("(" *(value / whitespace) ")")
+sexp           =  *whitespace value *whitespace
