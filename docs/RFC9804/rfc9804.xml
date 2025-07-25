@@ -56,7 +56,7 @@
         <name slugifiedName="name-status-of-this-memo">Status of This Memo</name>
         <t indent="0" pn="section-boilerplate.1-1">
             This document is not an Internet Standards Track specification; it is
-            published for informational purposes.  
+            published for informational purposes.
         </t>
         <t indent="0" pn="section-boilerplate.1-2">
             This document is a product of the Internet Engineering Task Force
@@ -64,7 +64,7 @@
             received public review and has been approved for publication by the
             Internet Engineering Steering Group (IESG).  Not all documents
             approved by the IESG are candidates for any level of Internet
-            Standard; see Section 2 of RFC 7841. 
+            Standard; see Section 2 of RFC 7841.
         </t>
         <t indent="0" pn="section-boilerplate.1-3">
             Information about the current status of this document, any
@@ -261,7 +261,7 @@
         <li pn="section-1-6.1">the octet-string "snicker"</li>
         <li pn="section-1-6.2">the octet-string "abc"</li>
         <li pn="section-1-6.3">a sub-list containing two elements: The hexadecimal constant
-  #03# (which represents a one-octet-long octet-string with the 
+  #03# (which represents a one-octet-long octet-string with the
   value of that octet being 0x03) and the base-64 constant |YWJj| (which
   represents the same octet-string as "abc")</li>
       </ul>
@@ -333,7 +333,7 @@ more readable and flexible than Bernstein's "netstrings" <xref target="BERN" for
         <t indent="0" pn="section-1.4-1">
     The key words "<bcp14>MUST</bcp14>", "<bcp14>MUST NOT</bcp14>", "<bcp14>REQUIRED</bcp14>", "<bcp14>SHALL</bcp14>", "<bcp14>SHALL NOT</bcp14>", "<bcp14>SHOULD</bcp14>", "<bcp14>SHOULD NOT</bcp14>", "<bcp14>RECOMMENDED</bcp14>", "<bcp14>NOT RECOMMENDED</bcp14>",
     "<bcp14>MAY</bcp14>", and "<bcp14>OPTIONAL</bcp14>" in this document are to be interpreted as
-    described in BCP 14 <xref target="RFC2119" format="default" sectionFormat="of" derivedContent="RFC2119"/> <xref target="RFC8174" format="default" sectionFormat="of" derivedContent="RFC8174"/> 
+    described in BCP 14 <xref target="RFC2119" format="default" sectionFormat="of" derivedContent="RFC2119"/> <xref target="RFC8174" format="default" sectionFormat="of" derivedContent="RFC8174"/>
     when, and only when, they appear in all capitals, as shown here.
         </t>
       </section>
@@ -485,7 +485,7 @@ they denote.  The string does not have any "terminating NULL" that
 octet.</t>
         <t indent="0" pn="section-4.2-4">The length is optional.</t>
         <t indent="0" pn="section-4.2-5">The escape conventions within the quoted string are as follows
-(these follow the C programming language <xref target="C88" format="default" sectionFormat="of" derivedContent="C88"/> 
+(these follow the C programming language <xref target="C88" format="default" sectionFormat="of" derivedContent="C88"/>
 conventions, with an extension for ignoring line terminators of just
 CR, LF, CRLF, or LFCR and more restrictive octal and hexadecimal value
 formats):</t>
