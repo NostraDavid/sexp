@@ -20,8 +20,11 @@
 !benchmarks/
 !data/
 !docs/
+!sexp_native/
 !src/
 !tests/
 
 # reignore
 __pycache__/
+sexp_native/target/
+src/sexp/*.so

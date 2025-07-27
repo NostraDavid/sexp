@@ -1,5 +1,5 @@
 from pathlib import Path
-from sexp.parser import SExpressionParser
+from sexp_old.parser import SExpressionParser
 
 # The benchmark file is in benchmarks/, so the project root is one level up.
 PROJECT_ROOT = Path(__file__).parent.parent

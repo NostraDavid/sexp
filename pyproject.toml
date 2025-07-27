@@ -1,26 +1,32 @@
+[build-system]
+requires = ["maturin>=1.5,<2"]
+build-backend = "maturin"
+
 [project]
 name = "sexp"
 version = "0.0.0"
 description = "RFC 9804 Simple Public Key Infrastructure (SPKI) S-Expressions parser-generator"
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = [
-]
+dependencies = ["pydantic>=2,<3"]
 
 [project.scripts]
 sexp = "sexp:main"
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[tool.maturin]
+module-name = "sexp._native"
+manifest-path = "sexp_native/Cargo.toml"
+python-source = "src"
+features = ["pyo3/extension-module"]
 
 [tool.uv]
 dev-dependencies = [
     "asv>=0.6.4",
     "coverage>=7.6.1",
     "hypothesis>=6.112.4",
+    "maturin>=1.9.1",
     "pre-commit>=4.2.0",
-    "pytest-cov>=5.0.0",
+    "pytest-cov>=6.0.0",
     "pytest-mock>=3.14.0",
     "pytest>=8.3.3",
     "ruff>=0.12.4",
@@ -29,10 +35,6 @@ dev-dependencies = [
 ]
 
 [tool.pytest.ini_options]
-minversion = "6.0" # Set the minimum pytest version
-addopts = [
-    "--strict-markers",
-    "--tb=short",
-    "--verbosity=4",
-]
+minversion = "6.0"                                            # Set the minimum pytest version
+addopts = ["--strict-markers", "--tb=short", "--verbosity=4"]
 testpaths = ["tests/"]

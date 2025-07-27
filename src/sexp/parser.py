@@ -1,312 +1,261 @@
-"""
-S-expression parser for RFC 9804.
-"""
+from __future__ import annotations
 
 import base64
-from typing import List
+import binascii
+import io
+import logging
+from typing import Tuple, Union
 
-from sexp.types import SExpression
+from sexp.settings import SexpSettings
+from sexp.types import SexpAtom, SexpList, SexpNode
+
+logger = logging.getLogger(__name__)
+
+_whitespace = {ord(" "), ord("\t"), ord("\n"), ord("\r")}
+_delims = {ord("("), ord(")")}
+_comment = ord(";")  # line comments in advanced/human form
 
 
-class SExpressionParser:
-    """
-    A stateful parser for S-expressions as defined in RFC 9804.
+class SexpParseError(ValueError):
+    pass
 
-    This parser consumes the input text from left to right, building the
-    corresponding Python objects (strings and lists). It handles various
-    string representations (verbatim, quoted, hex, base64, tokens) and
-    nested list structures.
 
-    The implementation is guided by the ABNF specification in RFC 9804.
-    """
+def parse(data: Union[bytes, str], settings: SexpSettings | None = None) -> SexpNode:  # type: ignore[syntax]
+    if settings is None:
+        settings = SexpSettings()
+    buf = data.encode("utf-8") if isinstance(data, str) else data
+    node, pos = _parse_one(buf, 0, settings)
+    _skip_ws(buf, pos, settings, eof_ok=True)
+    return node
 
-    def __init__(self, text: str):
-        """
-        Initializes the parser with the input text.
 
-        Args:
-            text: The string containing the S-expression(s).
-        """
-        self.text = text
-        self.index = 0
+def iterparse(source: io.BufferedReader) -> io.BufferedReader:  # type: ignore[no-redef]
+    raise TypeError("type hint sentinel")  # never runs, helps some linters
 
-    def parse(self) -> SExpression:
-        """
-        Parses a single S-expression from the input string.
 
-        It expects the string to contain exactly one S-expression,
-        surrounded by optional whitespace.
+def iterparse(source, settings: SexpSettings | None = None):  # noqa: F811
+    if settings is None:
+        settings = SexpSettings()
+    if not hasattr(source, "read"):
+        raise TypeError("iterparse expects a file-like object opened in binary mode")
 
-        Returns:
-            The parsed S-expression as a Python object.
+    buf = bytearray()
+    pos = 0
+    while True:
+        chunk = source.read(64 * 1024)
+        if not chunk and pos >= len(buf):
+            break
+        if chunk:
+            buf.extend(chunk)
 
-        Raises:
-            ValueError: If the input is empty, contains more than one
-                        S-expression, or has syntax errors.
-        """
-        self._skip_whitespace()
-        if self.index >= len(self.text):
-            raise ValueError(
-                "Unexpected EOF: input is empty or contains only whitespace."
-            )
-        value = self._parse_sexpr()
-        self._skip_whitespace()
-        if self.index < len(self.text):
-            raise ValueError(
-                f"Extra characters after end of S-expression at position {self.index}"
-            )
-        return value
-
-    def parse_multiple(self) -> List[SExpression]:
-        """
-        Parses a sequence of S-expressions from the input string.
-
-        This method is useful for files containing multiple S-expressions.
-
-        Returns:
-            A list of parsed S-expressions.
-        """
-        expressions = []
         while True:
-            self._skip_whitespace()
-            if self.index >= len(self.text):
+            try:
+                node, new_pos = _parse_one(buf, pos, settings)
+            except _NeedMore:
                 break
-            expressions.append(self._parse_sexpr())
-        return expressions
-
-    def _peek(self) -> str:
-        """Returns the character at the current parsing position without advancing."""
-        return self.text[self.index] if self.index < len(self.text) else ""
-
-    def _consume(self) -> str:
-        """Consumes and returns the character at the current position, advancing the index."""
-        if self.index >= len(self.text):
-            raise ValueError("Unexpected EOF while consuming character")
-        char = self.text[self.index]
-        self.index += 1
-        return char
-
-    def _consume_while(self, predicate) -> str:
-        """Consumes characters as long as the predicate function returns true."""
-        start = self.index
-        while self.index < len(self.text) and predicate(self.text[self.index]):
-            self.index += 1
-        return self.text[start : self.index]
-
-    def _skip_whitespace(self):
-        """
-        Skips over whitespace characters and comments.
-        ABNF: whitespace = SP / HTAB / vtab / CR / LF / ff
-        Also handles Lisp-style comments starting with ';'.
-        """
-        while self.index < len(self.text):
-            char = self.text[self.index]
-            if char in " \t\r\n\v\f":  # vtab=%x0B, ff=%x0C
-                self.index += 1
-            elif char == ";":
-                # Comment runs to the end of the line
-                while self.index < len(self.text) and self.text[self.index] != "\n":
-                    self.index += 1
+            except _AtEnd:
+                break
+            except SexpParseError:
+                raise
             else:
-                break
+                pos = new_pos
+                yield node
+                try:
+                    pos = _skip_ws(buf, pos, settings, eof_ok=False)
+                except _NeedMore:
+                    break
 
-    def _parse_sexpr(self) -> SExpression:
-        """
-        Parses a single S-expression value, which can be a list or an atom.
-        ABNF: value = string / ("(" *(value / whitespace) ")")
-        """
-        self._skip_whitespace()
-        if self._peek() == "(":
-            return self._parse_list()
-        else:
-            # ABNF: string = [display] simple-string
-            # We ignore the display hint.
-            return self._parse_simple_string()
+        if pos > 0:
+            del buf[:pos]
+            pos = 0
+        if not chunk and pos == 0 and len(buf) == 0:
+            break
 
-    def _parse_list(self) -> List[SExpression]:
-        """Parses a list S-expression: "(" *(value / whitespace) ")"."""
-        self._consume()  # Consume '('
-        items = []
-        while True:
-            self._skip_whitespace()
-            peeked = self._peek()
-            if peeked == "" or peeked == ")":
-                break
-            items.append(self._parse_sexpr())
 
-        if self.index >= len(self.text) or self._consume() != ")":
-            raise ValueError(f"Unclosed list starting at position {self.index}")
-        return items
+class _NeedMore(Exception):
+    pass
 
-    def _parse_simple_string(self) -> str:
-        """
-        Parses an atomic S-expression (simple-string).
-        ABNF: simple-string = verbatim / quoted-string / token / hexadecimal / base-64
-        """
-        char = self._peek()
-        if char.isdigit():
-            return self._parse_verbatim()
-        elif char == '"':
-            return self._parse_quoted_string()
-        elif char == "#":
-            return self._parse_hexadecimal()
-        elif char == "|":
-            return self._parse_base64()
-        else:
-            return self._parse_token()
 
-    def _parse_decimal(self) -> int:
-        """
-        Parses a non-zero-prefixed decimal number.
-        ABNF: decimal = %x30 / (%x31-39 *DIGIT)
-        """
-        if not self._peek().isdigit():
-            raise ValueError(f"Expected a digit at position {self.index}")
-        num_str = self._consume_while(str.isdigit)
-        if len(num_str) > 1 and num_str.startswith("0"):
-            raise ValueError(f"Invalid decimal: leading zero is not allowed: {num_str}")
-        return int(num_str)
+class _AtEnd(Exception):
+    pass
 
-    def _parse_verbatim(self) -> str:
-        """Parses a verbatim string like '5:hello'."""
-        match = self._consume_while(lambda char: char.isdigit())
-        if not match:
-            raise ValueError("Invalid verbatim string format: missing length")
 
-        length = int(match)
-        if self._peek() != ":":
-            raise ValueError("Invalid verbatim string format: missing colon")
-        self._consume()  # Skip the colon
+def _skip_ws(
+    buf: Union[bytearray, bytes], pos: int, settings: SexpSettings, eof_ok: bool
+) -> int:
+    n = len(buf)
+    while True:
+        while pos < n and (buf[pos] in _whitespace):
+            pos += 1
+        if settings.allow_comments and pos < n and buf[pos] == _comment:
+            while pos < n and buf[pos] not in (ord("\n"), ord("\r")):
+                pos += 1
+            continue
+        break
+    if pos >= n and not eof_ok:
+        raise _NeedMore()
+    return pos
 
-        # The rest of the text from the current index
-        remaining_text = self.text[self.index :]
-        # Encode to bytes to correctly handle multi-byte characters
-        remaining_bytes = remaining_text.encode("utf-8")
 
-        if length > len(remaining_bytes):
-            raise ValueError("Verbatim string length exceeds input size")
+def _parse_one(
+    buf: Union[bytearray, bytes], pos: int, settings: SexpSettings
+) -> Tuple[SexpNode, int]:
+    pos = _skip_ws(buf, pos, settings, eof_ok=False)
+    if pos >= len(buf):
+        raise _AtEnd()
 
-        # Get the verbatim content in bytes
-        verbatim_bytes = remaining_bytes[:length]
-        # Decode back to a string
-        content = verbatim_bytes.decode("utf-8")
+    b = buf[pos]
+    if b == ord("("):
+        return _parse_list(buf, pos + 1, settings)
+    if b == ord('"'):
+        atom, pos2 = _parse_quoted(buf, pos + 1, settings)
+        return atom, pos2
+    if b == ord("#"):
+        atom, pos2 = _parse_hex(buf, pos + 1, settings)
+        return atom, pos2
+    if b == ord("|"):
+        atom, pos2 = _parse_base64(buf, pos + 1, settings)
+        return atom, pos2
+    if 48 <= b <= 57:  # '0'..'9' maybe length-prefixed
+        pos2 = pos
+        while pos2 < len(buf) and 48 <= buf[pos2] <= 57:
+            pos2 += 1
+        if pos2 >= len(buf):
+            raise _NeedMore()
+        if buf[pos2] == ord(":"):
+            length_bytes = buf[pos:pos2]
+            try:
+                length = int(length_bytes.decode("ascii"))
+            except Exception as exc:
+                raise SexpParseError("invalid length prefix") from exc
+            start = pos2 + 1
+            end = start + length
+            if end > len(buf):
+                raise _NeedMore()
+            chunk = bytes(buf[start:end])
+            _maybe_warn_large_atom(chunk, settings)
+            return SexpAtom(chunk), end
+    return _parse_symbol(buf, pos, settings)
 
-        # Advance the index by the number of characters in the decoded content
-        self.index += len(content)
 
-        return content
+def _parse_list(
+    buf: Union[bytearray, bytes], pos: int, settings: SexpSettings
+) -> Tuple[SexpNode, int]:
+    items: list[SexpNode] = []
+    while True:
+        pos = _skip_ws(buf, pos, settings, eof_ok=False)
+        if pos >= len(buf):
+            raise _NeedMore()
+        if buf[pos] == ord(")"):
+            return SexpList(items), pos + 1
+        node, pos = _parse_one(buf, pos, settings)
+        items.append(node)
 
-    def _parse_quoted_string(self) -> str:
-        """
-        Parses a quoted string.
-        ABNF: quoted-string = [decimal] DQUOTE *(printable / escaped) DQUOTE
-        Ignoring optional decimal length prefix.
-        """
-        self._consume()  # Consume initial DQUOTE
-        result = []
-        while self._peek() != '"':
-            if self.index >= len(self.text):
-                raise ValueError("Unterminated quoted string")
-            char = self._consume()
-            if char == "\\":  # backslash
-                if self.index >= len(self.text):
-                    raise ValueError("Unterminated escape sequence in quoted string")
-                escaped_char = self._consume()
-                # ABNF for escaped is complex, implementing a subset.
-                if escaped_char == "n":
-                    result.append("\n")
-                elif escaped_char == "r":
-                    result.append("\r")
-                elif escaped_char == "t":
-                    result.append("\t")
-                elif escaped_char in "\"\\'":  # DQUOTE / backslash / quote
-                    result.append(escaped_char)
-                else:
-                    raise ValueError(f"Unsupported escape sequence: \\{escaped_char}")
+
+def _parse_quoted(
+    buf: Union[bytearray, bytes], pos: int, settings: SexpSettings
+) -> Tuple[SexpAtom, int]:
+    out = bytearray()
+    n = len(buf)
+    while True:
+        if pos >= n:
+            raise _NeedMore()
+        b = buf[pos]
+        pos += 1
+        if b == ord('"'):
+            s = out.decode("utf-8")
+            return SexpAtom(s), pos
+        if b == ord("\\"):
+            if pos >= n:
+                raise _NeedMore()
+            esc = buf[pos]
+            pos += 1
+            if esc in (ord('"'), ord("\\")):
+                out.append(esc)
+            elif esc == ord("n"):
+                out.append(ord("\n"))
+            elif esc == ord("r"):
+                out.append(ord("\r"))
+            elif esc == ord("t"):
+                out.append(ord("\t"))
+            elif esc == ord("x"):
+                if pos + 1 >= n:
+                    raise _NeedMore()
+                h1, h2 = buf[pos], buf[pos + 1]
+                pos += 2
+                try:
+                    out.append(int(bytes([h1, h2]).decode("ascii"), 16))
+                except Exception as exc:
+                    raise SexpParseError("invalid \\x escape") from exc
             else:
-                result.append(char)
-        self._consume()  # Consume final DQUOTE
-        return "".join(result)
+                raise SexpParseError("invalid escape")
+        else:
+            out.append(b)
 
-    def _parse_hexadecimal(self) -> str:
-        """
-        Parses a hexadecimal string.
-        ABNF: hexadecimal = [decimal] "#" *whitespace *hexadecimals "#"
-        Ignoring optional decimal length prefix.
-        """
-        self._consume()  # Consume '#'
-        self._skip_whitespace()
-        hex_chars = []
-        while self._peek() != "#":
-            if self.index >= len(self.text):
-                raise ValueError("Unterminated hexadecimal string")
-            char = self._consume()
-            if not char.isspace():
-                if not ("0" <= char <= "9" or "a" <= char.lower() <= "f"):
-                    raise ValueError(
-                        f"Invalid hex character '{char}' at position {self.index - 1}"
-                    )
-                hex_chars.append(char)
-        self._consume()  # Consume final '#'
 
-        hex_str = "".join(hex_chars)
-        # ABNF: hexadecimals = 2(HEXDIG *whitespace)
-        # This implies pairs of hexdigits. My simple join doesn't enforce the space between pairs,
-        # but it should be fine for decoding.
-        if len(hex_str) % 2 != 0:
-            raise ValueError(f"Odd number of hex digits: {hex_str}")
-        try:
-            # Per RFC, hex is raw bytes. We decode to string for type consistency.
-            return bytes.fromhex(hex_str).decode("utf-8", errors="replace")
-        except ValueError as e:
-            raise ValueError(f"Invalid hexadecimal string: {e}") from e
+def _parse_hex(
+    buf: Union[bytearray, bytes], pos: int, settings: SexpSettings
+) -> Tuple[SexpAtom, int]:
+    start = pos
+    while True:
+        if pos >= len(buf):
+            raise _NeedMore()
+        if buf[pos] == ord("#"):
+            data = buf[start:pos]
+            try:
+                val = binascii.unhexlify(bytes(data))
+            except Exception as exc:
+                raise SexpParseError("invalid hex data") from exc
+            _maybe_warn_large_atom(val, settings)
+            return SexpAtom(val), pos + 1
+        pos += 1
 
-    def _parse_base64(self) -> str:
-        """
-        Parses a base64 string.
-        ABNF: base-64 = [decimal] "|" *whitespace *base-64-chars [base-64-end] "|"
-        Ignoring optional decimal length prefix.
-        """
-        self._consume()  # Consume '|'
-        self._skip_whitespace()
-        b64_chars = []
-        while self._peek() != "|":
-            if self.index >= len(self.text):
-                raise ValueError("Unterminated base64 string")
-            char = self._consume()
-            if not char.isspace():
-                b64_chars.append(char)
-        self._consume()  # Consume final '|'
 
-        b64_str = "".join(b64_chars)
-        # Add padding if necessary for decoding.
-        padding = len(b64_str) % 4
-        if padding != 0:
-            b64_str += "=" * (4 - padding)
+def _parse_base64(
+    buf: Union[bytearray, bytes], pos: int, settings: SexpSettings
+) -> Tuple[SexpAtom, int]:
+    start = pos
+    while True:
+        if pos >= len(buf):
+            raise _NeedMore()
+        if buf[pos] == ord("|"):
+            data = buf[start:pos]
+            try:
+                val = base64.b64decode(bytes(data), validate=True)
+            except Exception as exc:
+                raise SexpParseError("invalid base64 data") from exc
+            _maybe_warn_large_atom(val, settings)
+            return SexpAtom(val), pos + 1
+        pos += 1
 
-        try:
-            # Per RFC, base64 is raw bytes. We decode to string for type consistency.
-            return base64.b64decode(b64_str).decode("utf-8", errors="replace")
-        except (ValueError, TypeError) as e:
-            raise ValueError(f"Invalid base64 string: {e}") from e
 
-    def _parse_token(self) -> str:
-        """
-        Parses a token.
-        ABNF: token = (ALPHA / simple-punc) *(ALPHA / DIGIT / simple-punc)
-        simple-punc = "-" / "." / "/" / "_" / ":" / "*" / "+" / "="
-        """
-        SIMPLE_PUNC = "-./_:+*="
+def _parse_symbol(
+    buf: Union[bytearray, bytes], pos: int, settings: SexpSettings
+) -> Tuple[SexpAtom, int]:
+    start = pos
+    n = len(buf)
+    while (
+        pos < n
+        and (buf[pos] not in _whitespace)
+        and (buf[pos] not in _delims)
+        and buf[pos] != _comment
+    ):
+        pos += 1
+    if pos == start:
+        raise SexpParseError("unexpected character")
+    raw = bytes(buf[start:pos])
+    try:
+        s = raw.decode("utf-8")
+        return SexpAtom(s), pos
+    except UnicodeDecodeError:
+        _maybe_warn_large_atom(raw, settings)
+        return SexpAtom(raw), pos
 
-        def is_token_start_char(char: str):
-            return char.isalpha() or char in SIMPLE_PUNC
 
-        def is_token_char(char: str):
-            return char.isalnum() or char in SIMPLE_PUNC
-
-        if not self._peek() or not is_token_start_char(self._peek()):
-            raise ValueError(
-                f"Invalid token start character at {self.index}: '{self._peek()}'"
-            )
-
-        return self._consume_while(is_token_char)
+def _maybe_warn_large_atom(val: bytes, settings: SexpSettings) -> None:
+    if (
+        settings.warn_on_large_atom
+        and isinstance(val, (bytes, bytearray))
+        and len(val) >= settings.large_atom_threshold
+    ):
+        logger.warning("large atom: %d bytes", len(val))

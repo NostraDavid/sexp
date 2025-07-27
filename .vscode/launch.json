@@ -13,8 +13,7 @@
             "args": [
                 "data/input1.lisp"
             ],
-            "env": {
-            }
+            "env": {}
         }
     ]
 }

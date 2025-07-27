@@ -1,7 +1,7 @@
 import re
 from typing import IO
-from sexp.parser import SExpressionParser
-from sexp.types import SExpression
+from sexp_old.parser import SExpressionParser
+from sexp_old.types import SExpression
 
 
 # A simple regex to identify strings that can be represented as tokens.

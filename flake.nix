@@ -1,4 +1,7 @@
-# run command for this file:
+# This flake provides a development shell for the NostraDavid playground.
+# I use it to setup a .venv - once that's up, you can do whatever you want.
+# I auto-activate the .venv using some private bash scripts
+# run commands for this file:
 # nix develop .#impure
 # nix develop .#uv2nix
 # file inspiration: https://pyproject-nix.github.io/uv2nix/usage/hello-world.html
@@ -111,13 +114,18 @@
           python
           pkgs.uv
           pkgs.freetype
+          pkgs.rustc
+          pkgs.cargo
+          pkgs.rustfmt
         ];
         env =
           {
             # Prevent uv from managing Python downloads
             UV_PYTHON_DOWNLOADS = "never";
-            # Force uv to use nixpkgs Python interpreter
-            UV_PYTHON = python.interpreter;
+            # Don't force a system interpreter; let venvs be used.
+            # (We’ll set UV_PYTHON dynamically in shellHook if a venv is active.)
+            # # Force uv to use nixpkgs Python interpreter
+            # UV_PYTHON = python.interpreter;
           }
           // lib.optionalAttrs pkgs.stdenv.isLinux {
             # Python libraries often load native shared objects using dlopen(3).
@@ -126,6 +134,10 @@
           };
         shellHook = ''
           unset PYTHONPATH
+          # If a venv is active, steer uv towards it so tool installs / pip ops go there
+          if [ -n "$VIRTUAL_ENV" ]; then
+            export UV_PYTHON="$VIRTUAL_ENV/bin/python"
+          fi
         '';
       };
 
@@ -188,6 +200,9 @@
           packages = [
             virtualenv
             pkgs.uv
+            pkgs.rustc
+            pkgs.cargo
+            pkgs.rustfmt
           ];
 
           env = {

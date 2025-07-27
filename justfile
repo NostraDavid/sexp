@@ -27,3 +27,11 @@ format:
 [group: 'benchmarking']
 benchmark:
   uv run asv run --show-stderr --show-stderr --config asv.conf.json
+
+[group: 'packaging']
+testbuild:
+  cargo build --manifest-path sexp_native/Cargo.toml
+
+[group: 'packaging']
+build:
+  PYO3_PYTHON="$PWD/.venv/bin/python" maturin develop --release

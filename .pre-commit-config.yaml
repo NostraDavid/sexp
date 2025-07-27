@@ -1,14 +1,45 @@
+# pre-commit autoupdate
+# Based on Ruff's pre-commit configuration
 repos:
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
       - id: check-added-large-files
+      - id: check-ast
+      - id: check-builtin-literals
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      # - id: check-json # disabled tue to being too strict
+      - id: check-merge-conflict
+      - id: check-shebang-scripts-are-executable
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-vcs-permalinks
+      - id: check-xml
+      - id: check-yaml
+      - id: destroyed-symlinks
+      # - id: detect-aws-credentials # I don't use AWS credentials
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: file-contents-sorter
+      - id: fix-byte-order-marker
+      - id: forbid-new-submodules
+      - id: mixed-line-ending
+      # - id: no-commit-to-branch # disabled until development slows down
+      # - id: pretty-format-json # disabled due to being too strict
+      - id: requirements-txt-fixer
+      - id: sort-simple-yaml
+      # - id: trailing-whitespace-fixer
+
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: v0.24.1
+    hooks:
+      - id: validate-pyproject
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.4
+    rev: v0.12.5
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
