@@ -45,6 +45,13 @@ repos:
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
 
+  # zizmor detects security vulnerabilities in GitHub Actions workflows.
+  # Additional configuration for the tool is found in `.github/zizmor.yml`
+  - repo: https://github.com/woodruffw/zizmor-pre-commit
+    rev: v1.11.0
+    hooks:
+      - id: zizmor
+
   - repo: local
     hooks:
       - id: pytest

@@ -1,96 +1,158 @@
-from __future__ import annotations
-
-import base64
-import io
-
+from parsimonious import Grammar
 import pytest
-from pytest_mock import MockerFixture
+from sexp.parser import dumps, loads
 
-from sexp import SexpSettings, parse, iterparse, dumps_advanced, dumps_canonical
-from sexp.types import SexpAtom, SexpList
-from sexp.parser import _NeedMore
+
+def test_grammar():
+    g = Grammar("""
+    polite_greeting = greeting ", my good " title
+    greeting        = "Hi" / "Hello"
+    title           = "madam" / "sir"
+    """)
+    g.parse("Hello, my good sir")
+
+
+def test_loads_valid_sexp123():
+    assert loads("# comment") is None
 
 
 @pytest.mark.parametrize(
-    "text,expect_py",
+    "input_sexp, expected_obj",
     [
+        # Basic atoms
+        ("#comment", None),
+        ("token", "token"),
+        ('"a quoted string"', "a quoted string"),
+        ("5:hello", "hello"),
+        ("#68656c6c6f#", "hello"),
+        ("|aGVsbG8=|", "hello"),
+        # Booleans
+        ("#t", True),
+        ("#f", False),
+        # Empty cases
+        ("()", []),
+        ('""', ""),
+        ("0:", ""),
+        ("##", ""),
+        ("||", ""),
+        # Lists
         ("(a b c)", ["a", "b", "c"]),
-        ('("a" "b")', ["a", "b"]),
-        ("(#616263#)", [b"abc"]),
-        ("(|" + base64.b64encode(b"abc").decode("ascii") + "|)", [b"abc"]),
-        ("(3:abc)", [b"abc"]),
         ("(a (b c) d)", ["a", ["b", "c"], "d"]),
+        (
+            '( "a" 1:b #63# |ZA==| #t )',
+            ["a", "b", "c", "d", True],
+        ),
+        # Whitespace and comments
+        (" ( a\n b\t c) # comment", ["a", "b", "c"]),
+        (
+            """
+            (list-of-items
+                # this is a comment
+                item1
+                "item 2 with spaces"
+                (nested list)
+            )
+            """,
+            ["list-of-items", "item1", "item 2 with spaces", ["nested", "list"]],
+        ),
     ],
 )
-def test_parse_variants(text: str, expect_py: list):
-    node = parse(text)
-    assert isinstance(node, SexpList)
-    py = _to_py(node)
-    assert py == expect_py
-
-
-def _to_py(node):
-    if isinstance(node, SexpAtom):
-        return node.value
-    assert isinstance(node, SexpList)
-    return [_to_py(n) for n in node.items]
-
-
-def test_roundtrip_canonical_and_advanced():
-    n1 = parse('(a "bc" #6465#)')  # a, "bc", bytes('de')
-    adv = dumps_advanced(n1)
-    assert isinstance(adv, str)
-    can = dumps_canonical(n1)
-    assert isinstance(can, (bytes, bytearray))
-    n2 = parse(adv)
-    assert dumps_canonical(n2) == can  # canonical equivalence on reparse
-
-
-def test_iterparse_multiple_top_level():
-    data = b"(a b)\n(1:Z)"  # two top-level forms
-    f = io.BytesIO(data)
-    xs = list(iterparse(f))
-    assert len(xs) == 2
-    assert isinstance(xs[0], SexpList) and isinstance(xs[1], SexpList)
-    assert dumps_advanced(xs[0]) == "(a b)"
-    assert (
-        dumps_advanced(xs[1]) == "(1:Z)".replace("1:Z", '"Z"') or True
-    )  # readable output acceptable
-
-
-def test_large_atom_warning(mocker: MockerFixture):
-    from sexp import parser
-
-    mock_logger = mocker.Mock()
-    mocker.patch.object(parser, "logger", mock_logger)
-
-    settings = SexpSettings(large_atom_threshold=8, warn_on_large_atom=True)
-    big = b"#" + b"41" * 8 + b"#"  # 8 bytes => exceeds threshold
-    parse(b"(" + big + b")", settings=settings)
-
-    assert mock_logger.warning.call_count == 1
+def test_loads_valid_sexp(input_sexp: str, expected_obj):
+    """
+    Tests that `loads` correctly parses various valid S-expression strings.
+    """
+    assert loads(input_sexp) == expected_obj
 
 
 @pytest.mark.parametrize(
-    "bad_text",
+    "invalid_sexp, error_message_part",
     [
-        "(#invalid#)",
-        "(|@@@@|)",
+        ("(", "Unexpected EOF while parsing list"),
+        (")", "Unexpected ')'"),
+        ("(a b", "Unexpected EOF while parsing list"),
+        ("4:abc", "Invalid length for verbatim string"),
+        ('"abc', "Unterminated quoted string"),
+        ("#616g#", "Invalid hex character 'g'"),
+        ("|YWJj", "Incorrect padding"),
+        ("#z", "Invalid token starting with '#'"),
+        ("a b", "Extra content found after S-expression"),
     ],
 )
-def test_parse_errors(bad_text: str):
-    with pytest.raises(ValueError):
-        parse(bad_text)
+def test_loads_invalid_sexp(invalid_sexp: str, error_message_part: str):
+    """
+    Tests that `loads` raises a ValueError for invalid S-expression strings.
+    """
+    with pytest.raises(ValueError, match=error_message_part):
+        loads(invalid_sexp)
 
 
 @pytest.mark.parametrize(
-    "bad_text",
+    "obj, expected_sexp",
     [
-        '("unclosed)',
-        "(3:ab)",  # short payload
-        "(a b",  # unclosed list
+        # Basic atoms
+        ("token", "token"),
+        ("a simple string", '"a simple string"'),
+        ("string-with-hyphen", "string-with-hyphen"),
+        ("string with (parens)", '"string with (parens)"'),
+        ('string with "quotes"', '"string with \\"quotes\\""'),
+        # Booleans
+        (True, "#t"),
+        (False, "#f"),
+        # Empty cases
+        ([], "()"),
+        ("", '""'),
+        # Lists
+        (["a", "b", "c"], "(a b c)"),
+        (["a", ["b", "c"], "d"], "(a (b c) d)"),
+        (
+            ["a", "b c", True, ["d", False]],
+            '(a "b c" #t (d #f))',
+        ),
     ],
 )
-def test_parse_needmore(bad_text: str):
-    with pytest.raises(_NeedMore):
-        parse(bad_text)
+def test_dumps_valid_objects(obj, expected_sexp: str):
+    """
+    Tests that `dumps` correctly serializes various Python objects to S-expressions.
+    """
+    assert dumps(obj) == expected_sexp
+
+
+@pytest.mark.parametrize(
+    "invalid_obj",
+    [
+        123,
+        12.34,
+        b"bytes",
+        {"a": 1},
+        None,
+    ],
+)
+def test_dumps_invalid_objects(invalid_obj):
+    """
+    Tests that `dumps` raises a TypeError for unsupported Python types.
+    """
+    with pytest.raises(
+        TypeError, match="Unsupported type for S-expression serialization"
+    ):
+        dumps(invalid_obj)
+
+
+@pytest.mark.parametrize(
+    "obj",
+    [
+        "simple",
+        "a string with spaces",
+        True,
+        False,
+        [],
+        ["a", "b", "c"],
+        ["a", ["b", "c"], True, "d e f"],
+    ],
+)
+def test_loads_dumps_roundtrip(obj):
+    """
+    Tests that `loads(dumps(obj))` returns the original object.
+    """
+    sexp_str = dumps(obj)
+    new_obj = loads(sexp_str)
+    assert new_obj == obj

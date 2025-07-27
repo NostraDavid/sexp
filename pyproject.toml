@@ -1,6 +1,6 @@
 [build-system]
-requires = ["maturin>=1.5,<2"]
-build-backend = "maturin"
+requires = ["uv_build>=0.8.3,<0.9.0"]
+build-backend = "uv_build"
 
 [project]
 name = "sexp"
@@ -8,33 +8,51 @@ version = "0.0.0"
 description = "RFC 9804 Simple Public Key Infrastructure (SPKI) S-Expressions parser-generator"
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = ["pydantic>=2,<3"]
+dependencies = [
+    "apg-py>=1.0.3",
+    "parsimonious>=0.10.0",
+    "pydantic>=2,<3",
+    "pydantic-settings>=2,<3",
+]
 
 [project.scripts]
 sexp = "sexp:main"
 
-[tool.maturin]
-module-name = "sexp._native"
-manifest-path = "sexp_native/Cargo.toml"
-python-source = "src"
-features = ["pyo3/extension-module"]
-
 [tool.uv]
 dev-dependencies = [
     "asv>=0.6.4",
-    "coverage>=7.6.1",
+    "coverage[toml]>=7.6.1",
     "hypothesis>=6.112.4",
-    "maturin>=1.9.1",
     "pre-commit>=4.2.0",
     "pytest-cov>=6.0.0",
     "pytest-mock>=3.14.0",
     "pytest>=8.3.3",
     "ruff>=0.12.4",
     "ty>=0.0.1a15",
-    "virtualenv>=20.32.0", # asv
+    "virtualenv>=20.32.0",   # asv
 ]
 
 [tool.pytest.ini_options]
-minversion = "6.0"                                            # Set the minimum pytest version
-addopts = ["--strict-markers", "--tb=short", "--verbosity=4"]
-testpaths = ["tests/"]
+minversion = "8.0" # Set the minimum pytest version
+# `pytest --help` to show all possible `addopts` options
+addopts = [
+    "--strict-config",
+    "--strict-markers",
+    # "--stepwise",
+    "--durations=4",
+    "--verbosity=4",
+    "-ra",
+    "--tb=line",
+]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_also = []
+ignore_errors = true
+
+[tool.coverage.html]
+directory = "coverage_html_report"

@@ -1,261 +1,202 @@
-from __future__ import annotations
-
 import base64
 import binascii
-import io
-import logging
-from typing import Tuple, Union
+from parsimonious.grammar import Grammar
+from parsimonious.nodes import NodeVisitor
+from parsimonious.exceptions import ParseError
+from pathlib import Path
 
-from sexp.settings import SexpSettings
-from sexp.types import SexpAtom, SexpList, SexpNode
+_abnf_path = Path(__file__).parent / "rfc9804.peg"
+with open(_abnf_path, "r", encoding="utf-8") as f:
+    _abnf_content = f.read()
 
-logger = logging.getLogger(__name__)
-
-_whitespace = {ord(" "), ord("\t"), ord("\n"), ord("\r")}
-_delims = {ord("("), ord(")")}
-_comment = ord(";")  # line comments in advanced/human form
-
-
-class SexpParseError(ValueError):
-    pass
-
-
-def parse(data: Union[bytes, str], settings: SexpSettings | None = None) -> SexpNode:  # type: ignore[syntax]
-    if settings is None:
-        settings = SexpSettings()
-    buf = data.encode("utf-8") if isinstance(data, str) else data
-    node, pos = _parse_one(buf, 0, settings)
-    _skip_ws(buf, pos, settings, eof_ok=True)
-    return node
+# Parsimonious doesn't support ABNF comments (starting with ';').
+# We filter them out.
+_abnf_lines = [
+    line for line in _abnf_content.splitlines() if not line.strip().startswith(";")
+]
+_processed_abnf = "\n".join(_abnf_lines)
 
 
-def iterparse(source: io.BufferedReader) -> io.BufferedReader:  # type: ignore[no-redef]
-    raise TypeError("type hint sentinel")  # never runs, helps some linters
+RFC9804_GRAMMAR = Grammar(_processed_abnf)
 
 
-def iterparse(source, settings: SexpSettings | None = None):  # noqa: F811
-    if settings is None:
-        settings = SexpSettings()
-    if not hasattr(source, "read"):
-        raise TypeError("iterparse expects a file-like object opened in binary mode")
+class SExpressionVisitor(NodeVisitor):
+    """
+    Transforms the parsimonious parse tree into Python objects.
+    This visitor handles the "advanced transport" representation.
+    """
 
-    buf = bytearray()
-    pos = 0
-    while True:
-        chunk = source.read(64 * 1024)
-        if not chunk and pos >= len(buf):
-            break
-        if chunk:
-            buf.extend(chunk)
+    def __init__(self, text):
+        self.text = text
+        self.index = 0
 
-        while True:
-            try:
-                node, new_pos = _parse_one(buf, pos, settings)
-            except _NeedMore:
-                break
-            except _AtEnd:
-                break
-            except SexpParseError:
-                raise
-            else:
-                pos = new_pos
-                yield node
-                try:
-                    pos = _skip_ws(buf, pos, settings, eof_ok=False)
-                except _NeedMore:
-                    break
+    def visit_sexp(self, node, visited_children):
+        _, value, _ = visited_children
+        return value
 
-        if pos > 0:
-            del buf[:pos]
-            pos = 0
-        if not chunk and pos == 0 and len(buf) == 0:
-            break
+    def visit_value(self, node, visited_children):
+        return visited_children[0]
 
+    def visit_list(self, node, visited_children):
+        _, children, _ = visited_children
+        # Filter out whitespace nodes
+        return [
+            child
+            for child in children
+            if not isinstance(child, str) or not child.isspace()
+        ]
 
-class _NeedMore(Exception):
-    pass
+    def visit_string(self, node, visited_children):
+        # Ignores display hints for now as per project spec (string | list)
+        _display, simple_string = visited_children
+        return simple_string
 
+    def visit_simple_string(self, node, visited_children):
+        return visited_children[0]
 
-class _AtEnd(Exception):
-    pass
+    def visit_token(self, node, visited_children):
+        return node.text
 
+    def visit_verbatim(self, node, visited_children):
+        length_str, _ = visited_children
+        length = int(length_str)
+        # Manually consume from original text
+        start = node.end
+        end = start + length
+        if end > len(self.text):
+            raise ValueError(
+                f"Verbatim string at position {node.start} expects {length} bytes, but not enough data remains."
+            )
+        data = self.text[start:end]
+        # This is a bit of a hack to tell the top-level parser how much we consumed
+        self.index = end
+        return data
 
-def _skip_ws(
-    buf: Union[bytearray, bytes], pos: int, settings: SexpSettings, eof_ok: bool
-) -> int:
-    n = len(buf)
-    while True:
-        while pos < n and (buf[pos] in _whitespace):
-            pos += 1
-        if settings.allow_comments and pos < n and buf[pos] == _comment:
-            while pos < n and buf[pos] not in (ord("\n"), ord("\r")):
-                pos += 1
-            continue
-        break
-    if pos >= n and not eof_ok:
-        raise _NeedMore()
-    return pos
+    def visit_quoted_string(self, node, visited_children):
+        # Using `codecs.escape_decode` is a robust way to handle C-style escapes
+        return binascii.unhexlify(
+            node.text[1:-1]
+            .encode("utf-8")
+            .decode("unicode_escape")
+            .encode("latin1")
+            .hex()
+        ).decode("utf-8")
 
+    def visit_hex_str(self, node, visited_children):
+        content = node.text.strip()
+        if content.startswith("#"):  # No length prefix
+            hex_data = content[1:-1]
+        else:  # Length prefix
+            hex_data = content[content.find("#") + 1 : -1]
 
-def _parse_one(
-    buf: Union[bytearray, bytes], pos: int, settings: SexpSettings
-) -> Tuple[SexpNode, int]:
-    pos = _skip_ws(buf, pos, settings, eof_ok=False)
-    if pos >= len(buf):
-        raise _AtEnd()
+        hex_data = "".join(hex_data.split())  # remove whitespace
+        if len(hex_data) % 2 != 0:
+            raise ValueError(
+                f"Invalid hex string at {node.start}: odd number of hex digits."
+            )
+        return binascii.unhexlify(hex_data).decode("utf-8", errors="replace")
 
-    b = buf[pos]
-    if b == ord("("):
-        return _parse_list(buf, pos + 1, settings)
-    if b == ord('"'):
-        atom, pos2 = _parse_quoted(buf, pos + 1, settings)
-        return atom, pos2
-    if b == ord("#"):
-        atom, pos2 = _parse_hex(buf, pos + 1, settings)
-        return atom, pos2
-    if b == ord("|"):
-        atom, pos2 = _parse_base64(buf, pos + 1, settings)
-        return atom, pos2
-    if 48 <= b <= 57:  # '0'..'9' maybe length-prefixed
-        pos2 = pos
-        while pos2 < len(buf) and 48 <= buf[pos2] <= 57:
-            pos2 += 1
-        if pos2 >= len(buf):
-            raise _NeedMore()
-        if buf[pos2] == ord(":"):
-            length_bytes = buf[pos:pos2]
-            try:
-                length = int(length_bytes.decode("ascii"))
-            except Exception as exc:
-                raise SexpParseError("invalid length prefix") from exc
-            start = pos2 + 1
-            end = start + length
-            if end > len(buf):
-                raise _NeedMore()
-            chunk = bytes(buf[start:end])
-            _maybe_warn_large_atom(chunk, settings)
-            return SexpAtom(chunk), end
-    return _parse_symbol(buf, pos, settings)
-
-
-def _parse_list(
-    buf: Union[bytearray, bytes], pos: int, settings: SexpSettings
-) -> Tuple[SexpNode, int]:
-    items: list[SexpNode] = []
-    while True:
-        pos = _skip_ws(buf, pos, settings, eof_ok=False)
-        if pos >= len(buf):
-            raise _NeedMore()
-        if buf[pos] == ord(")"):
-            return SexpList(items), pos + 1
-        node, pos = _parse_one(buf, pos, settings)
-        items.append(node)
-
-
-def _parse_quoted(
-    buf: Union[bytearray, bytes], pos: int, settings: SexpSettings
-) -> Tuple[SexpAtom, int]:
-    out = bytearray()
-    n = len(buf)
-    while True:
-        if pos >= n:
-            raise _NeedMore()
-        b = buf[pos]
-        pos += 1
-        if b == ord('"'):
-            s = out.decode("utf-8")
-            return SexpAtom(s), pos
-        if b == ord("\\"):
-            if pos >= n:
-                raise _NeedMore()
-            esc = buf[pos]
-            pos += 1
-            if esc in (ord('"'), ord("\\")):
-                out.append(esc)
-            elif esc == ord("n"):
-                out.append(ord("\n"))
-            elif esc == ord("r"):
-                out.append(ord("\r"))
-            elif esc == ord("t"):
-                out.append(ord("\t"))
-            elif esc == ord("x"):
-                if pos + 1 >= n:
-                    raise _NeedMore()
-                h1, h2 = buf[pos], buf[pos + 1]
-                pos += 2
-                try:
-                    out.append(int(bytes([h1, h2]).decode("ascii"), 16))
-                except Exception as exc:
-                    raise SexpParseError("invalid \\x escape") from exc
-            else:
-                raise SexpParseError("invalid escape")
+    def visit_base64_str(self, node, visited_children):
+        content = node.text.strip()
+        if content.startswith("|"):  # No length prefix
+            b64_data = content[1:-1]
         else:
-            out.append(b)
+            b64_data = content[content.find("|") + 1 : -1]
+
+        b64_data = "".join(b64_data.split())  # remove whitespace
+        # Add padding if missing
+        missing_padding = len(b64_data) % 4
+        if missing_padding:
+            b64_data += "=" * (4 - missing_padding)
+        return base64.b64decode(b64_data).decode("utf-8", errors="replace")
+
+    def generic_visit(self, node, visited_children):
+        return visited_children or node.text
 
 
-def _parse_hex(
-    buf: Union[bytearray, bytes], pos: int, settings: SexpSettings
-) -> Tuple[SexpAtom, int]:
-    start = pos
-    while True:
-        if pos >= len(buf):
-            raise _NeedMore()
-        if buf[pos] == ord("#"):
-            data = buf[start:pos]
-            try:
-                val = binascii.unhexlify(bytes(data))
-            except Exception as exc:
-                raise SexpParseError("invalid hex data") from exc
-            _maybe_warn_large_atom(val, settings)
-            return SexpAtom(val), pos + 1
-        pos += 1
+def loads(s: str):
+    """Parse a string into a list of S-expressions."""
+    results = []
+    index = 0
+    s = s.strip()
+    while index < len(s):
+        try:
+            # We can't use the grammar directly for verbatim strings, so we check first.
+            is_verbatim = False
+            if s[index].isdigit():
+                colon_pos = s.find(":", index)
+                if colon_pos > index:
+                    try:
+                        length = int(s[index:colon_pos])
+                        is_verbatim = True
+                        data_start = colon_pos + 1
+                        data_end = data_start + length
+                        results.append(s[data_start:data_end])
+                        index = data_end
+                        # Skip trailing whitespace for next iteration
+                        while index < len(s) and s[index].isspace():
+                            index += 1
+                        continue
+                    except (ValueError, IndexError):
+                        is_verbatim = False  # Not a valid verbatim string start
+
+            tree = RFC9804_GRAMMAR.parse(s[index:])
+            visitor = SExpressionVisitor(s)
+            result = visitor.visit(tree)
+            results.append(result)
+            # The visitor might have advanced the index for verbatim strings
+            index += tree.end
+            # Skip trailing whitespace for next iteration
+            while index < len(s) and s[index].isspace():
+                index += 1
+
+        except ParseError as e:
+            raise ValueError(
+                f"Failed to parse S-expression at position {index + e.pos}: {e.text[e.pos : e.pos + 30]}..."
+            ) from e
+    return results[0] if len(results) == 1 else results
 
 
-def _parse_base64(
-    buf: Union[bytearray, bytes], pos: int, settings: SexpSettings
-) -> Tuple[SexpAtom, int]:
-    start = pos
-    while True:
-        if pos >= len(buf):
-            raise _NeedMore()
-        if buf[pos] == ord("|"):
-            data = buf[start:pos]
-            try:
-                val = base64.b64decode(bytes(data), validate=True)
-            except Exception as exc:
-                raise SexpParseError("invalid base64 data") from exc
-            _maybe_warn_large_atom(val, settings)
-            return SexpAtom(val), pos + 1
-        pos += 1
+def load(f):
+    """Parse a file-like object into an S-expression."""
+    return loads(f.read())
 
 
-def _parse_symbol(
-    buf: Union[bytearray, bytes], pos: int, settings: SexpSettings
-) -> Tuple[SexpAtom, int]:
-    start = pos
-    n = len(buf)
-    while (
-        pos < n
-        and (buf[pos] not in _whitespace)
-        and (buf[pos] not in _delims)
-        and buf[pos] != _comment
-    ):
-        pos += 1
-    if pos == start:
-        raise SexpParseError("unexpected character")
-    raw = bytes(buf[start:pos])
-    try:
-        s = raw.decode("utf-8")
-        return SexpAtom(s), pos
-    except UnicodeDecodeError:
-        _maybe_warn_large_atom(raw, settings)
-        return SexpAtom(raw), pos
+def _dumps_canonical(node):
+    if isinstance(node, str):
+        return f"{len(node.encode('utf-8'))}:{node}"
+    elif isinstance(node, list):
+        return f"({''.join(_dumps_canonical(n) for n in node)})"
+    else:
+        raise TypeError(
+            f"Object of type {type(node).__name__} is not serializable to S-expression"
+        )
 
 
-def _maybe_warn_large_atom(val: bytes, settings: SexpSettings) -> None:
-    if (
-        settings.warn_on_large_atom
-        and isinstance(val, (bytes, bytearray))
-        and len(val) >= settings.large_atom_threshold
-    ):
-        logger.warning("large atom: %d bytes", len(val))
+def _dumps_advanced(node):
+    if isinstance(node, str):
+        # Simple heuristic: if it's a valid token, print as token, otherwise as quoted string.
+        try:
+            RFC9804_GRAMMAR["token"].parse(node)
+            return node
+        except ParseError:
+            # Simple quoting, does not handle all escapes but is reasonable.
+            return '"' + node.replace("\\", "\\\\").replace('"', '\\"') + '"'
+    elif isinstance(node, list):
+        return f"({' '.join(_dumps_advanced(n) for n in node)})"
+    else:
+        raise TypeError(
+            f"Object of type {type(node).__name__} is not serializable to S-expression"
+        )
+
+
+def dumps(node, *, advanced: bool = False):
+    """Serialize an S-expression node to a string."""
+    if advanced:
+        return _dumps_advanced(node)
+    return _dumps_canonical(node)
+
+
+def dump(node, f, *, advanced: bool = False):
+    """Serialize an S-expression node to a file-like object."""
+    f.write(dumps(node, advanced=advanced))
