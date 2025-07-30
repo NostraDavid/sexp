@@ -2,26 +2,26 @@
 ; original order from the RFC. I've also replaced all hex symbols with
 ; variables. All variables have been lowercased as well, as I am using this as a
 ; reference for my implementation.
-sexp           =  *whitespace value *whitespace
-whitespace     =  SP / HTAB / vtab / CR / LF / ff
-vtab           =  %x0B   ; vertical tab
 ff             =  %x0C   ; form feed
-value          =  string / ("(" *(value / whitespace) ")")
-string         =  [display] simple-string
-display        =  "[" *whitespace simple-string *whitespace "]" *whitespace
-simple-string  =  verbatim / quoted-string / token / hexadecimal / base-64
-verbatim       =  decimal ":" *OCTET
-decimal        =  %x30 / (%x31-39 *DIGIT)
-quoted-string  =  [decimal] DQUOTE *(printable / escaped) DQUOTE
-printable      =  %x20-21 / %x23-5B / %x5D-7E
-escaped        =  backslash (%x3F / %x61 / %x62 / %x66 / %x6E / %x72 / %x74 / %x76 / DQUOTE / quote / backslash / 3(%x30-37) / (%x78 2HEXDIG) / CR / LF / (CR LF) / (LF CR))
-backslash      =  %x5C
-quote          =  %x27   ; single quote
-token          =  (ALPHA / simple-punc) *(ALPHA / DIGIT / simple-punc)
-simple-punc    =  "-" / "." / "/" / "_" / ":" / "*" / "+" / "="
-hexadecimal    =  [decimal] "#" *whitespace *hexadecimals "#"
-hexadecimals   =  2(HEXDIG *whitespace)
-base-64        =  [decimal] "|" *whitespace *base-64-chars [base-64-end] "|"
-base-64-chars  =  4(base-64-char *whitespace)
+vtab           =  %x0B   ; vertical tab
+whitespace     =  SP / HTAB / vtab / CR / LF / ff
 base-64-char   =  ALPHA / DIGIT / "+" / "/"
+base-64-chars  =  4(base-64-char *whitespace)
 base-64-end    =  base-64-chars / 3(base-64-char *whitespace) ["=" *whitespace] / 2(base-64-char *whitespace) *2("=" *whitespace)
+decimal        =  %x30 / (%x31-39 *DIGIT)
+base-64        =  [decimal] "|" *whitespace *base-64-chars [base-64-end] "|"
+hexadecimals   =  2(HEXDIG *whitespace)
+hexadecimal    =  [decimal] "#" *whitespace *hexadecimals "#"
+simple-punc    =  "-" / "." / "/" / "_" / ":" / "*" / "+" / "="
+token          =  (ALPHA / simple-punc) *(ALPHA / DIGIT / simple-punc)
+quote          =  %x27   ; single quote
+backslash      =  %x5C
+escaped        =  backslash (%x3F / %x61 / %x62 / %x66 / %x6E / %x72 / %x74 / %x76 / DQUOTE / quote / backslash / 3(%x30-37) / (%x78 2HEXDIG) / CR / LF / (CR LF) / (LF CR))
+printable      =  %x20-21 / %x23-5B / %x5D-7E
+quoted-string  =  [decimal] DQUOTE *(printable / escaped) DQUOTE
+verbatim       =  decimal ":" *OCTET
+simple-string  =  verbatim / quoted-string / token / hexadecimal / base-64
+display        =  "[" *whitespace simple-string *whitespace "]" *whitespace
+string         =  [display] simple-string
+value          =  string / ("(" *(value / whitespace) ")")
+sexp           =  *whitespace value *whitespace
