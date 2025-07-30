@@ -114,9 +114,6 @@
           python
           pkgs.uv
           pkgs.freetype
-          pkgs.rustc
-          pkgs.cargo
-          pkgs.rustfmt
         ];
         env =
           {
@@ -200,9 +197,6 @@
           packages = [
             virtualenv
             pkgs.uv
-            pkgs.rustc
-            pkgs.cargo
-            pkgs.rustfmt
           ];
 
           env = {
