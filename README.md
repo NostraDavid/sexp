@@ -114,3 +114,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ```bash
 nix develop .#uv2nix
 ```
+
+---
+
+I am looking for an RFC9804 parser that can:
+
+- generate random data, depending on the node-type I am using
+- parse a string into a tree structure
+- serialize a tree structure into a string
+- be able to print an in-memory representation of the tree
+- eventually handle the whole of ./docs/RFC9804/sexp.abnf
+- handle various data types like integers, strings, lists, and dictionaries
+
+I heard a Packrat parser may be helpful. I need to develop this parser in a step-by-step manner, so I should start with the primitives.
