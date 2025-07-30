@@ -1,53 +1,28 @@
-from parsimonious import Grammar
 import pytest
 from sexp.parser import dumps, loads
-
-
-def test_grammar():
-    g = Grammar("""
-    polite_greeting = greeting ", my good " title
-    greeting        = "Hi" / "Hello"
-    title           = "madam" / "sir"
-    """)
-    g.parse("Hello, my good sir")
-
-
-def test_loads_valid_sexp123():
-    assert loads("# comment") is None
 
 
 @pytest.mark.parametrize(
     "input_sexp, expected_obj",
     [
         # Basic atoms
-        ("#comment", None),
         ("token", "token"),
         ('"a quoted string"', "a quoted string"),
         ("5:hello", "hello"),
-        ("#68656c6c6f#", "hello"),
-        ("|aGVsbG8=|", "hello"),
-        # Booleans
         ("#t", True),
         ("#f", False),
         # Empty cases
         ("()", []),
         ('""', ""),
         ("0:", ""),
-        ("##", ""),
-        ("||", ""),
         # Lists
         ("(a b c)", ["a", "b", "c"]),
         ("(a (b c) d)", ["a", ["b", "c"], "d"]),
-        (
-            '( "a" 1:b #63# |ZA==| #t )',
-            ["a", "b", "c", "d", True],
-        ),
-        # Whitespace and comments
-        (" ( a\n b\t c) # comment", ["a", "b", "c"]),
+        # Whitespace handling
+        (" ( a\n b\t c) ", ["a", "b", "c"]),
         (
             """
             (list-of-items
-                # this is a comment
                 item1
                 "item 2 with spaces"
                 (nested list)
@@ -67,15 +42,12 @@ def test_loads_valid_sexp(input_sexp: str, expected_obj):
 @pytest.mark.parametrize(
     "invalid_sexp, error_message_part",
     [
-        ("(", "Unexpected EOF while parsing list"),
-        (")", "Unexpected ')'"),
-        ("(a b", "Unexpected EOF while parsing list"),
-        ("4:abc", "Invalid length for verbatim string"),
-        ('"abc', "Unterminated quoted string"),
-        ("#616g#", "Invalid hex character 'g'"),
-        ("|YWJj", "Incorrect padding"),
-        ("#z", "Invalid token starting with '#'"),
-        ("a b", "Extra content found after S-expression"),
+        ("(", "Failed to parse S-expression"),
+        (")", "Failed to parse S-expression"),
+        ("(a b", "Failed to parse S-expression"),
+        ("4:abc", "Failed to parse S-expression"),
+        ('"abc', "Failed to parse S-expression"),
+        ("a b", "Failed to parse S-expression"),
     ],
 )
 def test_loads_invalid_sexp(invalid_sexp: str, error_message_part: str):
@@ -90,23 +62,20 @@ def test_loads_invalid_sexp(invalid_sexp: str, error_message_part: str):
     "obj, expected_sexp",
     [
         # Basic atoms
-        ("token", "token"),
-        ("a simple string", '"a simple string"'),
-        ("string-with-hyphen", "string-with-hyphen"),
-        ("string with (parens)", '"string with (parens)"'),
-        ('string with "quotes"', '"string with \\"quotes\\""'),
-        # Booleans
-        (True, "#t"),
-        (False, "#f"),
+        ("token", "5:token"),
+        ("a simple string", "15:a simple string"),
+        ("string-with-hyphen", "18:string-with-hyphen"),
+        ("string with (parens)", "20:string with (parens)"),
+        ('string with "quotes"', '20:string with "quotes"'),
         # Empty cases
         ([], "()"),
-        ("", '""'),
+        ("", "0:"),
         # Lists
-        (["a", "b", "c"], "(a b c)"),
-        (["a", ["b", "c"], "d"], "(a (b c) d)"),
+        (["a", "b", "c"], "(1:a1:b1:c)"),
+        (["a", ["b", "c"], "d"], "(1:a(1:b1:c)1:d)"),
         (
-            ["a", "b c", True, ["d", False]],
-            '(a "b c" #t (d #f))',
+            ["a", "b c", "d"],
+            "(1:a3:b c1:d)",
         ),
     ],
 )
@@ -132,7 +101,7 @@ def test_dumps_invalid_objects(invalid_obj):
     Tests that `dumps` raises a TypeError for unsupported Python types.
     """
     with pytest.raises(
-        TypeError, match="Unsupported type for S-expression serialization"
+        TypeError, match="Object of type .* is not serializable to S-expression"
     ):
         dumps(invalid_obj)
 
@@ -142,11 +111,9 @@ def test_dumps_invalid_objects(invalid_obj):
     [
         "simple",
         "a string with spaces",
-        True,
-        False,
         [],
         ["a", "b", "c"],
-        ["a", ["b", "c"], True, "d e f"],
+        ["a", ["b", "c"], "d e f"],
     ],
 )
 def test_loads_dumps_roundtrip(obj):

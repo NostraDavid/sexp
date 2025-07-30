@@ -3,5 +3,25 @@
         "-vvvv",
         "tests/"
     ],
-    "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix"
+    "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix",
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#ad1c37",
+        "activityBar.background": "#ad1c37",
+        "activityBar.foreground": "#e7e7e7",
+        "activityBar.inactiveForeground": "#e7e7e799",
+        "activityBarBadge.background": "#34a51b",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "commandCenter.border": "#e7e7e799",
+        "sash.hoverBorder": "#ad1c37",
+        "statusBar.background": "#811529",
+        "statusBar.foreground": "#e7e7e7",
+        "statusBarItem.hoverBackground": "#ad1c37",
+        "statusBarItem.remoteBackground": "#811529",
+        "statusBarItem.remoteForeground": "#e7e7e7",
+        "titleBar.activeBackground": "#811529",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.inactiveBackground": "#81152999",
+        "titleBar.inactiveForeground": "#e7e7e799"
+    },
+    "peacock.color": "#811529"
 }

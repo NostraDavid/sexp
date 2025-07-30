@@ -314,6 +314,19 @@ wheels = [
 ]
 
 [[package]]
+name = "mutatest"
+version = "2.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "coverage" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5c/60/f03cfedb8a466f458a7105535a5dfe5f4bca1f96709f7f7f53377382e388/mutatest-2.0.1.tar.gz", hash = "sha256:037e4585da01bd62113cc587549e0d19fe654839bf35fedbcc42939d37afec9d", size = 83209, upload-time = "2019-12-07T16:30:14.742Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4a/47/43a5842aeb9536ac2033ce6a16ad64dfc9941aae6e512559733fd1df8087/mutatest-2.0.1-py37-none-any.whl", hash = "sha256:d16ac2a92eaec18b8fad2fa4938436a497abdadc04aaf397e8bb1cfece972bb2", size = 48276, upload-time = "2019-12-07T16:30:12.409Z" },
+]
+
+[[package]]
 name = "nodeenv"
 version = "1.9.1"
 source = { registry = "https://pypi.org/simple" }
@@ -802,6 +815,7 @@ dev = [
     { name = "asv" },
     { name = "coverage", extra = ["toml"] },
     { name = "hypothesis" },
+    { name = "mutatest" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -824,6 +838,7 @@ dev = [
     { name = "asv", specifier = ">=0.6.4" },
     { name = "coverage", extras = ["toml"], specifier = ">=7.6.1" },
     { name = "hypothesis", specifier = ">=6.112.4" },
+    { name = "mutatest", specifier = ">=2.0.1" },
     { name = "pre-commit", specifier = ">=4.2.0" },
     { name = "pytest", specifier = ">=8.3.3" },
     { name = "pytest-cov", specifier = ">=6.0.0" },

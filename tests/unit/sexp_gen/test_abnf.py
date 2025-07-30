@@ -13,26 +13,25 @@ from sexp_gen import abnf
 @given(abnf.sp)
 def test_sp_strategy(s: str):
     """Tests the 'sp' strategy."""
-    assert s == " "
-    assert s == loads(dumps(s))
+    assert s == " ", "Expected a space character"
 
 
 @given(abnf.htab)
 def test_htab_strategy(s: str):
     """Tests the 'htab' strategy."""
-    assert s == "\t"
+    assert s == "\t", "Expected a horizontal tab character"
 
 
 @given(abnf.cr)
 def test_cr_strategy(s: str):
     """Tests the 'cr' strategy."""
-    assert s == "\r"
+    assert s == "\r", "Expected a carriage return character"
 
 
 @given(abnf.lf)
 def test_lf_strategy(s: str):
     """Tests the 'lf' strategy."""
-    assert s == "\n"
+    assert s == "\n", "Expected a line feed character."
 
 
 @given(abnf.digit)
@@ -100,7 +99,8 @@ def test_verbatim_strategy(s: str):
     length = int(length_str)
     header = f"{length_str}:"
     content = s[len(header) :]
-    assert len(content.encode("latin-1")) == length
+    assert len(content.encode("utf-8")) == length
+    assert s == dumps(loads(s))
 
 
 @pytest.mark.parametrize(
@@ -207,7 +207,7 @@ def test_x_strategy(s: str):
 
 
 @given(abnf.printable)
-def test_printable_strategy(s: str):
+def test_printable_strategy2(s: str):
     """Tests the 'printable' strategy."""
     assert re.fullmatch(r"[\x20-\x21\x23-\x5B\x5D-\x7E]", s)
 
@@ -234,6 +234,7 @@ def test_quoted_string_strategy(s: str):
     escaped_char = r"""\\(?:[?abfnrtv"'\\]|[0-7]{3}|x[0-9a-fA-F]{2}|\r\n?|\n\r?)"""
     quoted_re = f'(0|[1-9][0-9]*)?"(?:{printable_char}|{escaped_char})*"'
     assert re.fullmatch(quoted_re, s)
+    assert loads(s) == loads(dumps(loads(s))), "Quoted string should be round-trippable"
 
 
 @given(abnf.token)
@@ -419,11 +420,29 @@ def test_check_balanced_parentheses(input_string: str, expected: bool):
 def test_value_strategy(s: str):
     """Tests the 'value' strategy."""
     assert isinstance(s, str)
-    assert check_balanced_parentheses(s) is True
+    # Test that the generated value is parseable
+    try:
+        parsed = loads(s)
+        # For now, just verify it can be parsed
+        assert parsed is not None
+    except Exception as e:
+        # If parsing fails, print debug info and re-raise
+        print(f"Failed to parse: {s!r}")
+        print(f"Error: {e}")
+        raise
 
 
 @given(abnf.sexp)
 def test_sexp_strategy(s: str):
     """Tests the 'sexp' strategy."""
     assert isinstance(s, str)
-    assert check_balanced_parentheses(s)
+    # Test that the generated S-expression is parseable
+    try:
+        parsed = loads(s)
+        # For now, just verify it can be parsed
+        assert parsed is not None
+    except Exception as e:
+        # If parsing fails, print debug info and re-raise
+        print(f"Failed to parse: {s!r}")
+        print(f"Error: {e}")
+        raise
