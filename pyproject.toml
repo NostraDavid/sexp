@@ -27,10 +27,11 @@ dev-dependencies = [
     "pre-commit>=4.2.0",
     "pytest-cov>=6.0.0",
     "pytest-mock>=3.14.0",
+    "pytest-xdist>=3.8.0",
     "pytest>=8.3.3",
     "ruff>=0.12.4",
     "ty>=0.0.1a15",
-    "virtualenv>=20.32.0", # asv
+    "virtualenv>=20.32.0",   # asv
 ]
 
 [tool.pytest.ini_options]
@@ -45,15 +46,47 @@ addopts = [
     "-ra",
     "--tb=line",
 ]
-testpaths = ["tests"]
+testpaths = ["tests/"]
 
+# https://coverage.readthedocs.io/en/7.10.1/config.html
 [tool.coverage.run]
 branch = true
+parallel = true
+# concurrency = ["gevent"]
+# upgrade `core` to `sysmon` once we in Python 3.12+
+core = "ctrace"
+cover_pylib = false
+data_file = ".coverage"
+disable_warnings = []
+# https://coverage.readthedocs.io/en/7.10.1/cmd.html#cmd-run-debug
+debug = []
+# source: A list of packages or directorie
+source = ["sexp"]
+omit = [
+    "tests/*",
+    "benchmarks/*",
+    "docs/*",
+    "examples/*",
+    "scripts/*",
+    "*/tests/*",
+    "*/benchmarks/*",
+]
 
 [tool.coverage.report]
-# Regexes for lines to exclude from consideration
-exclude_also = []
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == '__main__':",
+    "raise NotImplementedError",
+    "pass",
+    "continue",
+]
+fail_under = 100
 ignore_errors = true
+precision = 0
+show_missing = true
+skip_covered = false
+skip_empty = false
+sort = "Cover"
 
 [tool.coverage.html]
-directory = "coverage_html_report"
+directory = "htmlcov"

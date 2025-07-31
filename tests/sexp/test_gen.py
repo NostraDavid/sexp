@@ -6,59 +6,59 @@ import re
 from hypothesis import given
 import pytest
 
-from sexp_gen import abnf
+from sexp.gen import sexp_gen
 
 
 # Basic ABNF core rules
-@given(abnf.sp)
+@given(sexp_gen.sp)
 def test_sp_strategy(s: str):
     """Tests the 'sp' strategy."""
     assert s == " ", "Expected a space character"
 
 
-@given(abnf.htab)
+@given(sexp_gen.htab)
 def test_htab_strategy(s: str):
     """Tests the 'htab' strategy."""
     assert s == "\t", "Expected a horizontal tab character"
 
 
-@given(abnf.cr)
+@given(sexp_gen.cr)
 def test_cr_strategy(s: str):
     """Tests the 'cr' strategy."""
     assert s == "\r", "Expected a carriage return character"
 
 
-@given(abnf.lf)
+@given(sexp_gen.lf)
 def test_lf_strategy(s: str):
     """Tests the 'lf' strategy."""
     assert s == "\n", "Expected a line feed character."
 
 
-@given(abnf.alpha)
+@given(sexp_gen.alpha)
 def test_alpha_strategy(s: str):
     """Tests the 'alpha' strategy."""
     assert re.fullmatch(r"[a-zA-Z]", s)
 
 
-@given(abnf.digit)
+@given(sexp_gen.digit)
 def test_digit_strategy(s: str):
     """Tests the 'digit' strategy."""
     assert re.fullmatch(r"[0-9]", s)
 
 
-@given(abnf.hexdig)
+@given(sexp_gen.hexdig)
 def test_hexdig_strategy(s: str):
     """Tests the 'hexdig' strategy."""
     assert re.fullmatch(r"[0-9a-fA-F]", s)
 
 
-@given(abnf.dquote)
+@given(sexp_gen.dquote)
 def test_dquote_strategy(s: str):
     """Tests the 'dquote' strategy."""
     assert s == '"'
 
 
-@given(abnf.octet)
+@given(sexp_gen.octet)
 def test_octet_strategy(b: bytes):
     """Tests the 'octet' strategy."""
     assert isinstance(b, bytes)
@@ -66,26 +66,26 @@ def test_octet_strategy(b: bytes):
 
 
 # S-expression specific basic rules
-@given(abnf.vtab)
+@given(sexp_gen.vtab)
 def test_vtab_strategy(s: str):
     """Tests the 'vtab' strategy."""
     assert s == "\v"
 
 
-@given(abnf.ff)
+@given(sexp_gen.ff)
 def test_ff_strategy(s: str):
     """Tests the 'ff' strategy."""
     assert s == "\f"
 
 
-@given(abnf.whitespace)
+@given(sexp_gen.whitespace)
 def test_whitespace_strategy(s: str):
     """Tests the 'whitespace' strategy."""
     assert re.fullmatch(r"[\s]", s)
     assert len(s) == 1
 
 
-@given(abnf.base_64_chars)
+@given(sexp_gen.base_64_chars)
 def test_base_64_chars_strategy(s: str):
     """Tests the 'base-64-chars' strategy."""
     b64_char_ws = r"[a-zA-Z0-9+/][\s]*"
@@ -93,13 +93,13 @@ def test_base_64_chars_strategy(s: str):
     assert re.fullmatch(b64_chars_re, s)
 
 
-@given(abnf.base_64_char)
+@given(sexp_gen.base_64_char)
 def test_base_64_char_strategy(s: str):
     """Tests the 'base-64-char' strategy."""
     assert re.fullmatch(r"[a-zA-Z0-9+/]", s)
 
 
-@given(abnf.base_64_end)
+@given(sexp_gen.base_64_end)
 def test_base_64_end_strategy(s: str):
     """Tests the 'base-64-end' strategy."""
     ws = r"[\s]*"
@@ -114,13 +114,13 @@ def test_base_64_end_strategy(s: str):
     assert re.fullmatch(b64_end_re, s)
 
 
-@given(abnf.decimal)
+@given(sexp_gen.decimal)
 def test_decimal_strategy(s: str):
     """Tests the 'decimal' strategy."""
     assert re.fullmatch(r"0|[1-9][0-9]*", s)
 
 
-@given(abnf.base_64)
+@given(sexp_gen.base_64)
 def test_base_64_strategy(s: str):
     """Tests the 'base-64' strategy."""
     ws = r"[\s]*"
@@ -139,7 +139,7 @@ def test_base_64_strategy(s: str):
     assert re.fullmatch(b64_re, s)
 
 
-@given(abnf.hexadecimals)
+@given(sexp_gen.hexadecimals)
 def test_hexadecimals_strategy(s: str):
     """Tests the 'hexadecimals' strategy."""
     ws = r"[\s]*"
@@ -148,7 +148,7 @@ def test_hexadecimals_strategy(s: str):
     assert re.fullmatch(hexadecimals_re, s, re.IGNORECASE)
 
 
-@given(abnf.hexadecimal)
+@given(sexp_gen.hexadecimal)
 def test_hexadecimal_strategy(s: str):
     """Tests the 'hexadecimal' strategy."""
     ws = r"[\s]*"
@@ -158,31 +158,31 @@ def test_hexadecimal_strategy(s: str):
     assert re.fullmatch(hex_re, s, re.IGNORECASE)
 
 
-@given(abnf.simple_punc)
+@given(sexp_gen.simple_punc)
 def test_simple_punc_strategy(s: str):
     """Tests the 'simple_punc' strategy."""
     assert re.fullmatch(r"[-./_:*+=]", s)
 
 
-@given(abnf.token)
+@given(sexp_gen.token)
 def test_token_strategy(s: str):
     """Tests the 'token' strategy."""
     assert re.fullmatch(r"[a-zA-Z-./_:*+=][a-zA-Z0-9-./_:*+=]*", s)
 
 
-@given(abnf.quote)
+@given(sexp_gen.quote)
 def test_quote_strategy(s: str):
     """Tests the 'quote' strategy."""
     assert s == "'"
 
 
-@given(abnf.backslash)
+@given(sexp_gen.backslash)
 def test_backslash_strategy(s: str):
     """Tests the 'backslash' strategy."""
     assert s == "\\"
 
 
-@given(abnf.escaped)
+@given(sexp_gen.escaped)
 def test_escaped_strategy(s: str):
     """Tests the 'escaped' strategy."""
     escaped_re = r"""
@@ -197,13 +197,13 @@ def test_escaped_strategy(s: str):
     assert re.fullmatch(escaped_re, s, re.VERBOSE)
 
 
-@given(abnf.printable)
+@given(sexp_gen.printable)
 def test_printable_strategy(s: str):
     """Tests the 'printable' strategy."""
     assert re.fullmatch(r"[\x20-\x21\x23-\x5B\x5D-\x7E]", s)
 
 
-@given(abnf.quoted_string)
+@given(sexp_gen.quoted_string)
 def test_quoted_string_strategy(s: str):
     """Tests the 'quoted_string' strategy."""
     printable_char = r"[\x20-\x21\x23-\x5B\x5D-\x7E]"
@@ -212,7 +212,7 @@ def test_quoted_string_strategy(s: str):
     assert re.fullmatch(quoted_re, s)
 
 
-@given(abnf.verbatim)
+@given(sexp_gen.verbatim)
 def test_verbatim_strategy(s: str):
     """Tests the 'verbatim' strategy."""
     match = re.match(r"([0-9]+):", s)
@@ -224,31 +224,31 @@ def test_verbatim_strategy(s: str):
     assert len(content.encode("utf-8")) == length
 
 
-@given(abnf.simple_string)
+@given(sexp_gen.simple_string)
 def test_simple_string_strategy(s: str):
     """Tests the 'simple_string' strategy."""
     assert isinstance(s, str)
 
 
-@given(abnf.display)
+@given(sexp_gen.display)
 def test_display_strategy(s: str):
     """Tests the 'display' strategy."""
     assert s.startswith("[") and s.strip().endswith("]")
 
 
-@given(abnf.string)
+@given(sexp_gen.string)
 def test_string_strategy(s: str):
     """Tests the 'string' strategy."""
     assert isinstance(s, str)
 
 
-@given(abnf.value)
+@given(sexp_gen.value)
 def test_value_strategy(s: str):
     """Tests the 'value' strategy."""
     assert isinstance(s, str)
 
 
-@given(abnf.sexp)
+@given(sexp_gen.sexp)
 def test_sexp_strategy(s: str):
     """Tests the 'sexp' strategy."""
     assert isinstance(s, str)

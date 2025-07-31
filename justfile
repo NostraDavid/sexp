@@ -14,7 +14,7 @@ export JUST_LOG := log
 
 [group: 'testing']
 test:
-  uv run coverage run --module pytest
+  uv run pytest --cov=sexp tests/
 
 [group: 'linting']
 lint:
@@ -27,10 +27,6 @@ format:
 [group: 'benchmarking']
 benchmark:
   uv run asv run --show-stderr --show-stderr --config asv.conf.json
-
-[group: 'packaging']
-testbuild:
-  cargo build --manifest-path sexp_native/Cargo.toml
 
 [group: 'packaging']
 build:
