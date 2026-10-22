@@ -1,33 +1,37 @@
-#!/usr/bin/env -S just --justfile
-
-# `just --list` to list all recipes.
-# `just --choose` to choose a recipe interactively.
-# Several of these programs use the configuration from pyproject.toml to
-# influence their behavior.
-# example: https://github.com/casey/just/blob/master/justfile
+set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 
 alias t := test
 
-log := "warn"
+default:
+    @just --list
 
-export JUST_LOG := log
+sync:
+    uv sync --locked
 
-[group: 'testing']
+update:
+    devenv update
+    uv lock --upgrade
+    uv sync --locked
+
 test:
-  uv run pytest --cov=sexp tests/
+    uv run --locked pytest --cov=sexp tests/
 
-[group: 'linting']
 lint:
-  uv run ruff check --fix --unsafe-fixes .
+    uv run --locked ruff check src tests
 
-[group: 'formatting']
 format:
-  uv run ruff format src tests
+    uv run --locked ruff format src tests
 
-[group: 'benchmarking']
+format-check:
+    uv run --locked ruff format --check src tests
+
+typecheck:
+    uv run --locked ty check src
+
 benchmark:
-  uv run asv run --show-stderr --show-stderr --config asv.conf.json
+    uv run --locked asv run --show-stderr --config asv.conf.json
 
-[group: 'packaging']
 build:
-  PYO3_PYTHON="$PWD/.venv/bin/python" maturin develop --release
+    uv build
+
+check: lint format-check typecheck test build

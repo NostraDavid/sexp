@@ -775,45 +775,72 @@ class TestParseHexadecimalsMethod:
 
 
 class TestParseHexadecimalMethod:
-    """Tests for parse_hexadecimal method (sequence of hex digits as int)"""
+    """RFC 9804 section 4.4 encodes octets as pairs of hexadecimal digits."""
 
     @pytest.mark.parametrize(
         "input_str, expected",
         [
-            ("#1a#", 0x1A),
-            ("#0#", 0x0),
-            ("#deadBEEF#", 0xDEADBEEF),
-            ("#ABC#", 0xABC),
-            ("##", None),
-            ("#g123#", None),
-            ("#123xyz#", 0x123),
+            ("#1a#", b"\x1a"),
+            ("#00#", b"\x00"),
+            ("#deadBEEF#", b"\xde\xad\xbe\xef"),
+            ("#ABCD#", b"\xab\xcd"),
+            ("##", b""),
+            ("# 61 62 63 #", b"abc"),
+            ("3#616263#", b"abc"),
         ],
     )
     def test_parse_hexadecimal_various(self, input_str, expected):
         parser = SexpParser(input_str)
-        result = parser.parse_hexadecimal()
-        assert result == expected
-        if expected is not None:
-            # Should consume only the hex digits
-            hex_count = 0
-            for c in input_str:
-                if c.lower() in "0123456789abcdef":
-                    hex_count += 1
-                else:
-                    break
-            assert parser.index == hex_count
-        else:
-            assert parser.index == 0
+        assert parser.parse_hexadecimal() == expected
+        assert parser.at_end()
+
+    @pytest.mark.parametrize("input_str", ["#0#", "#ABC#", "#g123#", "#123xyz#", "#12"])
+    def test_parse_hexadecimal_invalid(self, input_str):
+        with pytest.raises(ValueError):
+            SexpParser(input_str).parse_hexadecimal()
 
     def test_parse_hexadecimal_empty(self):
         parser = SexpParser("")
-        result = parser.parse_hexadecimal()
-        assert result is None
+        assert parser.parse_hexadecimal() is None
         assert parser.at_end()
 
     def test_parse_hexadecimal_partial(self):
-        parser = SexpParser("beef!foo")
-        result = parser.parse_hexadecimal()
-        assert result == 0xBEEF
-        assert parser.index == 4
+        parser = SexpParser("#beef#!foo")
+        assert parser.parse_hexadecimal() == b"\xbe\xef"
+        assert parser.index == 6
         assert parser.peek() == "!"
+
+    def test_parse_hexadecimal_missing_delimiter(self):
+        parser = SexpParser("beef!foo")
+        assert parser.parse_hexadecimal() is None
+        assert parser.index == 0
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [("AB", 2), ("AB=", 2), ("AB==", 2), ("ABC", 3), ("ABC=", 3), ("A B = = ", 2)],
+)
+def test_base64_end_optional_padding(text, expected):
+    parser = SexpParser(text)
+    assert parser.parse_base_64_end() == expected
+    assert parser.at_end()
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["", "!", "A", "=", "AB===", "ABC==", "ABCD=", "ABCDE"],
+)
+def test_base64_end_invalid_group(text):
+    parser = SexpParser(text)
+    assert parser.parse_base_64_end() == 0
+    assert parser.index == 0
+
+
+@pytest.mark.parametrize("text, expected", [("|/w==|", b"\xff"), ("|Y W J j |", "abc")])
+def test_base64_octets_and_internal_whitespace(text, expected):
+    assert SexpParser(text).parse_base_64() == expected
+
+
+def test_base64_invalid_padding():
+    with pytest.raises(ValueError, match="Invalid base64 encoding"):
+        SexpParser("|A|").parse_base_64()

@@ -2,7 +2,7 @@
 ABNF parser
 """
 
-from typing import Optional
+from typing import Optional, Union
 import base64
 
 
@@ -183,78 +183,26 @@ class SexpParser:
         return count + group_count
 
     def parse_base_64_end(self) -> int:
-        """
-        Parse base64 end group (with padding) and return count of valid base64
-        chars parsed. Returns the count of base64 characters parsed (excluding
-        padding). RFC 9804: Only base64 chars are counted, padding '=' is not.
-
-        Implements:
-        base-64-end = base-64-chars
-            / 3(base-64-char *whitespace) ["=" *whitespace]
-            / 2(base-64-char *whitespace) *2("=" *whitespace)
-        """
+        """Parse an RFC 9804 base64 group and optional padding, or leave it unread."""
         start_index = self.index
-        # Try full group first
-        chars = 0
-        # Try base-64-chars (multiples of 4)
-        try:
-            chars = self.parse_base_64_chars()
-            if chars > 0 and (chars % 4 == 0):
-                return chars
-        except ValueError:
-            # If it raises, we know it wasn't a full group
-            self.index = start_index
+        count = 0
+        while self.parse_base_64_char():
+            count += 1
+            while self.parse_whitespace():
+                pass
 
-        # Try 3(base-64-char *whitespace) ["=" *whitespace]
-        try:
-            group_start = self.index
-            count = 0
-            for _ in range(3):
-                if self.parse_base_64_char() or self.peek() == "=":
-                    count += 1
-                    while self.parse_whitespace():
-                        pass
-                else:
-                    break
-            if count == 3:
-                pad_count = 0
-                while self.peek() == "=":
-                    self.consume()
-                    pad_count += 1
-                    while self.parse_whitespace():
-                        pass
-                # Only one padding allowed for this case
-                if pad_count <= 1:
-                    return count
-        except ValueError:
-            # If it raises, we know it wasn't a full group
-            self.index = start_index
+        padding = 0
+        while self.peek() == "=":
+            self.consume()
+            padding += 1
+            while self.parse_whitespace():
+                pass
 
-        try:
-            # Try 2(base-64-char *whitespace) *2("=" *whitespace)
-            self.index = group_start
-            count = 0
-            for _ in range(2):
-                if self.parse_base_64_char():
-                    count += 1
-                    while self.parse_whitespace():
-                        pass
-                else:
-                    break
-            if count == 2:
-                pad_count = 0
-                for _ in range(2):
-                    if self.peek() == "=":
-                        self.consume()
-                        pad_count += 1
-                        while self.parse_whitespace():
-                            pass
-                if pad_count == 2:
-                    return count
-        except ValueError:
-            # If it raises, we know it wasn't a full group
-            self.index = start_index
-
+        if count >= 4 and count % 4 == 0 and padding == 0:
+            return count
+        if count in (2, 3) and padding <= 4 - count:
+            return count
+        self.index = start_index
         return 0
 
     def parse_decimal(self) -> Optional[int]:
@@ -269,10 +217,10 @@ class SexpParser:
             return int(self.text[start : self.index])
         return None
 
-    def parse_base_64(self) -> Optional[str]:
+    def parse_base_64(self) -> Union[str, bytes]:
         """
         Parse a base64-encoded string (between '|' delimiters).
-        Returns the decoded string, or None if not found.
+        Returns UTF-8 text when possible, otherwise bytes.
 
         Implements: base-64 = [decimal] "|" *whitespace *base-64-chars [base-64-end] "|"
         """

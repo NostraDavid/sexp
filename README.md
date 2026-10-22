@@ -1,129 +1,34 @@
-# Symbolic Expressions
+# Symbolic expressions
 
-This is an S-Expressions parser (only the parser) of `draft-rivest-sexp-09`, a
-
-`se` is designed to parse S-expressions from a file. S-expressions are a
-notation for nested list data, used in various domains such as Lisp programming
-and certain cryptographic systems.
-
-## Features
-
-- Supports parsing of basic S-expression elements, including:
-  - Verbatim strings (e.g., `3:abc`)
-  - Quoted strings (e.g., `"abc"`)
-  - Hexadecimal strings (e.g., `#616263#` for "abc")
-  - Base64 strings (e.g., `|YWJj|` for "abc")
-  - Lists (e.g., `(a b c)`)
-- Handles nested lists and mixed data types.
-- Flexible error handling for incorrect input formats.
-
-## Requirements
-
-- Python 3.12+
-- No additional external libraries are required for basic parsing.
-- The script uses standard Python libraries (`argparse`, `re`, `base64`).
-
-## Usage
-
-## Project Management with `uv`
-
-uv installation:
-
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-run application via uv:
-
-```bash
-# sexp as application is defined in pyproject.toml; Python versioning will be handled by uv>=0.4.5.
-uv run sexp data/input1.lisp
-```
-
-### Example Input File
-
-The input file should contain valid S-expressions. Below is an example
-of an S-expression file content:
-
-```lisp
-(define (factorial n)
-  (if (= n 0)
-      1
-      (* n (factorial (- n 1)))))
-
-("hello world"
-  5:abcde
-  #68656c6c6f#
-  |SGVsbG8gd29ybGQ=|
-  (inner-list "string in a list" 7:example))
-
-(test-data
-  (name "John Doe")
-  (age 35)
-  (base64-data |U29tZSByYW5kb20gZGF0YQ==|)
-  (hex-data #48656c6c6f#)
-  (sublist (item1 3:foo) (item2 3:bar)))
-
-( () (nested (1:1 2:22 3:333)) )
-```
-
-### Example Output
-
-After running the script on the above example file, you will get the
-following output (simplified for clarity):
+This project develops parsing primitives and Hypothesis generators for
+RFC 9804 S-expressions. `SexpParser` currently handles character classes, decimal
+numbers, base64 strings and hexadecimal strings. The full expression parser is
+still in progress.
 
 ```python
-['define', ['factorial', 'n'],
-  ['if', ['=', 'n', 0], 1,
-  ['*', 'n', ['factorial', ['-', 'n', 1]]]]]
-['hello world', 'abcde', 'hello', 'Hello world',
-  ['inner-list', 'string in a list', 'example']]
-['test-data', ['name', 'John Doe'], ['age', 35],
-  ['base64-data', 'Some random data'], ['hex-data', 'Hello'],
-  ['sublist', ['item1', 'foo'], ['item2', 'bar']]]
-[[], ['nested', [1, 1], [2, 22], [3, 333]]]
+from sexp import SexpParser
+
+assert SexpParser("|YWJj|").parse_base_64() == "abc"
 ```
 
-## Error Handling
+## Development
 
-If the input file is not found or contains invalid S-expression syntax,
-the script will output an appropriate error message. For example:
+Install devenv and direnv, then run:
 
 ```bash
-Error: The file 'nonexistent_file.txt' was not found.
+direnv allow
+just sync
+just check
 ```
 
-If any parsing error occurs, the script will print the error along
-with the position in the file where the error was encountered.
+The shell supplies Python 3.14 and uv. `just check` runs lint, format and type
+checks, the parser and generator tests with coverage, and package builds.
+`just update` refreshes Python and Nix locks. `just --list` lists all tasks.
 
-## License
+The package exposes the Python API above. The previous `sexp` console entry
+point referred to a missing function and has been removed.
 
-This project is licensed under the MIT License. Feel free to use
-and modify the code as needed.
+## Reference
 
-## Changelog
-
-Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-
-## Semantic Versioning
-
-This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## Dev guide
-
-```bash
-nix develop .#uv2nix
-```
-
----
-
-I am looking for an RFC9804 parser that can:
-
-- generate random data, depending on the node-type I am using
-- parse a string into a tree structure
-- serialize a tree structure into a string
-- be able to print an in-memory representation of the tree
-- eventually handle the whole of ./docs/RFC9804/sexp.abnf
-- handle various data types like integers, strings, lists, and dictionaries
-
-I heard a Packrat parser may be helpful. I need to develop this parser in a step-by-step manner, so I should start with the primitives.
+The specification and grammar are stored in `docs/RFC9804/`. Example input is in
+`data/`. The project uses the MIT license in `LICENSE`.

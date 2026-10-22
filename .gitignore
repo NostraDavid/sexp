@@ -6,8 +6,6 @@
 !.python-version
 !asv.conf.json
 !CHANGELOG.md
-!flake.lock
-!flake.nix
 !justfile
 !LICENSE
 !pyproject.toml
@@ -28,3 +26,16 @@
 __pycache__/
 sexp_native/target/
 src/sexp/*.so
+
+!.envrc
+!devenv.nix
+!devenv.yaml
+!devenv.lock
+
+# Local development and verification artifacts
+/.venv*/
+/dist/
+/.ruff_cache/
+/.pytest_cache/
+/.devenv/
+/.direnv/

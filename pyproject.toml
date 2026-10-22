@@ -1,5 +1,5 @@
 [build-system]
-requires = ["uv_build>=0.8.3,<0.9.0"]
+requires = ["uv_build>=0.13.5,<0.14.0"]
 build-backend = "uv_build"
 
 [project]
@@ -15,11 +15,8 @@ dependencies = [
     "pydantic-settings>=2,<3",
 ]
 
-[project.scripts]
-sexp = "sexp:main"
-
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "asv>=0.6.4",
     "coverage[toml]>=7.6.1",
     "hypothesis>=6.112.4",
@@ -92,3 +89,7 @@ sort = "Cover"
 
 [tool.coverage.html]
 directory = "htmlcov"
+
+[tool.ruff.lint]
+# Preserve the lint scope used before Ruff expanded its defaults.
+select = ["E4", "E7", "E9", "F"]
