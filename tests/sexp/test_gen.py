@@ -2,11 +2,74 @@
 Tests for the ABNF rule strategies.
 """
 
+import base64
 import re
-from hypothesis import given
 import pytest
+from hypothesis import given
 
 from sexp.gen import sexp_gen
+from sexp import DisplayString, SExpressionParser
+
+
+def decode_quoted(text: str) -> bytes:
+    content = text[text.index('"') + 1 : -1]
+    result = bytearray()
+    escapes = {"a": 7, "b": 8, "f": 12, "n": 10, "r": 13, "t": 9, "v": 11}
+    i = 0
+    while i < len(content):
+        char = content[i]
+        i += 1
+        if char != "\\":
+            result.append(ord(char))
+            continue
+        char = content[i]
+        i += 1
+        if char in "\r\n":
+            if i < len(content) and content[i] in "\r\n" and content[i] != char:
+                i += 1
+        elif char == "x":
+            result.append(int(content[i : i + 2], 16))
+            i += 2
+        elif char in "01234567":
+            value = int(char + content[i : i + 2], 8)
+            assert value <= 255
+            result.append(value)
+            i += 2
+        else:
+            result.append(escapes.get(char, ord(char)))
+    return bytes(result)
+
+
+def canonical_oracle(encoded: bytes):
+    """Decode canonical bytes independently, preserving hints as tuples."""
+
+    def atom(pos):
+        end = encoded.index(b":", pos)
+        digits = encoded[pos:end]
+        assert re.fullmatch(rb"0|[1-9][0-9]*", digits)
+        size = int(digits)
+        value = encoded[end + 1 : end + 1 + size]
+        assert len(value) == size
+        return value, end + 1 + size
+
+    def value(pos):
+        if encoded[pos : pos + 1] == b"(":
+            items = []
+            pos += 1
+            while encoded[pos : pos + 1] != b")":
+                item, pos = value(pos)
+                items.append(item)
+            return items, pos + 1
+        if encoded[pos : pos + 1] == b"[":
+            hint, pos = atom(pos + 1)
+            assert encoded[pos : pos + 1] == b"]"
+            data, pos = atom(pos + 1)
+            return (data, hint), pos
+        return atom(pos)
+
+    result, end = value(0)
+    assert end == len(encoded)
+    return result
 
 
 # Basic ABNF core rules
@@ -91,6 +154,9 @@ def test_base_64_chars_strategy(s: str):
     b64_char_ws = r"[a-zA-Z0-9+/][\s]*"
     b64_chars_re = f"(?:{b64_char_ws}){{4}}"
     assert re.fullmatch(b64_chars_re, s)
+    parser = SExpressionParser(s)
+    assert parser.parse_base_64_chars() == 4
+    assert parser.at_end()
 
 
 @given(sexp_gen.base_64_char)
@@ -112,6 +178,9 @@ def test_base_64_end_strategy(s: str):
     part3 = f"(?:{b64_char_ws}){{2}}(?:={ws}){{0,2}}"
     b64_end_re = f"(?:{part1}|{part2}|{part3})"
     assert re.fullmatch(b64_end_re, s)
+    parser = SExpressionParser(s)
+    assert parser.parse_base_64_end() == len("".join(s.split()).rstrip("="))
+    assert parser.at_end()
 
 
 @given(sexp_gen.decimal)
@@ -137,6 +206,11 @@ def test_base_64_strategy(s: str):
     # Full base-64 regex
     b64_re = f"(?:0|[1-9][0-9]*)?\\|{content}\\|"
     assert re.fullmatch(b64_re, s)
+    prefix, content, _ = s.split("|")
+    decoded = base64.b64decode("".join(content.split()), validate=True)
+    assert not prefix or int(prefix) == len(decoded)
+    assert "".join(content.split()) == base64.b64encode(decoded).decode("ascii")
+    assert SExpressionParser(s).parse() == decoded
 
 
 @given(sexp_gen.hexadecimals)
@@ -146,6 +220,9 @@ def test_hexadecimals_strategy(s: str):
     hexdig_ws = f"[0-9a-fA-F]{ws}"
     hexadecimals_re = f"{hexdig_ws}[0-9a-fA-F]"
     assert re.fullmatch(hexadecimals_re, s, re.IGNORECASE)
+    parser = SExpressionParser(s)
+    assert parser.parse_hexadecimals() == "".join(s.split())
+    assert parser.at_end()
 
 
 @given(sexp_gen.hexadecimal)
@@ -156,6 +233,10 @@ def test_hexadecimal_strategy(s: str):
     hexadecimals = f"({hexdig_ws}{hexdig_ws})*"
     hex_re = f"(0|[1-9][0-9]*)?#{ws}{hexadecimals}#{ws}"
     assert re.fullmatch(hex_re, s, re.IGNORECASE)
+    prefix, content, _ = s.split("#")
+    decoded = bytes.fromhex("".join(content.split()))
+    assert not prefix or int(prefix) == len(decoded)
+    assert SExpressionParser(s).parse() == decoded
 
 
 @given(sexp_gen.simple_punc)
@@ -168,6 +249,7 @@ def test_simple_punc_strategy(s: str):
 def test_token_strategy(s: str):
     """Tests the 'token' strategy."""
     assert re.fullmatch(r"[a-zA-Z-./_:*+=][a-zA-Z0-9-./_:*+=]*", s)
+    assert SExpressionParser(s).parse() == s.encode("ascii")
 
 
 @given(sexp_gen.quote)
@@ -195,6 +277,8 @@ def test_escaped_strategy(s: str):
     )
     """
     assert re.fullmatch(escaped_re, s, re.VERBOSE)
+    if re.fullmatch(r"\\[0-7]{3}", s):
+        assert int(s[1:], 8) <= 255
 
 
 @given(sexp_gen.printable)
@@ -210,6 +294,10 @@ def test_quoted_string_strategy(s: str):
     escaped_char = r"""\\(?:[?abfnrtv"'\\]|[0-7]{3}|x[0-9a-fA-F]{2}|\r\n?|\n\r?)"""
     quoted_re = f'(0|[1-9][0-9]*)?"(?:{printable_char}|{escaped_char})*"'
     assert re.fullmatch(quoted_re, s)
+    prefix = s[: s.index('"')]
+    decoded = decode_quoted(s)
+    assert not prefix or int(prefix) == len(decoded)
+    assert SExpressionParser(s).parse() == decoded
 
 
 @given(sexp_gen.verbatim)
@@ -222,6 +310,7 @@ def test_verbatim_strategy(s: str):
     header = f"{length_str}:"
     content = s[len(header) :]
     assert len(content.encode("utf-8")) == length
+    assert SExpressionParser(s).parse() == content.encode("utf-8")
 
 
 @given(sexp_gen.simple_string)
@@ -254,98 +343,143 @@ def test_sexp_strategy(s: str):
     assert isinstance(s, str)
 
 
-def check_balanced_parentheses(s: str):
-    """
-    Checks if the parentheses in a string are balanced, ignoring those inside
-    quoted strings.
-    """
-    balance = 0
-    i = 0
-    while i < len(s):
-        char = s[i]
+@given(sexp_gen.canonical)
+def test_canonical_strategy(encoded: bytes):
+    canonical_oracle(encoded)
 
-        # Handle verbatim strings
-        if char.isdigit():
-            s_match = s[i:]
-            match = re.match(r"([0-9]+):", s_match)
-            if match:
-                length_str = match.group(1)
-                length = int(length_str)
-                header_len = len(length_str) + 1
-                i += header_len + length
-                continue
 
-        # Handle quoted strings
-        if char == '"':
-            i += 1
-            while i < len(s):
-                if s[i] == "\\":
-                    i += 2
-                    continue
-                if s[i] == '"':
-                    break
-                i += 1
-            i += 1
-            continue
+@given(sexp_gen.basic_transport)
+def test_basic_transport_strategy(encoded: bytes):
+    if encoded.startswith(b"{"):
+        assert encoded.endswith(b"}")
+        body = b"".join(encoded[1:-1].split())
+        encoded = base64.b64decode(body, validate=True)
+        assert base64.b64encode(encoded) == body
+    canonical_oracle(encoded)
 
-        # Handle parentheses
-        if char == "(":
-            balance += 1
-        elif char == ")":
-            balance -= 1
 
-        if balance < 0:
-            return False
+def canonical_expected(value):
+    if isinstance(value, list):
+        return [canonical_expected(item) for item in value]
+    if isinstance(value, tuple):
+        return DisplayString(data=value[0], display_hint=value[1])
+    return value
 
-        i += 1
 
-    return balance == 0
+def advanced_oracle(text: str):
+    """Decode generated advanced expressions without the production parser."""
+    encoded = text.encode("utf-8")
+    whitespace = b" \t\v\r\n\f"
+
+    def skip(pos):
+        while pos < len(encoded) and encoded[pos] in whitespace:
+            pos += 1
+        return pos
+
+    def atom(pos):
+        prefix = re.match(rb"(?:0|[1-9][0-9]*)", encoded[pos:])
+        size = int(prefix.group()) if prefix else None
+        if prefix:
+            pos += len(prefix.group())
+        marker = encoded[pos : pos + 1]
+        if marker == b":" and size is not None:
+            start = pos + 1
+            data = encoded[start : start + size]
+            assert len(data) == size
+            return data, start + size
+        if marker == b'"':
+            match = re.match(
+                rb'''"(?:[\x20-\x21\x23-\x5b\x5d-\x7e]|\\(?:[?abfnrtv"'\\]|[0-7]{3}|x[0-9a-fA-F]{2}|\r\n?|\n\r?))*"''',
+                encoded[pos:],
+            )
+            assert match
+            data = decode_quoted(match.group().decode("ascii"))
+            end = pos + len(match.group())
+        elif marker in (b"#", b"|"):
+            end = encoded.index(marker, pos + 1)
+            content = encoded[pos + 1 : end]
+            if marker == b"#":
+                assert re.fullmatch(rb"[0-9a-fA-F\x20\t\v\r\n\f]*", content)
+                data = bytes.fromhex(b"".join(content.split()).decode("ascii"))
+            else:
+                assert re.fullmatch(rb"[a-zA-Z0-9+/=\x20\t\v\r\n\f]*", content)
+                data = base64.b64decode(b"".join(content.split()), validate=True)
+            end += 1
+        else:
+            assert size is None
+            match = re.match(rb"[a-zA-Z./_:*+=-][a-zA-Z0-9./_:*+=-]*", encoded[pos:])
+            assert match
+            return match.group(), pos + len(match.group())
+        assert size is None or size == len(data)
+        return data, end
+
+    def value(pos):
+        if encoded[pos : pos + 1] == b"(":
+            items = []
+            pos = skip(pos + 1)
+            while encoded[pos : pos + 1] != b")":
+                item, pos = value(pos)
+                items.append(item)
+                next_pos = skip(pos)
+                assert next_pos > pos or encoded[pos : pos + 1] == b")"
+                pos = next_pos
+            return items, pos + 1
+        if encoded[pos : pos + 1] == b"[":
+            hint, pos = atom(skip(pos + 1))
+            pos = skip(pos)
+            assert encoded[pos : pos + 1] == b"]"
+            data, pos = atom(skip(pos + 1))
+            return (data, hint), pos
+        return atom(pos)
+
+    result, end = value(skip(0))
+    assert skip(end) == len(encoded)
+    return result
 
 
 @pytest.mark.parametrize(
-    "input_string, expected",
+    ("encoded", "expected"),
     [
-        # Balanced cases
-        ("", True),
-        ("()", True),
-        ("(abc)", True),
-        ("(a(b)c)", True),
-        ("()()", True),
-        ("text without parens", True),
-        ("(1:2)", True),
-        ("(0:)", True),
-        # verbatims are like quoted strings
-        ("1:(", True),
-        ("1:)", True),
-        ("3:(()", True),
-        ("3:())", True),
-        ("2:)(", True),
-        # Unbalanced cases
-        ("(", False),
-        (")", False),
-        ("(()", False),
-        ("())", False),
-        (")(", False),
-        # Parentheses inside quotes (should be ignored)
-        ('"()"', True),
-        ('a(b"c()d")e', True),
-        # Escaped quotes
-        (r'a(b"c\"d()")e', True),
-        (r'("a\"b(c)")', True),
-        # Mixed content
-        ('a(b)c"d(e"f(g)h', True),
-        # Unbalanced outside quotes
-        ('a(b"c)d"', False),
-        # Unclosed quote - the logic should handle this correctly
-        ('a(b"c', False),  # `(` is unbalanced, `"` starts quote, rest is ignored
-        ('a(b"c)', False),  # `(` is balanced, `)` is inside unclosed quote
-        ('a)b"c(', False),  # `)` is encountered before `(`, unbalanced
-        ("(:2:)", False),  # Unbalanced parentheses with verbatim
-        ("(:10:)", False),  # Unbalanced parentheses with verbatim
-        ("(:10:())", False),  # Unbalanced parentheses with verbatim
-        ("(:10:())(:5:)", False),  # Multiple unbalanced verbatim sections
+        (
+            '([hint]2:é 1"\\x41" #4 2# |Qw==| ())',
+            [(b"\xc3\xa9", b"hint"), b"A", b"B", b"C", []],
+        ),
+        ('[1:h]1"\\n"', (b"\n", b"h")),
     ],
 )
-def test_check_balanced_parentheses(input_string: str, expected: bool):
-    """Tests the 'check_balanced_parentheses' helper function."""
-    assert check_balanced_parentheses(input_string) == expected
+def test_advanced_oracle_examples(encoded, expected):
+    assert advanced_oracle(encoded) == expected
+
+
+@pytest.mark.parametrize(
+    "encoded",
+    ["(a [h]x[y]z)", "[ [h]x ]y", "2:éx", '2"x"', "a trailing"],
+)
+def test_advanced_oracle_rejects_invalid_or_unseparated(encoded):
+    with pytest.raises((AssertionError, ValueError)):
+        advanced_oracle(encoded)
+
+
+@given(sexp_gen.canonical)
+def test_canonical_parser_interoperability(encoded: bytes):
+    expected = canonical_expected(canonical_oracle(encoded))
+    assert SExpressionParser(encoded).parse_canonical() == expected
+    assert SExpressionParser(encoded).parse() == expected
+
+
+@given(sexp_gen.basic_transport)
+def test_basic_transport_parser_interoperability(encoded: bytes):
+    canonical = encoded
+    if encoded.startswith(b"{"):
+        canonical = base64.b64decode(b"".join(encoded[1:-1].split()), validate=True)
+
+    assert SExpressionParser(encoded).parse() == canonical_expected(
+        canonical_oracle(canonical),
+    )
+
+
+@given(sexp_gen.sexp | sexp_gen.value)
+def test_advanced_parser_interoperability(encoded: str):
+    expected = canonical_expected(advanced_oracle(encoded))
+    assert SExpressionParser(encoded).parse() == expected
+    assert SExpressionParser(encoded.encode("utf-8")).parse() == expected

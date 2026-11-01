@@ -1,15 +1,56 @@
-"""
-ABNF parser
-"""
+"""Byte-oriented parser for RFC 9804 S-expressions."""
 
-from typing import Optional, Union
 import base64
+import binascii
+from dataclasses import dataclass
+from typing import List, Optional, Union
 
 
-class SexpParser:
-    def __init__(self, text: str):
-        self.text = text
-        self.text_length = len(text)
+@dataclass(frozen=True)
+class DisplayString:
+    """An octet-string with its explicit RFC 9804 display-hint."""
+
+    data: bytes
+    display_hint: bytes
+
+
+SExpression = Union[bytes, DisplayString, List["SExpression"]]
+
+_WHITESPACE = " \t\v\r\n\f"
+_TOKEN_START = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-./_:*+="
+_TOKEN_CHARS = _TOKEN_START + "0123456789"
+_HEX = "0123456789abcdefABCDEF"
+_BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
+_ESCAPES = {
+    "a": b"\a",
+    "b": b"\b",
+    "t": b"\t",
+    "v": b"\v",
+    "n": b"\n",
+    "f": b"\f",
+    "r": b"\r",
+    '"': b'"',
+    "'": b"'",
+    "?": b"?",
+    "\\": b"\\",
+}
+
+
+class SExpressionParser:
+    """Parse one complete expression; atoms are bytes and lists are Python lists.
+
+    Text input is encoded as UTF-8. Cursor positions and length fields count
+    bytes, not Unicode characters. Use bytes input for arbitrary binary data.
+    """
+
+    def __init__(self, text: Union[str, bytes]):
+        if isinstance(text, str):
+            text = text.encode("utf-8")
+        if not isinstance(text, bytes):
+            raise TypeError("S-expression input must be str or bytes")
+        # Latin-1 provides a one-character-per-byte view for the ABNF primitives.
+        self.text = text.decode("latin-1")
+        self.text_length = len(self.text)
         self.index = 0
 
     def at_end(self) -> bool:
@@ -30,7 +71,7 @@ class SexpParser:
         self.index += 1
         return char
 
-    # parsing primitives; sexp.abnf definition comes later.
+    # ABNF core rules.
     def parse_sp(self) -> bool:
         """Parse SP (space character) - %x20"""
         if self.peek() == " ":
@@ -62,7 +103,7 @@ class SexpParser:
     def parse_alpha(self) -> bool:
         """Parse ALPHA character - %x41-5A / %x61-7A (A-Z / a-z)"""
         char = self.peek()
-        if char and (char.isalpha()):
+        if char and char.isascii() and char.isalpha():
             self.consume()
             return True
         return False
@@ -70,7 +111,7 @@ class SexpParser:
     def parse_digit(self) -> bool:
         """Parse DIGIT character - %x30-39 (0-9)"""
         char = self.peek()
-        if char and char.isdigit():
+        if char and char in "0123456789":
             self.consume()
             return True
         return False
@@ -123,7 +164,7 @@ class SexpParser:
 
     def parse_whitespace(self) -> bool:
         """
-        Parse any whitespace character (SP / HTAB / VTAB / CR / LF)
+        Parse any whitespace character (SP / HTAB / VTAB / CR / LF / FF)
 
         Implements: whitespace = SP / HTAB / vtab / CR / LF / ff
         """
@@ -137,6 +178,8 @@ class SexpParser:
             return True
         if self.parse_lf():
             return True
+        if self.parse_ff():
+            return True
         return False
 
     def parse_base_64_char(self) -> bool:
@@ -146,47 +189,32 @@ class SexpParser:
         Implements: base-64-char = ALPHA / DIGIT / "+" / "/"
         """
         char = self.peek()
-        if char and (char.isalpha() or char.isdigit() or char in "+/"):
+        if char and char.isascii() and (char.isalnum() or char in "+/"):
             self.consume()
             return True
         return False
 
     def parse_base_64_chars(self) -> int:
-        """
-        Parse base64 characters in groups of 4, skipping whitespace. Returns
-        count of valid base64 chars.
+        """Read one base-64-chars group: 4(base-64-char *whitespace).
 
-        Implements: base-64-chars = 4(base-64-char *whitespace)
-
-        That is, parses groups of 4 base64 chars, each possibly followed by
-        whitespace. Returns total count of base64 chars parsed. Raises
-        ValueError if the number of base64 characters is not divisible by 4.
+        Return 4 on success, 0 on no match; raise ValueError for a partial group.
+        Subsequent groups are left unread.
         """
         count = 0
-        while True:
-            group_count = 0
-            for _ in range(4):
-                if self.parse_base_64_char():
-                    group_count += 1
-                    while self.parse_whitespace():
-                        pass
-                else:
-                    break
-            if group_count == 4:
-                count += 4
-            else:
-                break
-        if (count + group_count) % 4 != 0:
+        while count < 4 and self.parse_base_64_char():
+            count += 1
+            self._skip_whitespace()
+        if count not in (0, 4):
             raise ValueError(
-                f"Invalid base64 character count: {count} (must be multiple of 4)",
+                f"Invalid base64 character count: {count} (expected 4)",
             )
-        return count + group_count
+        return count
 
     def parse_base_64_end(self) -> int:
         """Parse an RFC 9804 base64 group and optional padding, or leave it unread."""
         start_index = self.index
         count = 0
-        while self.parse_base_64_char():
+        while count < 4 and self.parse_base_64_char():
             count += 1
             while self.parse_whitespace():
                 pass
@@ -198,7 +226,7 @@ class SexpParser:
             while self.parse_whitespace():
                 pass
 
-        if count >= 4 and count % 4 == 0 and padding == 0:
+        if count == 4 and padding == 0:
             return count
         if count in (2, 3) and padding <= 4 - count:
             return count
@@ -214,73 +242,28 @@ class SexpParser:
         while self.parse_digit():
             pass
         if self.index > start:
-            return int(self.text[start : self.index])
+            digits = self.text[start : self.index]
+            if len(digits) > 1 and digits[0] == "0":
+                raise ValueError(f"Leading zero in decimal at position {start}")
+            return int(digits)
         return None
 
     def parse_base_64(self) -> Union[str, bytes]:
-        """
-        Parse a base64-encoded string (between '|' delimiters).
-        Returns UTF-8 text when possible, otherwise bytes.
+        """Legacy primitive: return UTF-8 text if possible, otherwise bytes.
 
-        Implements: base-64 = [decimal] "|" *whitespace *base-64-chars [base-64-end] "|"
+        Full-expression methods always return byte-valued atoms instead.
         """
-        start_index = self.index
-        # Optional decimal length (ignored for now)
-        self.parse_decimal()
-
-        # Opening delimiter
+        length = self.parse_decimal()
         if self.peek() != "|":
             raise ValueError(f"Missing opening '|' for base64 at position {self.index}")
-        self.consume()
-
-        # Skip any whitespace
-        while self.parse_whitespace():
-            pass
-
-        # Collect base64 chars (with possible whitespace between)
-        b64_chars = []
-        while True:
-            char = self.peek()
-            if char is None or char == "|":
-                break
-            if char.isspace():
-                self.consume()
-                continue
-            if char in "+/=" or char.isalnum():
-                b64_chars.append(char)
-                self.consume()
-            else:
-                # Invalid character in base64
-                raise ValueError(
-                    f"Invalid base64 character '{char}' at position {self.index}",
-                )
-
-        # Closing delimiter
-        if self.peek() != "|":
-            raise ValueError(f"Missing closing '|' for base64 at position {self.index}")
-        self.consume()
-
-        # Join and decode
-        b64_str = "".join(b64_chars)
-        if not b64_str:
-            return ""
+        decoded = self._check_length(self._read_base64("|", "|"), length)
         try:
-            decoded = base64.b64decode(b64_str, validate=True)
-            # Try to decode as UTF-8, fallback to bytes
-            try:
-                return decoded.decode("utf-8")
-            except UnicodeDecodeError:
-                return decoded
-        except Exception as e:
-            raise ValueError(f"Invalid base64 encoding at position {start_index}: {e}")
+            return decoded.decode("utf-8")
+        except UnicodeDecodeError:
+            return decoded
 
     def parse_hexadecimals(self) -> str:
-        """
-        Parse a sequence of hexadecimal digits and return as a string.
-        Requires at least two HEXDIG, each possibly followed by whitespace.
-
-        Implements: hexadecimals = 2(HEXDIG *whitespace)
-        """
+        """Read exactly one hexadecimals group: 2(HEXDIG *whitespace)."""
         hex_digits = []
         for _ in range(2):
             if not self.parse_hexdigit():
@@ -288,63 +271,279 @@ class SexpParser:
             hex_digits.append(self.text[self.index - 1])
             while self.parse_whitespace():
                 pass
-        # Parse additional HEXDIG *whitespace
-        while self.parse_hexdigit():
-            hex_digits.append(self.text[self.index - 1])
-            while self.parse_whitespace():
-                pass
         return "".join(hex_digits)
 
     def parse_hexadecimal(self) -> Optional[bytes]:
-        """
-        Parse a hexadecimal-encoded string (between '#' delimiters).
-        Returns the decoded bytes, or None if not found.
-
-        Implements: hexadecimal = [decimal] "#" *whitespace *hexadecimals "#"
-        """
+        """Parse a hexadecimal string, or return None without consuming input."""
         start_index = self.index
-        # Optional decimal length (ignored for now)
-        self.parse_decimal()
-
-        # Opening delimiter
+        length = self.parse_decimal()
         if self.peek() != "#":
+            self.index = start_index
             return None
-        self.consume()
+        return self._check_length(self._read_hexadecimal(), length)
 
-        # Skip any whitespace
-        while self.parse_whitespace():
-            pass
-
-        # Parse hexadecimals (may be empty, e.g. ## is valid)
-        hex_digits = []
-        while True:
-            char = self.peek()
-            if char is None or char == "#":
-                break
-            if char.isspace():
+    def _read_encoded(
+        self,
+        opening: str,
+        closing: str,
+        alphabet: str,
+        label: str,
+    ) -> str:
+        self._expect(opening)
+        chars = []
+        while (char := self.peek()) != closing:
+            if char is None:
+                raise ValueError(
+                    f"Missing closing '{closing}' for {label} at position {self.index}",
+                )
+            if char in _WHITESPACE:
                 self.consume()
-                continue
-            if char.lower() in "0123456789abcdef":
-                hex_digits.append(char)
+            elif char in alphabet:
+                chars.append(char)
                 self.consume()
             else:
                 raise ValueError(
-                    f"Invalid hex character '{char}' at position {self.index}",
+                    f"Invalid {label} character {char!r} at position {self.index}",
                 )
+        self.consume()
+        return "".join(chars)
 
-        # Closing delimiter
-        if self.peek() != "#":
+    def _read_base64(self, opening: str, closing: str) -> bytes:
+        encoded = self._read_encoded(opening, closing, _BASE64, "base64")
+        data = encoded.rstrip("=")
+        padding = len(encoded) - len(data)
+        required = -len(data) % 4
+        if required == 3 or padding > required:
+            raise ValueError(f"Invalid base64 encoding at position {self.index}")
+        try:
+            return base64.b64decode(encoded + "=" * (required - padding), validate=True)
+        except binascii.Error as exc:
             raise ValueError(
-                f"Missing closing '#' for hexadecimal at position {self.index}",
-            )
+                f"Invalid base64 encoding at position {self.index}: {exc}",
+            ) from exc
+
+    def _read_hexadecimal(self) -> bytes:
+        encoded = self._read_encoded("#", "#", _HEX, "hexadecimal")
+        if len(encoded) % 2:
+            raise ValueError(f"Odd hexadecimal digit count at position {self.index}")
+        return bytes.fromhex(encoded)
+
+    def _expect(self, character: str) -> None:
+        if self.peek() != character:
+            raise ValueError(f"Expected {character!r} at position {self.index}")
         self.consume()
 
-        hex_str = "".join(hex_digits)
-        if not hex_str:
-            return b""
-        try:
-            return bytes.fromhex(hex_str)
-        except ValueError as e:
+    def _skip_whitespace(self) -> None:
+        while self.parse_whitespace():
+            pass
+
+    def _check_length(self, data: bytes, length: Optional[int]) -> bytes:
+        if length is not None and length != len(data):
             raise ValueError(
-                f"Invalid hexadecimal encoding at position {start_index}: {e}",
+                f"Length mismatch at position {self.index}: expected {length} bytes, "
+                f"got {len(data)}",
             )
+        return data
+
+    def parse_simple_punc(self) -> bool:
+        char = self.peek()
+        if char is not None and char in "-./_:*+=":
+            self.consume()
+            return True
+        return False
+
+    def parse_token(self) -> bytes:
+        """Read an ASCII token; numbers are length prefixes, not numeric atoms."""
+        start = self.index
+        char = self.peek()
+        if char is None or char not in _TOKEN_START:
+            raise ValueError(f"Expected token at position {self.index}")
+        while (char := self.peek()) is not None and char in _TOKEN_CHARS:
+            self.consume()
+        return self.text[start : self.index].encode("latin-1")
+
+    def parse_quote(self) -> bool:
+        if self.peek() == "'":
+            self.consume()
+            return True
+        return False
+
+    def parse_backslash(self) -> bool:
+        if self.peek() == "\\":
+            self.consume()
+            return True
+        return False
+
+    def parse_printable(self) -> bool:
+        char = self.peek()
+        if char is not None and " " <= char <= "~" and char not in '\\"':
+            self.consume()
+            return True
+        return False
+
+    def parse_escaped(self) -> bytes:
+        """Decode one C escape, including RFC 9804 line continuations."""
+        self._expect("\\")
+        char = self.consume()
+        if char in _ESCAPES:
+            return _ESCAPES[char]
+        if char in ("\r", "\n"):
+            other = "\n" if char == "\r" else "\r"
+            if self.peek() == other:
+                self.consume()
+            return b""
+        if char == "x":
+            count, base, alphabet = 2, 16, _HEX
+        elif char is not None and char in "01234567":
+            self.index -= 1
+            count, base, alphabet = 3, 8, "01234567"
+        else:
+            raise ValueError(f"Invalid escape at position {self.index}")
+        digits = self.text[self.index : self.index + count]
+        if len(digits) != count or any(digit not in alphabet for digit in digits):
+            raise ValueError(f"Invalid escape digits at position {self.index}")
+        self.index += count
+        value = int(digits, base)
+        if value > 255:
+            raise ValueError(f"Octal escape exceeds one octet at position {self.index}")
+        return bytes([value])
+
+    def _read_quoted_string(self) -> bytes:
+        self._expect('"')
+        result = bytearray()
+        while self.peek() != '"':
+            if self.peek() == "\\":
+                result.extend(self.parse_escaped())
+            elif self.parse_printable():
+                result.append(ord(self.text[self.index - 1]))
+            else:
+                raise ValueError(
+                    f"Expected printable character or escape at position {self.index}",
+                )
+        self.consume()
+        return bytes(result)
+
+    def parse_quoted_string(self) -> bytes:
+        length = self.parse_decimal()
+        return self._check_length(self._read_quoted_string(), length)
+
+    def _read_verbatim(self, length: int) -> bytes:
+        self._expect(":")
+        end = self.index + length
+        if end > self.text_length:
+            raise ValueError(f"Truncated verbatim string at position {self.index}")
+        data = self.text[self.index : end].encode("latin-1")
+        self.index = end
+        return data
+
+    def parse_verbatim(self) -> bytes:
+        length = self.parse_decimal()
+        if length is None:
+            raise ValueError(f"Expected verbatim length at position {self.index}")
+        return self._read_verbatim(length)
+
+    def _parse_simple_string(self, canonical: bool) -> bytes:
+        length = self.parse_decimal()
+        char = self.peek()
+        if length is not None and char == ":":
+            return self._read_verbatim(length)
+        if canonical:
+            raise ValueError(
+                f"Expected canonical verbatim string at position {self.index}",
+            )
+        if char == '"':
+            data = self._read_quoted_string()
+        elif char == "#":
+            data = self._read_hexadecimal()
+        elif char == "|":
+            data = self._read_base64("|", "|")
+        elif length is None:
+            return self.parse_token()
+        else:
+            raise ValueError(
+                f"Expected string delimiter after length at position {self.index}",
+            )
+        return self._check_length(data, length)
+
+    def parse_simple_string(self) -> bytes:
+        return self._parse_simple_string(canonical=False)
+
+    def _parse_display(self, canonical: bool) -> bytes:
+        self._expect("[")
+        if not canonical:
+            self._skip_whitespace()
+        hint = self._parse_simple_string(canonical)
+        if not canonical:
+            self._skip_whitespace()
+        self._expect("]")
+        if not canonical:
+            self._skip_whitespace()
+        return hint
+
+    def parse_display(self) -> bytes:
+        """Read one non-nested display-hint and its following whitespace."""
+        return self._parse_display(canonical=False)
+
+    def _parse_string(self, canonical: bool) -> Union[bytes, DisplayString]:
+        if self.peek() == "[":
+            hint = self._parse_display(canonical)
+            return DisplayString(self._parse_simple_string(canonical), hint)
+        return self._parse_simple_string(canonical)
+
+    def parse_string(self) -> Union[bytes, DisplayString]:
+        return self._parse_string(canonical=False)
+
+    def _parse_value(self, canonical: bool) -> SExpression:
+        # An explicit stack also handles untrusted lists deeper than Python's recursion limit.
+        stack: List[List[SExpression]] = []
+        while True:
+            if stack and not canonical:
+                self._skip_whitespace()
+            char = self.peek()
+            if char == "(":
+                self.consume()
+                stack.append([])
+                continue
+            if char == ")" and stack:
+                self.consume()
+                node: SExpression = stack.pop()
+            elif char is None and stack:
+                raise ValueError(f"Missing closing ')' at position {self.index}")
+            else:
+                node = self._parse_string(canonical)
+            if not stack:
+                return node
+            stack[-1].append(node)
+
+    def parse_value(self) -> SExpression:
+        """Read one advanced value, leaving subsequent input unread."""
+        return self._parse_value(canonical=False)
+
+    def _require_end(self) -> None:
+        if not self.at_end():
+            raise ValueError(f"Unexpected trailing input at position {self.index}")
+
+    def parse_canonical(self) -> SExpression:
+        """Read exactly one canonical expression, without structural whitespace."""
+        value = self._parse_value(canonical=True)
+        self._require_end()
+        return value
+
+    def parse(self) -> SExpression:
+        """Read exactly one canonical, basic transport or advanced expression."""
+        self._skip_whitespace()
+        if self.peek() == "{":
+            decoded = self._read_base64("{", "}")
+            value = SExpressionParser(decoded).parse_canonical()
+        else:
+            value = self.parse_value()
+        self._skip_whitespace()
+        self._require_end()
+        return value
+
+    def parse_sexp(self) -> SExpression:
+        return self.parse()
+
+
+# Compatibility with the original primitive parser's public name.
+SexpParser = SExpressionParser

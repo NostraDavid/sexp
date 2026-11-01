@@ -15,6 +15,9 @@ dependencies = [
     "pydantic-settings>=2,<3",
 ]
 
+[project.optional-dependencies]
+generator = ["hypothesis>=6.112.4"]
+
 [dependency-groups]
 dev = [
     "asv>=0.6.4",

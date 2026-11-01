@@ -4,9 +4,43 @@ Starting with the most basic elements
 """
 
 import pytest
-from sexp.parser import SexpParser
+from sexp.parser import SExpressionParser
 from sexp.gen import sexp_gen
 from hypothesis import given
+
+
+@pytest.mark.parametrize(
+    ("method", "character"),
+    [
+        ("parse_alpha", "é"),
+        ("parse_digit", "²"),
+        ("parse_digit", "١"),
+        ("parse_base_64_char", "é"),
+        ("parse_base_64_char", "١"),
+    ],
+)
+def test_abnf_character_classes_reject_out_of_range(method, character):
+    parser = SExpressionParser(character)
+    assert getattr(parser, method)() is False
+    assert parser.index == 0
+
+
+def test_form_feed_is_whitespace():
+    parser = SExpressionParser("\x0c")
+    assert parser.parse_whitespace() is True
+    assert parser.at_end()
+    assert SExpressionParser("|Y\x0cWJj|").parse_base_64() == "abc"
+    assert SExpressionParser("#6\x0c1#").parse_hexadecimal() == b"a"
+
+
+@pytest.mark.parametrize("text", ["|Y\u00a0WJj|", "#6\u00a01#", "|é|"])
+def test_encoded_strings_reject_non_abnf_characters(text):
+    parser = SExpressionParser(text)
+    with pytest.raises(ValueError):
+        if text.startswith("|"):
+            parser.parse_base_64()
+        else:
+            parser.parse_hexadecimal()
 
 
 class TestBasicUtilityMethods:
@@ -14,7 +48,7 @@ class TestBasicUtilityMethods:
 
     def test_consume_empty_string(self):
         """Test consuming from empty string returns None"""
-        parser = SexpParser("")
+        parser = SExpressionParser("")
         result = parser.consume()
         assert result is None
 
@@ -25,7 +59,7 @@ class TestParseSpMethod:
     @given(sexp_gen.sp)
     def test_parse_sp_success(self, s: str):
         """Test parsing a space character successfully"""
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         result = parser.parse_sp()
         assert result is True
         assert parser.at_end()
@@ -33,7 +67,7 @@ class TestParseSpMethod:
     @given(sexp_gen.alpha)
     def test_parse_sp_failure(self, s: str):
         """Test parsing non-space character fails"""
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         result = parser.parse_sp()
         assert result is False
         assert not parser.at_end()
@@ -41,14 +75,14 @@ class TestParseSpMethod:
 
     def test_parse_sp_empty_string(self):
         """Test parsing space from empty string fails"""
-        parser = SexpParser("")
+        parser = SExpressionParser("")
         result = parser.parse_sp()
         assert result is False
         assert parser.at_end()
 
     def test_parse_sp_multiple_chars(self):
         """Test parsing space when it's first of multiple characters"""
-        parser = SexpParser(" abc")
+        parser = SExpressionParser(" abc")
         result = parser.parse_sp()
         assert result is True
         assert not parser.at_end()
@@ -62,7 +96,7 @@ class TestParseHtabMethod:
     @given(sexp_gen.htab)
     def test_parse_htab_success(self, s: str):
         """Test parsing a horizontal tab character successfully"""
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         result = parser.parse_htab()
         assert result is True
         assert parser.at_end()
@@ -70,7 +104,7 @@ class TestParseHtabMethod:
     @given(sexp_gen.alpha)
     def test_parse_htab_failure(self, s: str):
         """Test parsing non-htab character fails"""
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         result = parser.parse_htab()
         assert result is False
         assert not parser.at_end()
@@ -83,7 +117,7 @@ class TestParseCrMethod:
     @given(sexp_gen.cr)
     def test_parse_cr_success(self, s: str):
         """Test parsing a carriage return character successfully"""
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         result = parser.parse_cr()
         assert result is True
         assert parser.at_end()
@@ -91,7 +125,7 @@ class TestParseCrMethod:
     @given(sexp_gen.alpha)
     def test_parse_cr_failure(self, s: str):
         """Test parsing non-cr character fails"""
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         result = parser.parse_cr()
         assert result is False
         assert not parser.at_end()
@@ -99,14 +133,14 @@ class TestParseCrMethod:
 
     def test_parse_cr_empty_string(self):
         """Test parsing cr from empty string fails"""
-        parser = SexpParser("")
+        parser = SExpressionParser("")
         result = parser.parse_cr()
         assert result is False
         assert parser.at_end()
 
     def test_parse_cr_multiple_chars(self):
         """Test parsing cr when it's first of multiple characters"""
-        parser = SexpParser("\rabc")
+        parser = SExpressionParser("\rabc")
         result = parser.parse_cr()
         assert result is True
         assert not parser.at_end()
@@ -121,7 +155,7 @@ class TestParseLfMethod:
     @given(sexp_gen.lf)
     def test_parse_lf_success(self, s: str):
         """Test parsing a line feed character successfully"""
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         result = parser.parse_lf()
         assert result is True
         assert parser.at_end()
@@ -129,7 +163,7 @@ class TestParseLfMethod:
     @given(sexp_gen.alpha)
     def test_parse_lf_failure(self, s: str):
         """Test parsing non-lf character fails"""
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         result = parser.parse_lf()
         assert result is False
         assert not parser.at_end()
@@ -137,14 +171,14 @@ class TestParseLfMethod:
 
     def test_parse_lf_empty_string(self):
         """Test parsing lf from empty string fails"""
-        parser = SexpParser("")
+        parser = SExpressionParser("")
         result = parser.parse_lf()
         assert result is False
         assert parser.at_end()
 
     def test_parse_lf_multiple_chars(self):
         """Test parsing lf when it's first of multiple characters"""
-        parser = SexpParser("\nabc")
+        parser = SExpressionParser("\nabc")
         result = parser.parse_lf()
         assert result is True
         assert not parser.at_end()
@@ -159,7 +193,7 @@ class TestParseAlphaMethod:
     @given(sexp_gen.alpha)
     def test_parse_alpha_success(self, s: str):
         """Test parsing an alphabetic character successfully"""
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         result = parser.parse_alpha()
         assert result is True
         assert parser.at_end()
@@ -167,7 +201,7 @@ class TestParseAlphaMethod:
     @given(sexp_gen.digit)
     def test_parse_alpha_failure(self, s: str):
         """Test parsing non-alpha character fails"""
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         result = parser.parse_alpha()
         assert result is False
         assert not parser.at_end()
@@ -175,14 +209,14 @@ class TestParseAlphaMethod:
 
     def test_parse_alpha_empty_string(self):
         """Test parsing alpha from empty string fails"""
-        parser = SexpParser("")
+        parser = SExpressionParser("")
         result = parser.parse_alpha()
         assert result is False
         assert parser.at_end()
 
     def test_parse_alpha_multiple_chars(self):
         """Test parsing alpha when it's first of multiple characters"""
-        parser = SexpParser("abc123")
+        parser = SExpressionParser("abc123")
         result = parser.parse_alpha()
         assert result is True
         assert not parser.at_end()
@@ -197,7 +231,7 @@ class TestParseDigitMethod:
     @given(sexp_gen.digit)
     def test_parse_digit_success(self, s: str):
         """Test parsing a digit character successfully"""
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         result = parser.parse_digit()
         assert result is True
         assert parser.at_end()
@@ -205,7 +239,7 @@ class TestParseDigitMethod:
     @given(sexp_gen.alpha)
     def test_parse_digit_failure(self, s: str):
         """Test parsing non-digit character fails"""
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         result = parser.parse_digit()
         assert result is False
         assert not parser.at_end()
@@ -213,14 +247,14 @@ class TestParseDigitMethod:
 
     def test_parse_digit_empty_string(self):
         """Test parsing digit from empty string fails"""
-        parser = SexpParser("")
+        parser = SExpressionParser("")
         result = parser.parse_digit()
         assert result is False
         assert parser.at_end()
 
     def test_parse_digit_multiple_chars(self):
         """Test parsing digit when it's first of multiple characters"""
-        parser = SexpParser("123abc")
+        parser = SExpressionParser("123abc")
         result = parser.parse_digit()
         assert result is True
         assert not parser.at_end()
@@ -235,7 +269,7 @@ class TestParseHexdigitMethod:
     @given(sexp_gen.hexdig)
     def test_parse_hexdigit_success(self, s: str):
         """Test parsing a hex digit character successfully"""
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         result = parser.parse_hexdigit()
         assert result is True
         assert parser.at_end()
@@ -245,7 +279,7 @@ class TestParseHexdigitMethod:
         """Test parsing non-hexdigit alpha character fails"""
         # Filter out valid hex alpha chars
         if s.lower() not in "abcdef":
-            parser = SexpParser(s)
+            parser = SExpressionParser(s)
             result = parser.parse_hexdigit()
             assert result is False
             assert not parser.at_end()
@@ -253,14 +287,14 @@ class TestParseHexdigitMethod:
 
     def test_parse_hexdigit_empty_string(self):
         """Test parsing hexdigit from empty string fails"""
-        parser = SexpParser("")
+        parser = SExpressionParser("")
         result = parser.parse_hexdigit()
         assert result is False
         assert parser.at_end()
 
     def test_parse_hexdigit_multiple_chars(self):
         """Test parsing hexdigit when it's first of multiple characters"""
-        parser = SexpParser("a1b2")
+        parser = SExpressionParser("a1b2")
         result = parser.parse_hexdigit()
         assert result is True
         assert not parser.at_end()
@@ -271,7 +305,7 @@ class TestParseHexdigitMethod:
     def test_parse_hexdigit_uppercase(self):
         """Test parsing uppercase hex digits"""
         for char in "ABCDEF":
-            parser = SexpParser(char)
+            parser = SExpressionParser(char)
             result = parser.parse_hexdigit()
             assert result is True
             assert parser.at_end()
@@ -279,7 +313,7 @@ class TestParseHexdigitMethod:
     def test_parse_hexdigit_lowercase(self):
         """Test parsing lowercase hex digits"""
         for char in "abcdef":
-            parser = SexpParser(char)
+            parser = SExpressionParser(char)
             result = parser.parse_hexdigit()
             assert result is True
             assert parser.at_end()
@@ -287,7 +321,7 @@ class TestParseHexdigitMethod:
     def test_parse_hexdigit_digits(self):
         """Test parsing numeric hex digits"""
         for char in "0123456789":
-            parser = SexpParser(char)
+            parser = SExpressionParser(char)
             result = parser.parse_hexdigit()
             assert result is True
             assert parser.at_end()
@@ -298,7 +332,7 @@ class TestParseDquoteMethod:
 
     def test_parse_dquote_success(self):
         """Test parsing double quote character successfully"""
-        parser = SexpParser('"')
+        parser = SExpressionParser('"')
         result = parser.parse_dquote()
         assert result is True
         assert parser.at_end()
@@ -306,7 +340,7 @@ class TestParseDquoteMethod:
     @given(sexp_gen.alpha)
     def test_parse_dquote_failure(self, s: str):
         """Test parsing non-dquote character fails"""
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         result = parser.parse_dquote()
         assert result is False
         assert not parser.at_end()
@@ -314,14 +348,14 @@ class TestParseDquoteMethod:
 
     def test_parse_dquote_empty_string(self):
         """Test parsing dquote from empty string fails"""
-        parser = SexpParser("")
+        parser = SExpressionParser("")
         result = parser.parse_dquote()
         assert result is False
         assert parser.at_end()
 
     def test_parse_dquote_multiple_chars(self):
         """Test parsing dquote when it's first of multiple characters"""
-        parser = SexpParser('"hello"')
+        parser = SExpressionParser('"hello"')
         result = parser.parse_dquote()
         assert result is True
         assert not parser.at_end()
@@ -335,23 +369,23 @@ class TestParseOctetMethod:
 
     def test_parse_octet_success(self):
         """Test parsing any character successfully"""
-        test_chars = ["a", "1", " ", "\t", "\n", "\r", '"', "#", "!", "@", "€"]
+        test_chars = ["a", "1", " ", "\t", "\n", "\r", '"', "#", "!", "@"]
         for char in test_chars:
-            parser = SexpParser(char)
+            parser = SExpressionParser(char)
             result = parser.parse_octet()
             assert result is True
             assert parser.at_end()
 
     def test_parse_octet_empty_string(self):
         """Test parsing octet from empty string fails"""
-        parser = SexpParser("")
+        parser = SExpressionParser("")
         result = parser.parse_octet()
         assert result is False
         assert parser.at_end()
 
     def test_parse_octet_multiple_chars(self):
         """Test parsing octet when it's first of multiple characters"""
-        parser = SexpParser("abc123")
+        parser = SExpressionParser("abc123")
         result = parser.parse_octet()
         assert result is True
         assert not parser.at_end()
@@ -363,9 +397,12 @@ class TestParseOctetMethod:
         """Test parsing unicode characters as octets"""
         unicode_chars = ["€", "ñ", "中", "🙂"]
         for char in unicode_chars:
-            parser = SexpParser(char)
+            parser = SExpressionParser(char)
             result = parser.parse_octet()
             assert result is True
+            assert parser.index == 1
+            assert parser.text_length == len(char.encode("utf-8"))
+            assert not parser.at_end()
 
 
 class TestParseVtabMethod:
@@ -373,7 +410,7 @@ class TestParseVtabMethod:
 
     def test_parse_vtab_success(self):
         """Test parsing vertical tab character successfully"""
-        parser = SexpParser("\x0b")
+        parser = SExpressionParser("\x0b")
         result = parser.parse_vtab()
         assert result is True
         assert parser.at_end()
@@ -381,7 +418,7 @@ class TestParseVtabMethod:
     @given(sexp_gen.alpha)
     def test_parse_vtab_failure(self, s: str):
         """Test parsing non-vtab character fails"""
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         result = parser.parse_vtab()
         assert result is False
         assert not parser.at_end()
@@ -389,14 +426,14 @@ class TestParseVtabMethod:
 
     def test_parse_vtab_empty_string(self):
         """Test parsing vtab from empty string fails"""
-        parser = SexpParser("")
+        parser = SExpressionParser("")
         result = parser.parse_vtab()
         assert result is False
         assert parser.at_end()
 
     def test_parse_vtab_multiple_chars(self):
         """Test parsing vtab when it's first of multiple characters"""
-        parser = SexpParser("\x0babc")
+        parser = SExpressionParser("\x0babc")
         result = parser.parse_vtab()
         assert result is True
         assert not parser.at_end()
@@ -409,7 +446,7 @@ class TestParseFfMethod:
 
     def test_parse_ff_success(self):
         """Test parsing form feed character successfully"""
-        parser = SexpParser("\x0c")
+        parser = SExpressionParser("\x0c")
         result = parser.parse_ff()
         assert result is True
         assert parser.at_end()
@@ -417,7 +454,7 @@ class TestParseFfMethod:
     @given(sexp_gen.alpha)
     def test_parse_ff_failure(self, s: str):
         """Test parsing non-ff character fails"""
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         result = parser.parse_ff()
         assert result is False
         assert not parser.at_end()
@@ -425,14 +462,14 @@ class TestParseFfMethod:
 
     def test_parse_ff_empty_string(self):
         """Test parsing ff from empty string fails"""
-        parser = SexpParser("")
+        parser = SExpressionParser("")
         result = parser.parse_ff()
         assert result is False
         assert parser.at_end()
 
     def test_parse_ff_multiple_chars(self):
         """Test parsing ff when it's first of multiple characters"""
-        parser = SexpParser("\x0cabc")
+        parser = SExpressionParser("\x0cabc")
         result = parser.parse_ff()
         assert result is True
         assert not parser.at_end()
@@ -446,7 +483,7 @@ class TestParseWhitespaceMethod:
     @pytest.mark.parametrize("char", [" ", "\t", "\x0b", "\r", "\n"])
     def test_parse_whitespace_success(self, char):
         """Test parsing any whitespace character successfully"""
-        parser = SexpParser(char)
+        parser = SExpressionParser(char)
         result = parser.parse_whitespace()
         assert result is True
         assert parser.at_end()
@@ -454,7 +491,7 @@ class TestParseWhitespaceMethod:
     @given(sexp_gen.alpha)
     def test_parse_whitespace_failure(self, s: str):
         """Test parsing non-whitespace character fails"""
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         result = parser.parse_whitespace()
         assert result is False
         assert not parser.at_end()
@@ -462,14 +499,14 @@ class TestParseWhitespaceMethod:
 
     def test_parse_whitespace_empty_string(self):
         """Test parsing whitespace from empty string fails"""
-        parser = SexpParser("")
+        parser = SExpressionParser("")
         result = parser.parse_whitespace()
         assert result is False
         assert parser.at_end()
 
     def test_parse_whitespace_multiple_chars(self):
         """Test parsing whitespace when it's first of multiple characters"""
-        parser = SexpParser(" \tabc")
+        parser = SExpressionParser(" \tabc")
         result = parser.parse_whitespace()
         assert result is True
         assert not parser.at_end()
@@ -486,7 +523,7 @@ class TestParseBase64CharMethod:
     )
     def test_parse_base_64_char_success(self, char):
         """Test parsing valid base64 character successfully"""
-        parser = SexpParser(char)
+        parser = SExpressionParser(char)
         result = parser.parse_base_64_char()
         assert result is True
         assert parser.at_end()
@@ -494,7 +531,7 @@ class TestParseBase64CharMethod:
     @pytest.mark.parametrize("char", ["=", "-", "_", "*", "!", " "])
     def test_parse_base_64_char_failure(self, char):
         """Test parsing invalid base64 character fails"""
-        parser = SexpParser(char)
+        parser = SExpressionParser(char)
         result = parser.parse_base_64_char()
         assert result is False
         assert not parser.at_end()
@@ -502,14 +539,14 @@ class TestParseBase64CharMethod:
 
     def test_parse_base_64_char_empty_string(self):
         """Test parsing base64 char from empty string fails"""
-        parser = SexpParser("")
+        parser = SExpressionParser("")
         result = parser.parse_base_64_char()
         assert result is False
         assert parser.at_end()
 
     def test_parse_base_64_char_multiple_chars(self):
         """Test parsing base64 char when it's first of multiple characters"""
-        parser = SexpParser("Qabc")
+        parser = SExpressionParser("Qabc")
         result = parser.parse_base_64_char()
         assert result is True
         assert not parser.at_end()
@@ -517,25 +554,25 @@ class TestParseBase64CharMethod:
 
 
 class TestParseBase64CharsMethod:
-    """Tests for parse_base_64_chars method (sequence of base64 characters in groups of 4)"""
+    """One RFC base-64-chars group contains exactly four characters."""
 
     @pytest.mark.parametrize(
         "input_str, expected_count",
         [
             ("ABCD", 4),
-            ("ABCDWXYZ", 8),
-            ("ABCD WXYZ", 8),  # whitespace between groups
+            ("ABCDWXYZ", 4),
+            ("ABCD WXYZ", 4),  # whitespace between groups
             ("A B C D", 4),  # whitespace between chars
-            ("ABCD\tWXYZ", 8),  # tab as whitespace
-            ("ABCD\nWXYZ", 8),  # newline as whitespace
+            ("ABCD\tWXYZ", 4),  # tab as whitespace
+            ("ABCD\nWXYZ", 4),  # newline as whitespace
             ("ABCD", 4),
             ("", 0),
-            ("ABCD WXYZ1234", 12),  # three groups
-            ("ABCD WXYZ 1234", 12),  # three groups with whitespace
+            ("ABCD WXYZ1234", 4),  # leave subsequent groups unread
+            ("ABCD WXYZ 1234", 4),
         ],
     )
     def test_parse_base_64_chars_various(self, input_str, expected_count):
-        parser = SexpParser(input_str)
+        parser = SExpressionParser(input_str)
         count = parser.parse_base_64_chars()
         assert count == expected_count
         # Should consume only the valid base64 chars and whitespace
@@ -543,8 +580,7 @@ class TestParseBase64CharsMethod:
         if expected_count == 0:
             assert parser.index == 0
         else:
-            # Should consume up to the last valid group
-            # Find where parsing should stop
+            # Consume one group, including following RFC whitespace.
             i = 0
             chars = 0
             while i < len(input_str) and chars < expected_count:
@@ -557,32 +593,31 @@ class TestParseBase64CharsMethod:
             # Allow for whitespace after each base64 char
             while i < len(input_str) and input_str[i].isspace():
                 i += 1
-            assert parser.index >= expected_count
+            assert parser.index == i
 
     def test_parse_base_64_chars_with_extra_non_base64(self):
-        parser = SexpParser("ABCD!WXYZ")
+        parser = SExpressionParser("ABCD!WXYZ")
         count = parser.parse_base_64_chars()
         assert count == 4  # Only first group is valid
         assert parser.index == 4  # Stops at '!' (non-base64 char)
 
     def test_parse_base_64_chars_only_whitespace(self):
-        parser = SexpParser("    ")
+        parser = SExpressionParser("    ")
         count = parser.parse_base_64_chars()
         assert count == 0
         assert parser.index == 0
 
     def test_parse_base_64_chars_partial_group(self):
         s = "ABC"
-        parser = SexpParser(s)
+        parser = SExpressionParser(s)
         with pytest.raises(ValueError) as excinfo:
             parser.parse_base_64_chars()
         assert "Invalid base64 character count" in str(excinfo.value)
         assert parser.index == len(s)
 
     def test_parse_base_64_chars_multiple_groups_with_whitespace(self):
-        parser = SexpParser("ABCD \tWXYZ\n1234")
-        count = parser.parse_base_64_chars()
-        assert count == 12
+        parser = SExpressionParser("ABCD \tWXYZ\n1234")
+        assert [parser.parse_base_64_chars() for _ in range(3)] == [4, 4, 4]
         assert parser.index == len("ABCD \tWXYZ\n1234")
 
 
@@ -593,12 +628,13 @@ class TestParseBase64EndMethod:
         "input_str, expected_count",
         [
             ("ABCD", 4),  # base-64-chars: full group
-            ("ABCDWXYZ", 8),  # two full groups
-            ("ABCD WXYZ", 8),  # whitespace between groups
+            ("ABCDWXYZ", 4),  # leave the second group unread
+            ("ABCD WXYZ", 4),
+            ("ABCDE", 4),
         ],
     )
     def test_parse_base_64_end_full_group(self, input_str, expected_count):
-        parser = SexpParser(input_str)
+        parser = SExpressionParser(input_str)
         count = parser.parse_base_64_end()
         assert count == expected_count
         assert parser.index >= expected_count
@@ -612,7 +648,7 @@ class TestParseBase64EndMethod:
         ],
     )
     def test_parse_base_64_end_three_chars_one_padding(self, input_str, expected_count):
-        parser = SexpParser(input_str)
+        parser = SExpressionParser(input_str)
         count = parser.parse_base_64_end()
         assert count == expected_count
         # Should consume up to the padding
@@ -627,13 +663,13 @@ class TestParseBase64EndMethod:
         ],
     )
     def test_parse_base_64_end_two_chars_two_padding(self, input_str, expected_count):
-        parser = SexpParser(input_str)
+        parser = SExpressionParser(input_str)
         count = parser.parse_base_64_end()
         assert count == expected_count
         assert parser.index >= len(input_str.rstrip())
 
     def test_parse_base_64_end_with_whitespace(self):
-        parser = SexpParser("ABCD \t\n")
+        parser = SExpressionParser("ABCD \t\n")
         count = parser.parse_base_64_end()
         assert count == 4
         # Should consume all base64 chars and whitespace
@@ -648,7 +684,6 @@ class TestParseDecimalMethod:
         [
             ("123", 123),
             ("0", 0),
-            ("00123", 123),
             ("42abc", 42),
             ("9", 9),
             ("", None),
@@ -657,7 +692,7 @@ class TestParseDecimalMethod:
         ],
     )
     def test_parse_decimal_various(self, input_str, expected):
-        parser = SexpParser(input_str)
+        parser = SExpressionParser(input_str)
         result = parser.parse_decimal()
         assert result == expected
         if expected is not None:
@@ -673,14 +708,14 @@ class TestParseDecimalMethod:
             assert parser.index == 0
 
     def test_parse_decimal_partial(self):
-        parser = SexpParser("123abc456")
+        parser = SExpressionParser("123abc456")
         result = parser.parse_decimal()
         assert result == 123
         assert parser.index == 3
         assert parser.peek() == "a"
 
     def test_parse_decimal_empty(self):
-        parser = SexpParser("")
+        parser = SExpressionParser("")
         result = parser.parse_decimal()
         assert result is None
         assert parser.at_end()
@@ -700,20 +735,20 @@ class TestParseBase64Method:
         ],
     )
     def test_parse_base_64_success(self, input_str, expected):
-        parser = SexpParser(input_str)
+        parser = SExpressionParser(input_str)
         result = parser.parse_base_64()
         assert result == expected
         assert parser.at_end()
 
     def test_parse_base_64_with_trailing(self):
-        parser = SexpParser("|YWJj|foo")
+        parser = SExpressionParser("|YWJj|foo")
         result = parser.parse_base_64()
         assert result == "abc"
         assert parser.index == 6
         assert parser.peek() == "f"
 
     def test_parse_base_64_invalid_start(self):
-        parser = SexpParser("YWJj|")
+        parser = SExpressionParser("YWJj|")
         with pytest.raises(ValueError) as excinfo:
             parser.parse_base_64()
         assert "Missing opening '|'" in str(
@@ -722,56 +757,56 @@ class TestParseBase64Method:
         assert parser.index == 0
 
     def test_parse_base_64_unterminated(self):
-        parser = SexpParser("|YWJj")
+        parser = SExpressionParser("|YWJj")
         with pytest.raises(ValueError) as excinfo:
             parser.parse_base_64()
         assert "Missing closing '|' for base64 at position" in str(excinfo.value)
 
     def test_parse_base_64_invalid_char(self):
-        parser = SexpParser("|YWJ!j|")
+        parser = SExpressionParser("|YWJ!j|")
         with pytest.raises(ValueError) as excinfo:
             parser.parse_base_64()
         assert "Invalid base64 character" in str(excinfo.value)
 
     def test_parse_base_64_decode_error(self):
         # Invalid base64 padding
-        parser = SexpParser("|YWJj===")
+        parser = SExpressionParser("|YWJj===")
         with pytest.raises(ValueError) as excinfo:
             parser.parse_base_64()
         assert "Missing closing '|' for base64 at position" in str(excinfo.value)
 
 
 class TestParseHexadecimalsMethod:
-    """Tests for parse_hexadecimals method (sequence of hex digits as string)"""
+    """One RFC hexadecimals group contains exactly two digits."""
 
     @pytest.mark.parametrize(
         "input_str, expected",
         [
-            ("abc123", "abc123"),
-            ("ABCDEF", "ABCDEF"),
-            ("0123456789abcdef", "0123456789abcdef"),
-            ("a1b2c3xyz", "a1b2c3"),
+            ("abc123", "ab"),
+            ("ABCDEF", "AB"),
+            ("0123456789abcdef", "01"),
+            ("a1b2c3xyz", "a1"),
         ],
     )
     def test_parse_hexadecimals_various(self, input_str, expected):
-        parser = SexpParser(input_str)
+        parser = SExpressionParser(input_str)
         result = parser.parse_hexadecimals()
         assert result == expected
         assert parser.index == len(expected)
 
     def test_parse_hexadecimals_empty(self):
-        parser = SexpParser("")
+        parser = SExpressionParser("")
         with pytest.raises(ValueError) as excinfo:
             parser.parse_hexadecimals()
         assert "Expected HEXDIG at position" in str(excinfo.value)
         assert parser.at_end()
 
     def test_parse_hexadecimals_partial(self):
-        parser = SexpParser("deadbeef!")
+        parser = SExpressionParser("deadbeef!")
         result = parser.parse_hexadecimals()
-        assert result == "deadbeef"
-        assert parser.index == 8
-        assert parser.peek() == "!"
+        assert result == "de"
+        assert parser.index == 2
+        assert parser.peek() == "a"
 
 
 class TestParseHexadecimalMethod:
@@ -790,28 +825,28 @@ class TestParseHexadecimalMethod:
         ],
     )
     def test_parse_hexadecimal_various(self, input_str, expected):
-        parser = SexpParser(input_str)
+        parser = SExpressionParser(input_str)
         assert parser.parse_hexadecimal() == expected
         assert parser.at_end()
 
     @pytest.mark.parametrize("input_str", ["#0#", "#ABC#", "#g123#", "#123xyz#", "#12"])
     def test_parse_hexadecimal_invalid(self, input_str):
         with pytest.raises(ValueError):
-            SexpParser(input_str).parse_hexadecimal()
+            SExpressionParser(input_str).parse_hexadecimal()
 
     def test_parse_hexadecimal_empty(self):
-        parser = SexpParser("")
+        parser = SExpressionParser("")
         assert parser.parse_hexadecimal() is None
         assert parser.at_end()
 
     def test_parse_hexadecimal_partial(self):
-        parser = SexpParser("#beef#!foo")
+        parser = SExpressionParser("#beef#!foo")
         assert parser.parse_hexadecimal() == b"\xbe\xef"
         assert parser.index == 6
         assert parser.peek() == "!"
 
     def test_parse_hexadecimal_missing_delimiter(self):
-        parser = SexpParser("beef!foo")
+        parser = SExpressionParser("beef!foo")
         assert parser.parse_hexadecimal() is None
         assert parser.index == 0
 
@@ -821,26 +856,26 @@ class TestParseHexadecimalMethod:
     [("AB", 2), ("AB=", 2), ("AB==", 2), ("ABC", 3), ("ABC=", 3), ("A B = = ", 2)],
 )
 def test_base64_end_optional_padding(text, expected):
-    parser = SexpParser(text)
+    parser = SExpressionParser(text)
     assert parser.parse_base_64_end() == expected
     assert parser.at_end()
 
 
 @pytest.mark.parametrize(
     "text",
-    ["", "!", "A", "=", "AB===", "ABC==", "ABCD=", "ABCDE"],
+    ["", "!", "A", "=", "AB===", "ABC==", "ABCD="],
 )
 def test_base64_end_invalid_group(text):
-    parser = SexpParser(text)
+    parser = SExpressionParser(text)
     assert parser.parse_base_64_end() == 0
     assert parser.index == 0
 
 
 @pytest.mark.parametrize("text, expected", [("|/w==|", b"\xff"), ("|Y W J j |", "abc")])
 def test_base64_octets_and_internal_whitespace(text, expected):
-    assert SexpParser(text).parse_base_64() == expected
+    assert SExpressionParser(text).parse_base_64() == expected
 
 
 def test_base64_invalid_padding():
     with pytest.raises(ValueError, match="Invalid base64 encoding"):
-        SexpParser("|A|").parse_base_64()
+        SExpressionParser("|A|").parse_base_64()

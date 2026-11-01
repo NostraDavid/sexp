@@ -1,12 +1,15 @@
+import base64
+
 from hypothesis import strategies as st
 
 
-# Basic ABNF core rules
 class SExpressionGenerator:
-    """ABNF strategy generators for S-expressions based on RFC 9804.
+    """Hypothesis strategies for syntactically and semantically valid RFC 9804.
 
-    This class was created so I as actually able to tell which properties have
-    been tested, while I was writing tests.
+    Advanced grammar strategies return UTF-8 text. Canonical and basic transport
+    strategies return bytes and also cover arbitrary binary octet-strings.
+    These generate decoder test inputs, including permitted whitespace and
+    optional padding in grammar fragments; they are not serialization APIs.
     """
 
     # Basic ABNF core rules
@@ -148,24 +151,12 @@ class SExpressionGenerator:
     def base_64(self):
         @st.composite
         def _base_64(draw):
-            # Optional decimal prefix
-            has_decimal = draw(st.booleans())
-            dec = draw(self.decimal) if has_decimal else ""
-
-            # Opening whitespace after |
-            ws1 = draw(st.lists(self.whitespace, max_size=5))
-
-            # Base64 character sequences
-            chars = draw(st.lists(self.base_64_chars, max_size=10))
-
-            # Optional base64 end sequence
-            has_end = draw(st.booleans())
-            end = draw(self.base_64_end) if has_end else ""
-
-            # Closing whitespace before |
-            ws2 = draw(st.lists(self.whitespace, max_size=5))
-
-            return dec + "|" + "".join(ws1) + "".join(chars) + end + "".join(ws2) + "|"
+            data = draw(st.binary(max_size=30))
+            encoded = base64.b64encode(data).decode("ascii")
+            ws = st.lists(self.whitespace, max_size=2).map("".join)
+            content = draw(ws) + "".join(c + draw(ws) for c in encoded)
+            prefix = str(len(data)) if draw(st.booleans()) else ""
+            return prefix + "|" + content + "|"
 
         return _base_64()
 
@@ -187,13 +178,15 @@ class SExpressionGenerator:
         def _hexadecimal(draw):
             # Optional decimal prefix
             has_decimal = draw(st.booleans())
-            dec = draw(self.decimal) if has_decimal else ""
+            dec = ""
 
             # Opening whitespace after #
             ws1 = draw(st.lists(self.whitespace, max_size=5))
 
             # Hexadecimal digit pairs
             hexs = draw(st.lists(self.hexadecimals, max_size=10))
+            if has_decimal:
+                dec = str(len(hexs))
 
             # Closing whitespace before #
             ws2 = draw(st.lists(self.whitespace, max_size=5))
@@ -275,7 +268,7 @@ class SExpressionGenerator:
                 char = draw(st.one_of(self.dquote, self.quote, self.backslash))
             elif escape_type == 9:
                 # Octal escape: three octal digits
-                d1 = draw(zero_to_seven)
+                d1 = draw(st.characters(min_codepoint=ord("0"), max_codepoint=ord("3")))
                 d2 = draw(zero_to_seven)
                 d3 = draw(zero_to_seven)
                 char = d1 + d2 + d3
@@ -315,13 +308,15 @@ class SExpressionGenerator:
         def _quoted_string(draw):
             # Optional decimal prefix
             has_decimal = draw(st.booleans())
-            dec = draw(self.decimal) if has_decimal else ""
 
             # Content: mix of printable and escaped characters
             content = draw(
                 st.lists(st.one_of(self.printable, self.escaped), max_size=50),
             )
-
+            length = sum(
+                not (part.startswith("\\") and part[1] in "\r\n") for part in content
+            )
+            dec = str(length) if has_decimal else ""
             return dec + '"' + "".join(content) + '"'
 
         return _quoted_string()
@@ -332,7 +327,7 @@ class SExpressionGenerator:
         def _verbatim(draw):
             content = draw(
                 st.text(
-                    alphabet=st.characters(min_codepoint=0x00, max_codepoint=0x7F),
+                    alphabet=st.characters(blacklist_categories=("Cs",)),
                     max_size=99,
                 ),
             )
@@ -379,33 +374,47 @@ class SExpressionGenerator:
 
     @property
     def value(self):
+        ws = st.lists(self.whitespace, max_size=3).map("".join)
+
         @st.composite
-        def _value(draw):
-            choice = draw(st.booleans())
-            if choice:
-                # Generate a string
-                return draw(self.string)
-            else:
-                # Generate a list: "(" *whitespace *(value / whitespace) *whitespace ")"
-                ws1 = draw(st.lists(self.whitespace, max_size=5))
+        def lists(draw, children):
+            values = draw(st.lists(children, max_size=5))
+            separator = draw(st.lists(self.whitespace, min_size=1, max_size=3))
+            return "(" + draw(ws) + "".join(separator).join(values) + draw(ws) + ")"
 
-                # Generate list contents (mix of values and whitespace)
-                contents = []
-                num_items = draw(st.integers(min_value=0, max_value=10))
-                for _ in range(num_items):
-                    item_choice = draw(st.booleans())
-                    if item_choice:
-                        # Add a value (recursive)
-                        contents.append(draw(st.deferred(lambda: self.value)))
-                    else:
-                        # Add whitespace
-                        ws = draw(st.lists(self.whitespace, min_size=1, max_size=5))
-                        contents.append("".join(ws))
+        return st.recursive(self.string, lists, max_leaves=15)
 
-                ws2 = draw(st.lists(self.whitespace, max_size=5))
-                return "(" + "".join(ws1) + "".join(contents) + "".join(ws2) + ")"
+    @property
+    def canonical(self):
+        def verbatim(data):
+            return str(len(data)).encode("ascii") + b":" + data
 
-        return _value()
+        atom = st.binary(max_size=40).map(verbatim)
+        hinted = st.tuples(atom, atom).map(lambda pair: b"[" + pair[0] + b"]" + pair[1])
+        return st.recursive(
+            st.one_of(atom, hinted),
+            lambda children: st.lists(children, max_size=5).map(
+                lambda values: b"(" + b"".join(values) + b")",
+            ),
+            max_leaves=15,
+        )
+
+    @property
+    def basic_transport(self):
+        @st.composite
+        def wrapped(draw):
+            encoded = base64.b64encode(draw(self.canonical))
+            ws = st.lists(self.whitespace, max_size=2).map(
+                lambda chars: "".join(chars).encode("ascii"),
+            )
+            return (
+                b"{"
+                + draw(ws)
+                + b"".join(bytes([c]) + draw(ws) for c in encoded)
+                + b"}"
+            )
+
+        return st.one_of(self.canonical, wrapped())
 
     @property
     def sexp(self):

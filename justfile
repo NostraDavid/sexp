@@ -31,6 +31,9 @@ typecheck:
 benchmark:
     uv run --locked asv run --show-stderr --config asv.conf.json
 
+benchmark-scaling:
+    uv run --locked python -c 'import json; from benchmarks.scaling import run_sweep; print(json.dumps(run_sweep(), indent=2))'
+
 build:
     uv build
 
