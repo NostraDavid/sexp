@@ -1,6 +1,16 @@
 # Parser performance
 
-## Results: 2026-11-01
+The tables below preserve the original pre-optimization baseline, committed in
+`cdfd9f9`; they are not a new scaling sweep of the memory-optimized parser.
+Use `just benchmark-memory` for a focused before/after comparison of that baseline
+and the current parser, including both latency and whole-process peak RSS.
+The changes and comparison methodology are described in
+[memory optimization](memory-optimization.md).
+That follow-up also records explicit normal/development-mode controls; the
+original scaling report did not record the development-mode flag directly.
+Do not interpret its roughly 330 MiB peak as a universal production requirement.
+
+## Baseline results: 2026-11-01
 
 **There is no single performant byte limit.** On this machine, a 64 MiB verbatim
 byte string parsed in **68.7 ms**, but a roughly 1 MiB list of tiny tokens took

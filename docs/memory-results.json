@@ -1,0 +1,1274 @@
+{
+  "initial_project_environment": {
+    "metadata": {
+      "timestamp_utc": "2026-11-01T22:40:27.992882+00:00",
+      "python": "3.14.9 (main, Oct 21 2026, 17:48:02) [Clang 23.1.3 ]",
+      "executable": "/home/david/dev/NostraDavid/sexp/trunk/.venv/bin/python",
+      "platform": "Linux-7.3.0-x86_64-with-glibc2.42",
+      "cpu_model": "AMD Ryzen 9 9950X3D 16-Core Processor",
+      "cpu_count": 32,
+      "load_average": [
+        1.62255859375,
+        1.84375,
+        1.705078125
+      ],
+      "baseline_revision": "cdfd9f9bdc2ec740ed04fd6e07ebeba33c7f10fd",
+      "parser_sha256": {
+        "baseline": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "candidate": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c"
+      },
+      "benchmark_sha256": {
+        "scaling": "c24de472de14c9ba10f42c2d4b64310a23e758e75cfa70ea80c3eba4cd14cdca",
+        "memory": "06d3614a5c3adcc19f59bdbadbc5f439a5fa248abf619236ac7acc68ee1f7e9e"
+      }
+    },
+    "policy": {
+      "repeats": 5,
+      "warmups": 1,
+      "timeout_seconds": 60,
+      "child_rlimit_as_bytes": 805306368,
+      "method": "fresh serial child per version and case; scaling.measure_case",
+      "peak_rss": "whole child high-water RSS in KiB, including input and warmup"
+    },
+    "results": [
+      {
+        "atom_count": 1,
+        "depth": 2097151,
+        "scenario": "deep_list_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194303,
+        "status": "ok",
+        "wall_seconds": [
+          1.7908806499908678,
+          1.7737231320061255,
+          1.7899370889936108,
+          1.8026769100106321,
+          1.792484093020903
+        ],
+        "cpu_seconds": [
+          1.7845616979999999,
+          1.7679853939999997,
+          1.7833837580000003,
+          1.7962913979999993,
+          1.786235606
+        ],
+        "wall_median": 1.7908806499908678,
+        "wall_min": 1.7737231320061255,
+        "wall_max": 1.8026769100106321,
+        "cpu_median": 1.7845616979999999,
+        "cpu_min": 1.7679853939999997,
+        "cpu_max": 1.7962913979999993,
+        "peak_rss_kib": 338112,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "atom_count": 1,
+        "depth": 2097151,
+        "scenario": "deep_list_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194303,
+        "status": "ok",
+        "wall_seconds": [
+          1.9553853120014537,
+          1.9863015439768787,
+          1.9688355649996083,
+          1.965171799005475,
+          1.9658768600202166
+        ],
+        "cpu_seconds": [
+          1.9476848080000004,
+          1.9765606699999996,
+          1.9608578310000002,
+          1.9584237150000003,
+          1.9595692059999994
+        ],
+        "wall_median": 1.9658768600202166,
+        "wall_min": 1.9553853120014537,
+        "wall_max": 1.9863015439768787,
+        "cpu_median": 1.9595692059999994,
+        "cpu_min": 1.9476848080000004,
+        "cpu_max": 1.9765606699999996,
+        "peak_rss_kib": 274044,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      },
+      {
+        "atom_count": 1,
+        "depth": 524287,
+        "scenario": "deep_list_bytes",
+        "target_bytes": 1048576,
+        "input_bytes": 1048575,
+        "status": "ok",
+        "wall_seconds": [
+          0.4153808649862185,
+          0.41734399797860533,
+          0.4168401869828813,
+          0.414742833992932,
+          0.4151659840135835
+        ],
+        "cpu_seconds": [
+          0.413962966,
+          0.41602028199999996,
+          0.41533943399999984,
+          0.4133642449999999,
+          0.4138546839999999
+        ],
+        "wall_median": 0.4153808649862185,
+        "wall_min": 0.414742833992932,
+        "wall_max": 0.41734399797860533,
+        "cpu_median": 0.413962966,
+        "cpu_min": 0.4133642449999999,
+        "cpu_max": 0.41602028199999996,
+        "peak_rss_kib": 107372,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "atom_count": 1,
+        "depth": 524287,
+        "scenario": "deep_list_bytes",
+        "target_bytes": 1048576,
+        "input_bytes": 1048575,
+        "status": "ok",
+        "wall_seconds": [
+          0.43103477999102324,
+          0.4400924160145223,
+          0.4326660029764753,
+          0.4308871600078419,
+          0.42840101598994806
+        ],
+        "cpu_seconds": [
+          0.42972318,
+          0.43868082100000005,
+          0.4313231169999998,
+          0.4295871280000001,
+          0.4270281629999997
+        ],
+        "wall_median": 0.43103477999102324,
+        "wall_min": 0.42840101598994806,
+        "wall_max": 0.4400924160145223,
+        "cpu_median": 0.42972318,
+        "cpu_min": 0.4270281629999997,
+        "cpu_max": 0.43868082100000005,
+        "peak_rss_kib": 91968,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      },
+      {
+        "atom_count": 2097151,
+        "depth": 1,
+        "scenario": "wide_list_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194303,
+        "status": "ok",
+        "wall_seconds": [
+          1.9217977189982776,
+          1.8181594880006742,
+          1.8218619039980695,
+          1.815558633999899,
+          1.8409994569956325
+        ],
+        "cpu_seconds": [
+          1.8953793230000002,
+          1.811854184,
+          1.8159981089999997,
+          1.8099104060000002,
+          1.8342061750000003
+        ],
+        "wall_median": 1.8218619039980695,
+        "wall_min": 1.815558633999899,
+        "wall_max": 1.9217977189982776,
+        "cpu_median": 1.8159981089999997,
+        "cpu_min": 1.8099104060000002,
+        "cpu_max": 1.8953793230000002,
+        "peak_rss_kib": 52952,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "atom_count": 2097151,
+        "depth": 1,
+        "scenario": "wide_list_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194303,
+        "status": "ok",
+        "wall_seconds": [
+          1.8405622959835455,
+          1.830323969013989,
+          1.8300286890007555,
+          1.823992690013256,
+          1.8167355679906905
+        ],
+        "cpu_seconds": [
+          1.8345316020000002,
+          1.8246491030000005,
+          1.824056229,
+          1.8178285669999994,
+          1.811259583
+        ],
+        "wall_median": 1.8300286890007555,
+        "wall_min": 1.8167355679906905,
+        "wall_max": 1.8405622959835455,
+        "cpu_median": 1.824056229,
+        "cpu_min": 1.811259583,
+        "cpu_max": 1.8345316020000002,
+        "peak_rss_kib": 53816,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      },
+      {
+        "atom_count": 716100,
+        "group_count": 102300,
+        "depth": 3,
+        "scenario": "mixed_list_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194301,
+        "status": "ok",
+        "wall_seconds": [
+          1.243248571001459,
+          1.2575293050031178,
+          1.250718544004485,
+          1.2530401069961954,
+          1.2599186389998067
+        ],
+        "cpu_seconds": [
+          1.2392533049999999,
+          1.2516897240000002,
+          1.2467548689999997,
+          1.2492246499999995,
+          1.2560722819999999
+        ],
+        "wall_median": 1.2530401069961954,
+        "wall_min": 1.243248571001459,
+        "wall_max": 1.2599186389998067,
+        "cpu_median": 1.2492246499999995,
+        "cpu_min": 1.2392533049999999,
+        "cpu_max": 1.2560722819999999,
+        "peak_rss_kib": 93640,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "atom_count": 716100,
+        "group_count": 102300,
+        "depth": 3,
+        "scenario": "mixed_list_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194301,
+        "status": "ok",
+        "wall_seconds": [
+          1.2908362509915605,
+          1.3046417929872405,
+          1.2964015600155108,
+          1.2920991540013347,
+          1.289520068996353
+        ],
+        "cpu_seconds": [
+          1.286943701,
+          1.3004949909999999,
+          1.292028486,
+          1.2881920390000001,
+          1.2855439429999995
+        ],
+        "wall_median": 1.2920991540013347,
+        "wall_min": 1.289520068996353,
+        "wall_max": 1.3046417929872405,
+        "cpu_median": 1.2881920390000001,
+        "cpu_min": 1.2855439429999995,
+        "cpu_max": 1.3004949909999999,
+        "peak_rss_kib": 90172,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      },
+      {
+        "payload_bytes": 4194304,
+        "atom_count": 1,
+        "scenario": "token_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194304,
+        "status": "ok",
+        "wall_seconds": [
+          0.3383215279900469,
+          0.3369743459916208,
+          0.34558372097671963,
+          0.3395909309911076,
+          0.342042135016527
+        ],
+        "cpu_seconds": [
+          0.337383054,
+          0.33598441199999995,
+          0.34430644999999993,
+          0.33851959499999995,
+          0.34092466199999993
+        ],
+        "wall_median": 0.3395909309911076,
+        "wall_min": 0.3369743459916208,
+        "wall_max": 0.34558372097671963,
+        "cpu_median": 0.33851959499999995,
+        "cpu_min": 0.33598441199999995,
+        "cpu_max": 0.34430644999999993,
+        "peak_rss_kib": 34780,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "payload_bytes": 4194304,
+        "atom_count": 1,
+        "scenario": "token_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194304,
+        "status": "ok",
+        "wall_seconds": [
+          0.3348902740108315,
+          0.33274604901089333,
+          0.3322001479973551,
+          0.3324777389934752,
+          0.3327408389886841
+        ],
+        "cpu_seconds": [
+          0.333891206,
+          0.33190312,
+          0.3312583709999999,
+          0.3316065799999999,
+          0.33182921900000006
+        ],
+        "wall_median": 0.3327408389886841,
+        "wall_min": 0.3322001479973551,
+        "wall_max": 0.3348902740108315,
+        "cpu_median": 0.33182921900000006,
+        "cpu_min": 0.3312583709999999,
+        "cpu_max": 0.333891206,
+        "peak_rss_kib": 35012,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      },
+      {
+        "payload_bytes": 8388607,
+        "atom_count": 1,
+        "scenario": "hex_bytes",
+        "target_bytes": 16777216,
+        "input_bytes": 16777216,
+        "status": "ok",
+        "wall_seconds": [
+          1.7009824190172367,
+          1.7055744270037394,
+          1.710400704992935,
+          1.7153974329994526,
+          1.723628176987404
+        ],
+        "cpu_seconds": [
+          1.695794884,
+          1.700293572,
+          1.704405488,
+          1.7098804229999995,
+          1.7182787719999997
+        ],
+        "wall_median": 1.710400704992935,
+        "wall_min": 1.7009824190172367,
+        "wall_max": 1.723628176987404,
+        "cpu_median": 1.704405488,
+        "cpu_min": 1.695794884,
+        "cpu_max": 1.7182787719999997,
+        "peak_rss_kib": 220556,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "payload_bytes": 8388607,
+        "atom_count": 1,
+        "scenario": "hex_bytes",
+        "target_bytes": 16777216,
+        "input_bytes": 16777216,
+        "status": "ok",
+        "wall_seconds": [
+          1.784781718015438,
+          1.7624683720059693,
+          1.7822954439907335,
+          1.7656811570050195,
+          1.7853780690056738
+        ],
+        "cpu_seconds": [
+          1.779445197,
+          1.7572755969999996,
+          1.7768155810000001,
+          1.7607242760000013,
+          1.7797689979999998
+        ],
+        "wall_median": 1.7822954439907335,
+        "wall_min": 1.7624683720059693,
+        "wall_max": 1.7853780690056738,
+        "cpu_median": 1.7768155810000001,
+        "cpu_min": 1.7572755969999996,
+        "cpu_max": 1.7797689979999998,
+        "peak_rss_kib": 87208,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      },
+      {
+        "payload_bytes": 12582909,
+        "atom_count": 1,
+        "scenario": "base64_bytes",
+        "target_bytes": 16777216,
+        "input_bytes": 16777214,
+        "status": "ok",
+        "wall_seconds": [
+          1.7737326810020022,
+          1.7652054280042648,
+          1.7668484500027262,
+          1.7589319059916306,
+          1.7645377770240884
+        ],
+        "cpu_seconds": [
+          1.7678674089999997,
+          1.7592474980000001,
+          1.7614936960000005,
+          1.753192019,
+          1.7586252569999985
+        ],
+        "wall_median": 1.7652054280042648,
+        "wall_min": 1.7589319059916306,
+        "wall_max": 1.7737326810020022,
+        "cpu_median": 1.7592474980000001,
+        "cpu_min": 1.753192019,
+        "cpu_max": 1.7678674089999997,
+        "peak_rss_kib": 220800,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "payload_bytes": 12582909,
+        "atom_count": 1,
+        "scenario": "base64_bytes",
+        "target_bytes": 16777216,
+        "input_bytes": 16777214,
+        "status": "ok",
+        "wall_seconds": [
+          1.8453447909851093,
+          1.855974817997776,
+          1.84716732398374,
+          1.8397536420088727,
+          1.855654147977475
+        ],
+        "cpu_seconds": [
+          1.839659703,
+          1.8498479129999996,
+          1.8418932099999994,
+          1.8343171100000006,
+          1.8498474349999992
+        ],
+        "wall_median": 1.84716732398374,
+        "wall_min": 1.8397536420088727,
+        "wall_max": 1.855974817997776,
+        "cpu_median": 1.8418932099999994,
+        "cpu_min": 1.8343171100000006,
+        "cpu_max": 1.8498479129999996,
+        "peak_rss_kib": 98852,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      },
+      {
+        "payload_bytes": 12582901,
+        "atom_count": 1,
+        "scenario": "basic_transport_bytes",
+        "target_bytes": 16777216,
+        "input_bytes": 16777218,
+        "status": "ok",
+        "wall_seconds": [
+          1.7604840609710664,
+          1.7845013010082766,
+          1.7742234939942136,
+          1.7846764310088474,
+          1.7905161209928337
+        ],
+        "cpu_seconds": [
+          1.7550634590000003,
+          1.7773214849999999,
+          1.7678295040000007,
+          1.7782814900000004,
+          1.7845587070000004
+        ],
+        "wall_median": 1.7845013010082766,
+        "wall_min": 1.7604840609710664,
+        "wall_max": 1.7905161209928337,
+        "cpu_median": 1.7773214849999999,
+        "cpu_min": 1.7550634590000003,
+        "cpu_max": 1.7845587070000004,
+        "peak_rss_kib": 220256,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "payload_bytes": 12582901,
+        "atom_count": 1,
+        "scenario": "basic_transport_bytes",
+        "target_bytes": 16777216,
+        "input_bytes": 16777218,
+        "status": "ok",
+        "wall_seconds": [
+          1.8270028319966514,
+          1.8239424070052337,
+          1.834002524992684,
+          1.8473536900128238,
+          1.847278284985805
+        ],
+        "cpu_seconds": [
+          1.8214523269999998,
+          1.8179299149999997,
+          1.827790662,
+          1.8415507139999994,
+          1.8411968820000002
+        ],
+        "wall_median": 1.834002524992684,
+        "wall_min": 1.8239424070052337,
+        "wall_max": 1.8473536900128238,
+        "cpu_median": 1.827790662,
+        "cpu_min": 1.8179299149999997,
+        "cpu_max": 1.8415507139999994,
+        "peak_rss_kib": 115268,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      },
+      {
+        "payload_bytes": 67108855,
+        "atom_count": 1,
+        "scenario": "verbatim_bytes",
+        "target_bytes": 67108864,
+        "input_bytes": 67108864,
+        "status": "ok",
+        "wall_seconds": [
+          0.07828256499487907,
+          0.07441821601241827,
+          0.07705640900530852,
+          0.07465890800813213,
+          0.07420545499189757
+        ],
+        "cpu_seconds": [
+          0.07785813800000002,
+          0.07407018999999998,
+          0.076748859,
+          0.074206563,
+          0.07390805099999997
+        ],
+        "wall_median": 0.07465890800813213,
+        "wall_min": 0.07420545499189757,
+        "wall_max": 0.07828256499487907,
+        "cpu_median": 0.074206563,
+        "cpu_min": 0.07390805099999997,
+        "cpu_max": 0.07785813800000002,
+        "peak_rss_kib": 283936,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "payload_bytes": 67108855,
+        "atom_count": 1,
+        "scenario": "verbatim_bytes",
+        "target_bytes": 67108864,
+        "input_bytes": 67108864,
+        "status": "ok",
+        "wall_seconds": [
+          0.07215518498560414,
+          0.06699155998649076,
+          0.06775178300449625,
+          0.06809221502044238,
+          0.06960400199750438
+        ],
+        "cpu_seconds": [
+          0.071817353,
+          0.066695179,
+          0.067416207,
+          0.06778242700000003,
+          0.06928911500000001
+        ],
+        "wall_median": 0.06809221502044238,
+        "wall_min": 0.06699155998649076,
+        "wall_max": 0.07215518498560414,
+        "cpu_median": 0.06778242700000003,
+        "cpu_min": 0.066695179,
+        "cpu_max": 0.071817353,
+        "peak_rss_kib": 284572,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      },
+      {
+        "payload_bytes": 67108854,
+        "atom_count": 1,
+        "scenario": "verbatim_utf8_str",
+        "target_bytes": 67108864,
+        "input_bytes": 67108863,
+        "status": "ok",
+        "wall_seconds": [
+          0.09975771102472208,
+          0.10429743200074881,
+          0.10328734799986705,
+          0.10287592498934828,
+          0.10751873801928014
+        ],
+        "cpu_seconds": [
+          0.09920483799999999,
+          0.10381885400000002,
+          0.10287764400000005,
+          0.10245321500000004,
+          0.106915969
+        ],
+        "wall_median": 0.10328734799986705,
+        "wall_min": 0.09975771102472208,
+        "wall_max": 0.10751873801928014,
+        "cpu_median": 0.10287764400000005,
+        "cpu_min": 0.09920483799999999,
+        "cpu_max": 0.106915969,
+        "peak_rss_kib": 251020,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "payload_bytes": 67108854,
+        "atom_count": 1,
+        "scenario": "verbatim_utf8_str",
+        "target_bytes": 67108864,
+        "input_bytes": 67108863,
+        "status": "ok",
+        "wall_seconds": [
+          0.0931881979922764,
+          0.09866744501050562,
+          0.10242575200391002,
+          0.10671662399545312,
+          0.10037527300301008
+        ],
+        "cpu_seconds": [
+          0.09281674300000001,
+          0.09828323900000002,
+          0.10206586500000003,
+          0.10630960099999998,
+          0.099992007
+        ],
+        "wall_median": 0.10037527300301008,
+        "wall_min": 0.0931881979922764,
+        "wall_max": 0.10671662399545312,
+        "cpu_median": 0.099992007,
+        "cpu_min": 0.09281674300000001,
+        "cpu_max": 0.10630960099999998,
+        "peak_rss_kib": 251752,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      },
+      {
+        "payload_bytes": 4194302,
+        "atom_count": 1,
+        "scenario": "quoted_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194304,
+        "status": "ok",
+        "wall_seconds": [
+          0.8433329830004368,
+          0.8382682840165216,
+          0.8368744129838888,
+          0.8364551579870749,
+          0.8409869760216679
+        ],
+        "cpu_seconds": [
+          0.840965307,
+          0.8358944479999999,
+          0.8342757460000003,
+          0.8337411590000001,
+          0.8383867700000005
+        ],
+        "wall_median": 0.8382682840165216,
+        "wall_min": 0.8364551579870749,
+        "wall_max": 0.8433329830004368,
+        "cpu_median": 0.8358944479999999,
+        "cpu_min": 0.8337411590000001,
+        "cpu_max": 0.840965307,
+        "peak_rss_kib": 38824,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "payload_bytes": 4194302,
+        "atom_count": 1,
+        "scenario": "quoted_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194304,
+        "status": "ok",
+        "wall_seconds": [
+          0.8357542130106594,
+          0.8342137620202266,
+          0.8413460919982754,
+          0.8374935500032734,
+          0.8363123809976969
+        ],
+        "cpu_seconds": [
+          0.8334119620000001,
+          0.8314431729999998,
+          0.8385783240000002,
+          0.834800725,
+          0.833718771
+        ],
+        "wall_median": 0.8363123809976969,
+        "wall_min": 0.8342137620202266,
+        "wall_max": 0.8413460919982754,
+        "cpu_median": 0.833718771,
+        "cpu_min": 0.8314431729999998,
+        "cpu_max": 0.8385783240000002,
+        "peak_rss_kib": 39396,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      },
+      {
+        "payload_bytes": 1048575,
+        "atom_count": 1,
+        "scenario": "escaped_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194302,
+        "status": "ok",
+        "wall_seconds": [
+          0.673531645006733,
+          0.6709079300053418,
+          0.6699152739893179,
+          0.6773300470085815,
+          0.6643080910143908
+        ],
+        "cpu_seconds": [
+          0.671111692,
+          0.6687309549999998,
+          0.6676278669999998,
+          0.6747510619999999,
+          0.6621624019999999
+        ],
+        "wall_median": 0.6709079300053418,
+        "wall_min": 0.6643080910143908,
+        "wall_max": 0.6773300470085815,
+        "cpu_median": 0.6687309549999998,
+        "cpu_min": 0.6621624019999999,
+        "cpu_max": 0.6747510619999999,
+        "peak_rss_kib": 32404,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "payload_bytes": 1048575,
+        "atom_count": 1,
+        "scenario": "escaped_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194302,
+        "status": "ok",
+        "wall_seconds": [
+          0.6666456090169959,
+          0.6801024900050834,
+          0.6740296299976762,
+          0.676264697976876,
+          0.6772844200022519
+        ],
+        "cpu_seconds": [
+          0.664527652,
+          0.6780843089999999,
+          0.6720500939999998,
+          0.6744327220000002,
+          0.6750513320000002
+        ],
+        "wall_median": 0.676264697976876,
+        "wall_min": 0.6666456090169959,
+        "wall_max": 0.6801024900050834,
+        "cpu_median": 0.6744327220000002,
+        "cpu_min": 0.664527652,
+        "cpu_max": 0.6780843089999999,
+        "peak_rss_kib": 32632,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      },
+      {
+        "payload_bytes": 0,
+        "atom_count": 1,
+        "scenario": "whitespace_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194304,
+        "status": "ok",
+        "wall_seconds": [
+          1.274933760985732,
+          1.2785794909868855,
+          1.2764596130000427,
+          1.280515653983457,
+          1.2863070029998198
+        ],
+        "cpu_seconds": [
+          1.270336733,
+          1.2748499830000002,
+          1.2730743619999996,
+          1.2764305980000001,
+          1.281599431
+        ],
+        "wall_median": 1.2785794909868855,
+        "wall_min": 1.274933760985732,
+        "wall_max": 1.2863070029998198,
+        "cpu_median": 1.2748499830000002,
+        "cpu_min": 1.270336733,
+        "cpu_max": 1.281599431,
+        "peak_rss_kib": 30588,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "payload_bytes": 0,
+        "atom_count": 1,
+        "scenario": "whitespace_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194304,
+        "status": "ok",
+        "wall_seconds": [
+          1.2801527669944335,
+          1.2804533900052775,
+          1.2756980489939451,
+          1.2778760509972926,
+          1.266371509002056
+        ],
+        "cpu_seconds": [
+          1.27642629,
+          1.27670634,
+          1.2717953870000005,
+          1.2730744999999999,
+          1.2626691020000003
+        ],
+        "wall_median": 1.2778760509972926,
+        "wall_min": 1.266371509002056,
+        "wall_max": 1.2804533900052775,
+        "cpu_median": 1.2730744999999999,
+        "cpu_min": 1.2626691020000003,
+        "cpu_max": 1.27670634,
+        "peak_rss_kib": 29580,
+        "parser_path": "/tmp/opencode/sexp-memory-rl520npg/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      }
+    ]
+  },
+  "explicit_development_mode": {
+    "metadata": {
+      "timestamp_utc": "2026-11-01T22:51:48.448816+00:00",
+      "python": "3.14.9 (main, Oct 21 2026, 17:48:02) [Clang 23.1.3 ]",
+      "executable": "/home/david/dev/NostraDavid/sexp/trunk/.venv/bin/python",
+      "platform": "Linux-7.3.0-x86_64-with-glibc2.42",
+      "cpu_model": "AMD Ryzen 9 9950X3D 16-Core Processor",
+      "cpu_count": 32,
+      "load_average": [
+        2.970703125,
+        2.578125,
+        2.17333984375
+      ],
+      "baseline_revision": "cdfd9f9bdc2ec740ed04fd6e07ebeba33c7f10fd",
+      "parser_sha256": {
+        "baseline": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "candidate": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c"
+      },
+      "benchmark_sha256": {
+        "scaling": "c24de472de14c9ba10f42c2d4b64310a23e758e75cfa70ea80c3eba4cd14cdca",
+        "memory": "06d3614a5c3adcc19f59bdbadbc5f439a5fa248abf619236ac7acc68ee1f7e9e"
+      },
+      "inherited_runtime": {
+        "dev_mode": true,
+        "PYTHONDEVMODE": "1",
+        "PYTHONMALLOC": null,
+        "child_extra_flags": [
+          "-B"
+        ]
+      }
+    },
+    "policy": {
+      "repeats": 5,
+      "warmups": 1,
+      "timeout_seconds": 60,
+      "child_rlimit_as_bytes": 805306368,
+      "method": "fresh serial child per version and case; scaling.measure_case",
+      "peak_rss": "whole child high-water RSS in KiB, including input and warmup"
+    },
+    "results": [
+      {
+        "atom_count": 1,
+        "depth": 2097151,
+        "scenario": "deep_list_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194303,
+        "status": "ok",
+        "wall_seconds": [
+          1.77828378698905,
+          1.7630949640006293,
+          1.7749399750027806,
+          1.7595825099851936,
+          1.7794003970047925
+        ],
+        "cpu_seconds": [
+          1.7723171819999999,
+          1.757998133,
+          1.7695847530000002,
+          1.7546038380000004,
+          1.7740038269999996
+        ],
+        "wall_median": 1.7749399750027806,
+        "wall_min": 1.7595825099851936,
+        "wall_max": 1.7794003970047925,
+        "cpu_median": 1.7695847530000002,
+        "cpu_min": 1.7546038380000004,
+        "cpu_max": 1.7740038269999996,
+        "peak_rss_kib": 338776,
+        "parser_path": "/tmp/opencode/sexp-memory-1bu3wgj9/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "atom_count": 1,
+        "depth": 2097151,
+        "scenario": "deep_list_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194303,
+        "status": "ok",
+        "wall_seconds": [
+          1.9710124889970757,
+          1.9438511470216326,
+          1.968061696010409,
+          1.9370811129920185,
+          1.982053685002029
+        ],
+        "cpu_seconds": [
+          1.9644314430000005,
+          1.937963432,
+          1.9616297839999994,
+          1.9309191439999989,
+          1.97525147
+        ],
+        "wall_median": 1.968061696010409,
+        "wall_min": 1.9370811129920185,
+        "wall_max": 1.982053685002029,
+        "cpu_median": 1.9616297839999994,
+        "cpu_min": 1.9309191439999989,
+        "cpu_max": 1.97525147,
+        "peak_rss_kib": 274456,
+        "parser_path": "/tmp/opencode/sexp-memory-1bu3wgj9/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      }
+    ]
+  },
+  "normal_mode": {
+    "metadata": {
+      "timestamp_utc": "2026-11-01T22:53:00.594276+00:00",
+      "python": "3.14.9 (main, Oct 21 2026, 17:48:02) [Clang 23.1.3 ]",
+      "executable": "/home/david/dev/NostraDavid/sexp/trunk/.venv/bin/python",
+      "platform": "Linux-7.3.0-x86_64-with-glibc2.42",
+      "cpu_model": "AMD Ryzen 9 9950X3D 16-Core Processor",
+      "cpu_count": 32,
+      "load_average": [
+        2.2041015625,
+        2.408203125,
+        2.14453125
+      ],
+      "baseline_revision": "cdfd9f9bdc2ec740ed04fd6e07ebeba33c7f10fd",
+      "parser_sha256": {
+        "baseline": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "candidate": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c"
+      },
+      "benchmark_sha256": {
+        "scaling": "c24de472de14c9ba10f42c2d4b64310a23e758e75cfa70ea80c3eba4cd14cdca",
+        "memory": "06d3614a5c3adcc19f59bdbadbc5f439a5fa248abf619236ac7acc68ee1f7e9e"
+      },
+      "inherited_runtime": {
+        "dev_mode": false,
+        "PYTHONDEVMODE": null,
+        "PYTHONMALLOC": null,
+        "child_extra_flags": [
+          "-B"
+        ]
+      }
+    },
+    "policy": {
+      "repeats": 5,
+      "warmups": 1,
+      "timeout_seconds": 60,
+      "child_rlimit_as_bytes": 805306368,
+      "method": "fresh serial child per version and case; scaling.measure_case",
+      "peak_rss": "whole child high-water RSS in KiB, including input and warmup"
+    },
+    "results": [
+      {
+        "atom_count": 1,
+        "depth": 2097151,
+        "scenario": "deep_list_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194303,
+        "status": "ok",
+        "wall_seconds": [
+          1.7180000470252708,
+          1.7450772730226163,
+          1.7320136089983862,
+          1.719315155991353,
+          1.7219271489884704
+        ],
+        "cpu_seconds": [
+          1.712831286,
+          1.739644938,
+          1.7264697420000008,
+          1.7140072219999993,
+          1.7164799819999992
+        ],
+        "wall_median": 1.7219271489884704,
+        "wall_min": 1.7180000470252708,
+        "wall_max": 1.7450772730226163,
+        "cpu_median": 1.7164799819999992,
+        "cpu_min": 1.712831286,
+        "cpu_max": 1.739644938,
+        "peak_rss_kib": 238484,
+        "parser_path": "/tmp/opencode/sexp-memory-3dk9y_nj/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "atom_count": 1,
+        "depth": 2097151,
+        "scenario": "deep_list_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194303,
+        "status": "ok",
+        "wall_seconds": [
+          1.8323630389932077,
+          1.8474817789974622,
+          1.850542422995204,
+          1.8344887989806011,
+          1.8443311329756398
+        ],
+        "cpu_seconds": [
+          1.82654054,
+          1.8417549629999996,
+          1.8446972089999996,
+          1.8290255869999994,
+          1.8383506080000007
+        ],
+        "wall_median": 1.8443311329756398,
+        "wall_min": 1.8323630389932077,
+        "wall_max": 1.850542422995204,
+        "cpu_median": 1.8383506080000007,
+        "cpu_min": 1.82654054,
+        "cpu_max": 1.8446972089999996,
+        "peak_rss_kib": 205524,
+        "parser_path": "/tmp/opencode/sexp-memory-3dk9y_nj/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      },
+      {
+        "atom_count": 2097151,
+        "depth": 1,
+        "scenario": "wide_list_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194303,
+        "status": "ok",
+        "wall_seconds": [
+          1.6739835859916639,
+          1.6815751540125348,
+          1.6657963329926133,
+          1.6729662110155914,
+          1.6711462110106368
+        ],
+        "cpu_seconds": [
+          1.669393957,
+          1.6766031700000004,
+          1.6613038830000004,
+          1.6679049670000001,
+          1.6660787389999996
+        ],
+        "wall_median": 1.6729662110155914,
+        "wall_min": 1.6657963329926133,
+        "wall_max": 1.6815751540125348,
+        "cpu_median": 1.6679049670000001,
+        "cpu_min": 1.6613038830000004,
+        "cpu_max": 1.6766031700000004,
+        "peak_rss_kib": 50036,
+        "parser_path": "/tmp/opencode/sexp-memory-3dk9y_nj/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "atom_count": 2097151,
+        "depth": 1,
+        "scenario": "wide_list_bytes",
+        "target_bytes": 4194304,
+        "input_bytes": 4194303,
+        "status": "ok",
+        "wall_seconds": [
+          1.6913965129933786,
+          1.672240262007108,
+          1.6598365610116161,
+          1.6677021289942786,
+          1.6661833809921518
+        ],
+        "cpu_seconds": [
+          1.6867011070000002,
+          1.6672898309999997,
+          1.655391658,
+          1.663042762,
+          1.661652113999999
+        ],
+        "wall_median": 1.6677021289942786,
+        "wall_min": 1.6598365610116161,
+        "wall_max": 1.6913965129933786,
+        "cpu_median": 1.663042762,
+        "cpu_min": 1.655391658,
+        "cpu_max": 1.6867011070000002,
+        "peak_rss_kib": 50828,
+        "parser_path": "/tmp/opencode/sexp-memory-3dk9y_nj/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      },
+      {
+        "payload_bytes": 8388607,
+        "atom_count": 1,
+        "scenario": "hex_bytes",
+        "target_bytes": 16777216,
+        "input_bytes": 16777216,
+        "status": "ok",
+        "wall_seconds": [
+          1.692929572018329,
+          1.6901235800178256,
+          1.6902328159776516,
+          1.68421980299172,
+          1.6894458650203887
+        ],
+        "cpu_seconds": [
+          1.6875054189999998,
+          1.6848526019999999,
+          1.6852891310000002,
+          1.6793085089999993,
+          1.6841836830000005
+        ],
+        "wall_median": 1.6901235800178256,
+        "wall_min": 1.68421980299172,
+        "wall_max": 1.692929572018329,
+        "cpu_median": 1.6848526019999999,
+        "cpu_min": 1.6793085089999993,
+        "cpu_max": 1.6875054189999998,
+        "peak_rss_kib": 208732,
+        "parser_path": "/tmp/opencode/sexp-memory-3dk9y_nj/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "payload_bytes": 8388607,
+        "atom_count": 1,
+        "scenario": "hex_bytes",
+        "target_bytes": 16777216,
+        "input_bytes": 16777216,
+        "status": "ok",
+        "wall_seconds": [
+          1.7791875989933033,
+          1.784340728976531,
+          1.7354044420062564,
+          1.7507523530221079,
+          1.7437200180138461
+        ],
+        "cpu_seconds": [
+          1.7738489179999999,
+          1.779294686,
+          1.730440766,
+          1.745956757000001,
+          1.7385789719999991
+        ],
+        "wall_median": 1.7507523530221079,
+        "wall_min": 1.7354044420062564,
+        "wall_max": 1.784340728976531,
+        "cpu_median": 1.745956757000001,
+        "cpu_min": 1.730440766,
+        "cpu_max": 1.779294686,
+        "peak_rss_kib": 85748,
+        "parser_path": "/tmp/opencode/sexp-memory-3dk9y_nj/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      },
+      {
+        "payload_bytes": 12582909,
+        "atom_count": 1,
+        "scenario": "base64_bytes",
+        "target_bytes": 16777216,
+        "input_bytes": 16777214,
+        "status": "ok",
+        "wall_seconds": [
+          1.7363562670070678,
+          1.7425829720159527,
+          1.7299794310238212,
+          1.7273758789815474,
+          1.736679160996573
+        ],
+        "cpu_seconds": [
+          1.7311141239999999,
+          1.7373507800000003,
+          1.7252915270000004,
+          1.7224627579999998,
+          1.7317086879999994
+        ],
+        "wall_median": 1.7363562670070678,
+        "wall_min": 1.7273758789815474,
+        "wall_max": 1.7425829720159527,
+        "cpu_median": 1.7311141239999999,
+        "cpu_min": 1.7224627579999998,
+        "cpu_max": 1.7373507800000003,
+        "peak_rss_kib": 209356,
+        "parser_path": "/tmp/opencode/sexp-memory-3dk9y_nj/baseline/sexp/parser.py",
+        "parser_sha256": "61d29d4ac9f8d4cd870dea578360ae88dbbeec758ccd5bfb60a328a8770f0394",
+        "version": "baseline"
+      },
+      {
+        "payload_bytes": 12582909,
+        "atom_count": 1,
+        "scenario": "base64_bytes",
+        "target_bytes": 16777216,
+        "input_bytes": 16777214,
+        "status": "ok",
+        "wall_seconds": [
+          1.8183809100009967,
+          1.7971160029992461,
+          1.8102608069893904,
+          1.8184422360209282,
+          1.8007959100068547
+        ],
+        "cpu_seconds": [
+          1.8128695709999998,
+          1.7916608410000001,
+          1.8046229410000008,
+          1.8131715119999994,
+          1.7959511829999997
+        ],
+        "wall_median": 1.8102608069893904,
+        "wall_min": 1.7971160029992461,
+        "wall_max": 1.8184422360209282,
+        "cpu_median": 1.8046229410000008,
+        "cpu_min": 1.7916608410000001,
+        "cpu_max": 1.8131715119999994,
+        "peak_rss_kib": 97288,
+        "parser_path": "/tmp/opencode/sexp-memory-3dk9y_nj/candidate/sexp/parser.py",
+        "parser_sha256": "0d25a1bb463743e42cbe4066a5c0a2c6be499bec8a9a38fd044d8f960dd3c74c",
+        "version": "candidate"
+      }
+    ]
+  }
+}

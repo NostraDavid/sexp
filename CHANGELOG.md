@@ -27,3 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with unambiguous token separators.
 - Match individual ABNF groups in `parse_base_64_chars()`, `parse_base_64_end()`
   and `parse_hexadecimals()` instead of consuming multiple groups per call.
+- Reduce memory overhead for nested/small lists and hex/base64 temporary buffers
+  without changing parsed values or the public API; add reproducible before/after
+  memory comparisons and allocation regression tests.

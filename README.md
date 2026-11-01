@@ -115,6 +115,11 @@ resource-limited cases stop further growth of that scenario.
 See [measured performance](docs/performance.md) for the results and methodology.
 Encoded input bytes alone do not determine cost: a large verbatim atom is very
 different from the same number of bytes in tiny atoms or deeply nested lists.
+Run `just benchmark-memory` to compare immutable snapshots of the committed
+baseline (`cdfd9f9`) and the current parser, using the same inputs and interpreter.
+The API still returns ordinary mutable Python lists; empty and small list frames
+and encoded-string temporary buffers are allocated more compactly.
+See [memory optimization](docs/memory-optimization.md) for the comparison details.
 
 ## Reference
 

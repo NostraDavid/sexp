@@ -34,6 +34,9 @@ benchmark:
 benchmark-scaling:
     uv run --locked python -c 'import json; from benchmarks.scaling import run_sweep; print(json.dumps(run_sweep(), indent=2))'
 
+benchmark-memory:
+    uv run --locked python -c 'import json; from benchmarks.memory import run_comparison; print(json.dumps(run_comparison(), indent=2))'
+
 build:
     uv build
 

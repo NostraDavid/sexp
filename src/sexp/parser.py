@@ -290,7 +290,7 @@ class SExpressionParser:
         label: str,
     ) -> str:
         self._expect(opening)
-        chars = []
+        chars = bytearray()
         while (char := self.peek()) != closing:
             if char is None:
                 raise ValueError(
@@ -299,14 +299,14 @@ class SExpressionParser:
             if char in _WHITESPACE:
                 self.consume()
             elif char in alphabet:
-                chars.append(char)
+                chars.append(ord(char))
                 self.consume()
             else:
                 raise ValueError(
                     f"Invalid {label} character {char!r} at position {self.index}",
                 )
         self.consume()
-        return "".join(chars)
+        return chars.decode("ascii")
 
     def _read_base64(self, opening: str, closing: str) -> bytes:
         encoded = self._read_encoded(opening, closing, _BASE64, "base64")
@@ -495,25 +495,38 @@ class SExpressionParser:
 
     def _parse_value(self, canonical: bool) -> SExpression:
         # An explicit stack also handles untrusted lists deeper than Python's recursion limit.
-        stack: List[List[SExpression]] = []
+        stack: List[Optional[List[SExpression]]] = []
         while True:
             if stack and not canonical:
                 self._skip_whitespace()
             char = self.peek()
             if char == "(":
                 self.consume()
-                stack.append([])
+                stack.append(None)
                 continue
             if char == ")" and stack:
                 self.consume()
-                node: SExpression = stack.pop()
+                children = stack.pop()
+                if children is None:
+                    node: SExpression = []
+                elif 3 <= len(children) <= 4:
+                    # Trim the growth caused by appending to a compact pair.
+                    node = children[:]
+                else:
+                    node = children
             elif char is None and stack:
                 raise ValueError(f"Missing closing ')' at position {self.index}")
             else:
                 node = self._parse_string(canonical)
             if not stack:
                 return node
-            stack[-1].append(node)
+            children = stack[-1]
+            if children is None:
+                stack[-1] = [node]
+            elif len(children) == 1:
+                stack[-1] = [children[0], node]
+            else:
+                children.append(node)
 
     def parse_value(self) -> SExpression:
         """Read one advanced value, leaving subsequent input unread."""
