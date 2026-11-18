@@ -1,13 +1,27 @@
 {pkgs, ...}: {
   dotenv.enable = false;
-  packages = [pkgs.python314 pkgs.uv pkgs.just pkgs.git];
+
   env = {
     UV_PYTHON = "3.14";
     UV_PYTHON_PREFERENCE = "only-system";
     UV_PYTHON_DOWNLOADS = "never";
     PYTHONNOUSERSITE = "1";
   };
-  enterShell = ''
-    unset PYTHONPATH PYTHONHOME _PYTHON_SYSCONFIGDATA_NAME
-  '';
+  enterShell =
+    (import (builtins.fetchurl {
+        url = "https://raw.githubusercontent.com/NostraDavid/nixcfg/cb2423e55f4a7ee010d33a649ddf0488338baa42/nix/system-tools.nix";
+        sha256 = "7d2abe646d9389e296c5e1cafa0b63dd52e9821c58037d9dd8faef90124104e2";
+      })
+      pkgs [
+        "python314"
+        {
+          attr = "uv";
+          also = ["uvx"];
+        }
+        "just"
+        "git"
+      ])
+    + ''
+      unset PYTHONPATH PYTHONHOME _PYTHON_SYSCONFIGDATA_NAME
+    '';
 }
