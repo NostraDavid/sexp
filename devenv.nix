@@ -16,6 +16,7 @@
         "python314"
         {
           attr = "uv";
+          series = "0";
           also = ["uvx"];
         }
         "just"
